@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="fr">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>Outil_FBM_2</title>  
+<style>
+/* Style global de la page */
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  padding: 1px;
+}
+/* En-tête avec titre et bouton de partage */
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1px;
+}
+.header-row h3 {
+  margin: 0;
+}
+
+.header-row button {
+  margin: 0;
+  padding: 5px 10px;
+}
+  
+/* Conteneur principal de l'outil */
+.box {
+  position: relative;
+  z-index: 2;
+  max-width: 380px;
+  margin: auto;
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Lignes de formulaire */
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1px;
+}
+
+/* Champs de saisie individuels */
+.field {
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Style spécifique pour champs compacts */
+.field.compact {
+  display: flex !important;
+  flex-direction: column !important; 
+  align-items: center !important;
+  width: 30% !important;
+}
+
+.field.compact label {
+  font-size: 0.75em !important;
+  color: #333 !important;
+  margin-bottom: 0px !important;
+}
+
+.field.compact input {
+  padding: 3px 6px;    
+  font-size: 0.85em;   
+  border-radius: 6px;  
+  border: 1px solid #ccc;
+  text-align: center;
+  width: 90%;
+}
+.ref {
+    display: block;      /* Pour qu'il soit bien sous l'input */
+    text-align: center;    /* Aligné à gauche, plus centré */
+    color: green !important;         /*  vert */
+    font-size: 0.7em;    /* Petite taille */
+    margin-top: 1px;
+	font-weight: bold;
+}
+/* Style pour les références */
+.field.compact .ref,
+.field .ref {
+  font-size: 0.7em !important;
+  color: green !important;
+  font-weight: 900 !important;
+  display: block !important;
+  min-height: auto !important;  
+  margin-top: 1px !important;
+  text-align: center !important; 
+}
+
+/* Labels de formulaire */
+label {
+  margin-bottom: 4px;
+  font-weight: bold;
+  font-size: 0.7em;
+  text-align: center;
+}
+
+/* Inputs et selects */
+input, select {
+  display: inline-block;
+  vertical-align: middle;
+  height: 28px;             
+  padding: 0px 6px;         
+  font-size: 0.85em;   
+  border-radius: 6px;  
+  border: 1px solid #ccc;
+  text-align: center;       
+  width: 90%;
+  box-sizing: border-box;   
+  line-height: normal;      
+}
+
+/* Input en lecture seule */
+input[readonly]{
+  background:#eee;
+  font-weight:bold;
+}
+
+/* Conteneur de champ unique */
+.single-field{
+  width:100%;
+  margin-bottom:2px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* Zone de résultat */
+.result{
+  margin-top:15px;
+  text-align:start;
+  font-weight:bold;
+}
+
+/* Ligne de résultat */
+.result-line {
+  display:flex;
+  justify-content:start;
+  gap:20px;
+  margin-bottom:6px;
+}
+
+/* Modales */
+.custom-modal {
+  display: none; 
+  position: fixed; 
+  z-index: 9999; 
+  left: 0; 
+  top: 0; 
+  width: 100%; 
+  height: 100%;
+  background-color: rgba(0,0,0,0.5); 
+  align-items: flex-start;    
+  justify-content: center;
+  padding-top: 20px;          
+}
+
+.custom-modal-content {
+  background: white; padding: 18px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;
+}
+.custom-modal button {
+  display: block; width: 100%; margin: 8px 0; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold; font-size: 0.9em; cursor: pointer;
+}
+#bloc_saisie_carotte label {
+  white-space: nowrap;
+  text-align: left;
+  align-items: flex-start;
+  width: 98%;
+}
+
+
+
+</style>  
+
+</head> 
+<body> 
+<div class="box"> 
+<div class="header-row">
+<div style="display:flex; justify-content:center; margin-bottom:8px;">
+<svg id="logoSNCF" width="100" height="100" viewBox="0 0 216 153" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M10.8369 129.316H18.1316C22.0158 129.316 25.2842 130.642 25.2842 135.047C25.2842 137.7 23.8632 139.737 21.2105 140.211L25.9947 148.216H21.0211L17.0895 140.637H15.0526V148.216H10.8842V129.316H10.8369ZM15.0053 137.132H17.4684C18.9842 137.132 20.9737 137.084 20.9737 135C20.9737 133.105 19.2684 132.821 17.7526 132.821H15.0053V137.132Z" fill="#7C2270"/>
+<path d="M42.0526 129.316H54.8895V133.153H46.221V136.658H54.4158V140.495H46.221V144.332H55.3631V148.168H42.0526V129.316ZM48.4 124.105H53.8474L49.2052 127.942H45.7L48.4 124.105Z" fill="#7C2270"/>
+<path d="M81.7947 133.911C81.1316 133.058 79.8053 132.679 78.7632 132.679C77.579 132.679 75.9684 133.2 75.9684 134.621C75.9684 138.079 84.6842 135.853 84.6842 142.484C84.6842 146.7 81.2737 148.689 77.3895 148.689C74.9737 148.689 72.8421 147.979 71.0421 146.321L74.0263 143.053C74.879 144.189 76.2526 144.853 77.6737 144.853C79.0474 144.853 80.5632 144.189 80.5632 142.863C80.5632 139.405 71.7053 141.253 71.7053 134.953C71.7053 130.926 75.2105 128.795 78.9053 128.795C81.0369 128.795 83.1211 129.363 84.6842 130.784L81.7947 133.911Z" fill="#7C2270"/>
+<path d="M101.689 129.316H114.526V133.153H105.858V136.658H114.053V140.495H105.858V144.332H115V148.168H101.689V129.316Z" fill="#7C2270"/>
+<path d="M138.353 129.316H141.811L150.053 148.216H145.316L143.705 144.189H136.363L134.8 148.216H130.158L138.353 129.316ZM139.963 134.811L137.689 140.684H142.332L139.963 134.811Z" fill="#7C2270"/>
+<path d="M181.6 140.921C181.6 145.374 178.853 148.689 173.642 148.689C168.384 148.689 165.637 145.374 165.637 140.921V129.316H169.805V140.779C169.805 143.1 171.416 144.853 173.642 144.853C175.821 144.853 177.432 143.1 177.432 140.779V129.316H181.6V140.921Z" fill="#7C2270"/>
+<path d="M3.92822 1.2655C1.55861 1.36502 0.0187378 2.45987 0.0187378 4.80103V109.18C0.0187378 110.999 1.3219 112.645 3.33141 112.645H189.677C191.351 112.645 192.687 112.493 193.474 110.284C193.474 110.284 212.36 51.1823 212.687 50.1121C213.389 47.8797 212.934 46.7465 211.029 45.534C150.341 6.64057 59.5601 0.999825 18.3877 0.999825C12.4775 0.999825 7.59596 1.11831 3.94585 1.26524" fill="url(#paint0_linear_915_33000)"/>
+<path d="M118.527 83.5323C115.921 80.4945 114.888 76.5751 115.532 72.2056C117.068 61.784 127.21 55.1965 140.778 55.1965C143.636 55.1965 146.579 55.3766 149.223 55.713L151.906 47.8507C148.636 47.3483 144.674 47.135 140.788 47.135C128.755 47.135 118.29 51.2771 111.509 58.5803C111.295 58.8078 111.077 58.803 110.945 58.803C110.736 58.803 110.594 58.7651 110.651 58.5803L114.049 47.9217H104.115L93.2436 82.03C89.784 71.9639 82.6657 58.7272 73.9597 47.9217H63.2917L55.3156 72.7506C59.3249 75.7316 60.5951 77.8832 61.6424 80.9447C61.704 81.1248 61.832 81.1627 62.0263 81.1627C62.2206 81.1627 62.3154 81.1153 62.3675 80.9447C62.4434 80.7078 69.3247 59.367 69.3247 59.367C76.3435 69.4094 83.3102 82.6224 87.0447 96.5747H98.4852L104.144 78.8974C104.205 78.7173 104.329 78.6794 104.518 78.6794C104.717 78.6794 104.845 78.7315 104.869 78.8974C106.589 89.9967 117.627 97.4562 133.271 97.4562C143.385 97.4562 152.527 94.8022 154.802 93.5843L160.73 74.9117H183.498L185.815 67.6796H163.043L166.972 55.4192H194.104L196.469 47.9217H158.356L145.418 88.3616C142.674 89.0535 139.281 89.3948 135.736 89.3948C128.101 89.3948 121.987 87.5796 118.527 83.5323ZM54.2634 55.386L56.5288 48.263C53.2729 47.6658 50.946 47.3578 47.0598 47.2677C34.5672 46.9786 23.2736 50.4241 20.3685 57.7225C16.9278 66.3763 26.6906 71.2435 35.1501 75.2529C41.8656 78.4377 47.1736 81.466 45.3063 85.4328C43.8561 88.5085 39.1026 89.9682 32.1928 89.8118C26.2072 89.6696 18.7429 87.954 12.8615 84.992L9.36395 92.5558C13.6909 94.5653 22.6101 97.2951 30.2213 97.4704C44.5148 97.7974 53.7706 94.2004 57.4766 86.4185C61.8604 77.2055 50.9839 72.1677 42.2495 67.9497C35.4108 64.6465 30.7474 62.9214 31.8706 59.5992C33.1976 55.6656 40.0742 54.1728 46.3063 54.315C49.4579 54.3908 51.6995 54.7936 54.2634 55.386Z" fill="white"/>
+<defs>
+<linearGradient id="paint0_linear_915_33000" x1="0.0250333" y1="-5.52104" x2="212.686" y2="-5.52104" gradientUnits="userSpaceOnUse">
+<stop stop-color="#7C2270"/>
+<stop offset="0.2472" stop-color="#AA147E"/>
+<stop offset="0.8146" stop-color="#E41D25"/>
+<stop offset="1" stop-color="#E41D25"/>
+</linearGradient>
+</defs>
+</svg>
+</div>
+
+  <h3 id="pageTitle">SUIVI FBM</h3>
+  <div style="display:flex; gap:5px;">
+    <button onclick="shareWhatsApp()">📲 Partage</button>
+    <button id="btnExportPdf" onclick="exporterPDF()">📄 PDF</button>
+  </div>
+</div>
+
+<div class="header-row">
+<select id="selectChantier" onchange="filtrerSupports()">
+  <option value="">-- choisir chantier --</option>
+</select>
+<select id="selectSupport" onchange="chargerSupport()">
+  <option value="">-- choisir support --</option>
+</select>
+</div>
+
+<div style="height: 5px;"></div>
+
+<div class="single-field" style="margin-left: 5px; margin-bottom: 5px;">  
+  <div style="display: flex; flex-direction: row; gap: 15px; align-items: center; width: 100%;">
+    <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold;">  
+      <input type="checkbox" id="verifVoie" checked onchange="calculer()"> 🚆TES.D  
+    </label>  
+    <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold;">  
+      <input type="checkbox" id="carotte" onchange="calculer();"> 🥕CAROTTE  
+    </label>
+    <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; color: #dc3545;">  
+      <input type="checkbox" id="blindageCheck" onchange="calculer();"> 🛡️BLINDAGE  
+    </label>
+	<span id="display_type" style="font-size:0.85em; font-weight:bold; color:#7C2270; white-space:nowrap;"></span>
+  </div>
+</div> 
+
+<div class="row" style="display: flex !important; flex-direction: row !important; justify-content: space-between; width: 100%; margin-bottom: 5px;">  
+  <div class="field" style="width: 23% !important;">
+    <label>Implantation</label>
+    <input type="number" id="I" step="any" oninput="calculer()" onkeydown="passerAEchantillon(event)">
+    <span class="ref" id="I_ref"></span>
+  </div>  
+  
+  <div class="field" style="width: 23% !important;">
+    <label>Echantillon</label>
+    <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
+    <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="Saisir en cm" style="display: none; margin-top: 5px; width: 100%;">
+    <span class="ref" id="ECH_ref"></span>
+  </div>  
+  
+  <div class="field" style="width: 23% !important;">
+    <label>Arasement</label>
+    <input type="number" id="AR" oninput="calculer()">
+    <span class="ref" id="AR_ref"></span>
+  </div>  
+  
+<div class="field" style="width: 23% !important;">
+
+<label id="labelEnc">Encastrement</label>
+
+    <input type="number" id="Enc" onblur="calculer()">
+    <span class="ref" id="Enc_ref"></span>
+</div>  
+</div>
+  
+<div class="row" style="gap: 3px; justify-content: space-between;">  
+  <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
+    <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">A</label></div>
+    <input type="number" id="AF" step="any" readonly onclick="gererChangementA()" style="width: 100%; padding: 5px 2px; font-size: 0.8em; background: #fff; cursor: pointer; font-weight: bold;">
+	<span class="ref" id="AF_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
+  </div>  
+  <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
+    <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">B</label></div>
+    <input type="number" id="B_Fouille" step="any" oninput="calculer()" style="width: 100%; padding: 5px 2px; font-size: 0.8em;">
+	<span class="ref" id="B_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
+  </div>   
+  <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
+    <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">H</label></div>
+    <input type="number" id="H_Fouille" step="any" oninput="calculer()" style="width: 100%; padding: 5px 2px; font-size: 0.8em;">
+	<span class="ref" id="H_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
+  </div>
+</div>
+
+
+
+
+
+
+<div class="row" style="margin-top: 5px; justify-content: space-between; align-items: center;"> 
+  <div class="field compact" style="width: 25% !important;">
+    <label>F</label>
+	<input type="number" id="valF" oninput="calculer()">
+    <span class="ref" id="F_ref" style="margin: 0 !important; font-size: 0.7em !important;"></span>	
+  </div>  
+  
+<div id="bloc-N" style="width: 30% !important; display: none;">
+  <label>Imp depuis </label>
+  <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
+  <span class="ref" id="P_ref_N" style="margin: 0 !important; font-size: 0.7em !important;"></span>
+</div>
+
+
+	  <div class="field compact" style="width: 30% !important;">
+    <label>Support référent</label>
+    <input type="text" id="valSUP" oninput="calculer()" disabled>
+    <span class="ref" id="SUP_ref" style="margin: 0 !important; font-size: 0.7em !important;"></span>
+  </div>	
+	
+<div id="bloc-S" style="width: 30% !important; display: none;">
+  <label>Imp depuis </label>
+  <input type="text" id="valP_S" oninput="gérerVisibilitéP()">
+  <span class="ref" id="P_ref_S" style="margin: 0 !important; font-size: 0.7em !important;"></span>
+</div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #ffeba2; width: 95% !important; flex-direction: column; gap: 8px;"> 
+  <div class="row" style="display: flex; justify-content: space-between; width: 100%;">
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">A (cm)</label><input type="number" id="A_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">B (cm)</label><input type="number" id="B_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Encastrement</label><input type="number" id="H_carotte" readonly style="background: #e9ecef; cursor: not-allowed;"></div>
+  </div>
+  <div class="row" style="display: flex; justify-content: start; gap: 15px; width: 100%;">
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Plus petit e1(cm)</label><input type="number" id="E1_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();"></div>
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Plus petit e2(cm)</label><input type="number" id="E2_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();"></div>
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">P (cm)</label><input type="number" id="P_carotte" readonly style="background: #e9ecef; cursor: not-allowed;"></div>
+  </div>
+  <div id="info_echantillon_bloc" style="margin: 10px 0; padding: 8px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; text-align: center; font-size: 0.85em;">
+    <span style="color: #666;">Profilé : </span><span id="display_nom" style="font-weight:bold; color:#000;">-</span> | 
+    <span style="color: #666;">Larg : </span><span id="display_larg" style="font-weight:bold; color:#d97706;">0</span> mm | 
+    <span style="color: #666;">Prof : </span><span id="display_prof" style="font-weight:bold; color:#d97706;">0</span> mm
+  </div>
+  <div id="calculs_carotte_grid" style="display: none; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; font-size: 0.8em;">
+    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e1 Cote A:↕ <span id="calc_S1" style="font-weight:bold;">0.00</span></div>
+    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e1 Cote B:↔ <span id="calc_S2" style="font-weight:bold;">0.00</span></div>
+    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote A:↕ <span id="calc_S3" style="font-weight:bold;">0.00</span></div>
+    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote B:↔ <span id="calc_S4" style="font-weight:bold;">0.00</span></div>
+  </div> 
+</div> 
+ 
+ 
+<div id="bloc_saisie_blindage" style="display: none; background: #e0f2fe; padding: 6px 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #93c5fd; width: 95% !important; flex-direction: column; gap: 4px;">  
+  <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; gap: 6px;">
+    <label style="color: #0369a1; font-weight: bold; font-size: 0.8em; white-space: nowrap; flex: 1;">Bord blindage bord rail (m)</label>
+    <input type="number" id="dist_blindage" step="any" style="width: 75px !important; padding: 4px; border-radius: 4px; border: 1px solid #ccc; text-align: center;" onclick="this.select()" oninput="calculer()">
+  </div>
+  
+  <div id="bloc_traverse_nit" class="row" style="display: none;">  
+  <div class="field"><label>Traverse</label><input type="number" id="LT" value="40" oninput="calculer()"></div>  
+  <div class="field">
+    <label>Sol-->Massif</label>
+    <div style="display:flex; gap:5px;">
+      <button type="button" onclick="toggleSignSOL()">±</button>
+      <input type="number" id="SOL" step="any" value="0" oninput="calculer()" style="flex:1;">
+    </div>
+  </div>
+  <div class="field"><label>NiT-->Hbis</label><input type="number" id="NIT" readonly></div>  
+</div>
+  
+  
+  
+  
+  <div id="alerte_blindage_bloc" style="margin-top: 2px; font-size: 0.85em; font-weight: bold; text-align: left;"></div>
+</div>
+
+
+<div class="result" style="margin-top: 10px; padding: 8px; border: 1px dashed #bbb; border-radius: 8px; background: #fafafa;">
+  <div style="display: flex; justify-content: space-between; margin-bottom: 4px; flex-wrap: wrap; gap: 5px;">
+    <span>🧱 Th: <span id="vol_prevu" style="color: #008000; font-weight: bold;">0.00 m³</span></span>
+    <span>🧱 Réel: <span id="vol_modifie" style="color: #007bff; font-weight: bold;">0.00 m³</span></span>
+    <span id="display_vol_carotte" style="display: none;">🧱 Béton Net sans 🥕: <span id="vol_carotte" style="color: #d97706; font-weight: bold;">0.00 m³</span></span>
+  </div>
+</div>
+
+<div class="result">  
+  <div id="tbf"></div>  
+  <div id="ltv" style="margin-top:4px; font-weight:bold; color:teal;"></div>
+  <div id="I_LTV" style="margin-top:4px; font-weight:bold;"></div>  
+</div>
+
+<div class="result">  
+  <div class="result-line" id="bdLine">  
+    <span id="bf"></span>  
+    <span id="BMax_display"></span>  
+    <span id="DMin_display"></span> 
+    <span id="Hmax_display"></span>	
+  </div>   
+</div>  
+
+
+
+<div class="result" style="margin-top: 12px;">
+  <label style="text-align:left; display:block; margin-bottom:4px;">✍️ Signature</label>
+  <input type="text" id="nomRedacteur" placeholder="Nom du rédacteur" style="width:100%; margin-bottom:6px;">
+  <canvas id="signatureCanvas" style="width:100%; height:110px; touch-action:none; border:1px solid #ccc; border-radius:8px; background:#fff; display:block;"></canvas>
+  <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+    <button type="button" onclick="effacerSignature()" style="background:#fee2e2; color:#dc2626; font-size:0.75em; padding:5px 10px; margin:0;">🗑️ Effacer signature</button>
+  </div>
+</div>
+
+<div id="divExtensionModal" class="custom-modal">
+  <div class="custom-modal-content" style="background: white; padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
+    <p style="font-weight: bold; font-size:1em; margin-bottom: 15px; color: #333;">Configuration de la Cote A</p>
+    
+    <div style="margin-bottom: 18px; text-align: left;">
+      <label style="font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 5px; text-align: left; color: #4b5563;">Nouvelle valeur pour A :</label>
+      <input type="number" id="modal_saisie_A" step="any" placeholder="Saisir la valeur..." style="width: 100%; height: 36px; font-size: 1.1em; border: 1px solid #3b82f6; border-radius: 6px; text-align: center;" onclick="this.select()">
+    </div>
+
+    <p style="font-weight: bold; font-size:0.85em; margin-bottom: 8px; text-align: left; color: #4b5563;">Type d'élargissement :</p>
+    
+    <button onclick="validerToutPopup('centre')" style="background: #f3f4f6; color: #1f2937; font-weight: bold;">1 : Les 2 côtés (Centré)</button>
+    <button onclick="validerToutPopup('champ')" style="background: #f5f3ff; color: #6d28d9; font-weight: bold;">2 : Vers le CHAMP (Protège rail)</button>
+    <button onclick="validerToutPopup('voie')" style="background: #eff6ff; color: #1d4ed8; font-weight: bold;">3 : Vers la VOIE</button>
+    
+    <button onclick="document.getElementById('divExtensionModal').style.display='none';" style="background: #fee2e2; color: #dc2626; margin-top: 10px; font-size: 0.8em; padding: 6px;">❌ Annuler</button>
+  </div>
+</div>
+
+<div id="divEchantillonModal" class="custom-modal">
+  <div class="custom-modal-content" style="background: white; padding: 15px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
+    <p style="font-weight: bold; font-size:1em; margin-bottom: 12px; color: #333;">Sélectionner le Profilé (Échantillon)</p>   
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px;">
+      <button onclick="validerEchantillonPopup('200', '200', '200')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE200</button>
+      <button onclick="validerEchantillonPopup('220', '220', '220')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE220</button>
+      <button onclick="validerEchantillonPopup('240', '240', '240')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE240</button>
+      <button onclick="validerEchantillonPopup('260', '260', '260')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE260</button>
+      <button onclick="validerEchantillonPopup('280', '280', '280')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE280</button>
+      <button onclick="validerEchantillonPopup('300', '300', '300')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE300</button>
+      <button onclick="validerEchantillonPopup('320', '300', '320')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE320</button>
+      <button onclick="validerEchantillonPopup('280', '710', '280')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHE280</button>
+      <button onclick="validerEchantillonPopup('320', '610', '320')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHE320</button>
+      <button onclick="validerEchantillonPopup('Epingle', '0', '0')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">Epingle</button>	
+	</div>    
+    <button onclick="validerEchantillonPopup('manuel', '0', 'Autre...')" style="background:#f5f3ff; color:#6d28d9; width:100%; padding: 10px 0; margin: 0 0 10px 0; font-weight: bold;">Autre...</button>   
+    <button onclick="document.getElementById('divEchantillonModal').style.display='none';" style="background: #fee2e2; color: #dc2626; width:100%; margin:0; font-size: 0.8em; padding: 6px;">❌ Annuler</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script> 
+
+const baseSupports = [
+{ chantier: "SST_THOMERY", support: "62/03_ANC", I: 2.51, AF: 1, B: 1.8, H: 1.4, AR: 0.75, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "4Api", F: 0, P: -7,SUP: "62/03" },
+{ chantier: "SST_THOMERY", support: "62/03", I: 2.4, AF: 0.7, B: 1.2, H: 1.7, AR: 0.75, Enc: 1.5,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 3, P: -13.5,SUP: "62/03" },
+{ chantier: "SST_THOMERY", support: "62/05", I: 2.4, AF: 0.7, B: 1.2, H: 1.7, AR: 0.75, Enc: 1.5,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 3, P: -13.5,SUP: "62/05" },
+{ chantier: "SST_THOMERY", support: "62/07_ANC1", I: 2.53, AF: 1.2, B: 2.1, H: 1.4, AR: 0.6, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: -6,SUP: "62/07" },
+{ chantier: "SST_THOMERY", support: "62/07_ANC2", I: 2.53, AF: 1.2, B: 2.1, H: 1.4, AR: 0.6, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: -9.1,SUP: "62/07" },
+{ chantier: "SST_THOMERY", support: "62/07", I: 2.4, AF: 0.9, B: 1.5, H: 1.8, AR: 0.6, Enc: 165,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 3, P: -13.5,SUP: "62/07" },
+{ chantier: "SST_THOMERY", support: "62/09", I: 2.4, AF: 0.8, B: 1.3, H: 2.2, AR: 0.75, Enc: 1.9,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "3Pnb", F: 3, P: -13.5,SUP: "62/09" },
+{ chantier: "SST_THOMERY", support: "62/11", I: 2.4, AF: 0.9, B: 1.5, H: 1.8, AR: 0.8, Enc: 1.45,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 3, P: -18,SUP: "62/11" },
+{ chantier: "SST_THOMERY", support: "62/13", I: 2.4, AF: 0.9, B: 1.5, H: 1.8, AR: 0.8, Enc: 1.45,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 3, P: -22.5,SUP: "62/13" },
+{ chantier: "SST_THOMERY", support: "62/15_ANC1", I: 2.53, AF: 1.2, B: 2.1, H: 1.4, AR: 0.7, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: 6,SUP: "62/15" },
+{ chantier: "SST_THOMERY", support: "62/15_ANC2", I: 2.53, AF: 1.2, B: 2.1, H: 1.4, AR: 0.7, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: 9.1,SUP: "62/15" },
+{ chantier: "SST_THOMERY", support: "62/15", I: 2.4, AF: 0.9, B: 1.5, H: 1.8, AR: 0.7, Enc: 1.55,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 3, P: -13.5,SUP: "62/15" },
+{ chantier: "SST_THOMERY", support: "62/17_ANC1", I: 2.53, AF: 1.2, B: 2.1, H: 1.4, AR: 0.7, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: -6,SUP: "62/17" },
+{ chantier: "SST_THOMERY", support: "62/17_ANC2", I: 2.53, AF: 1.2, B: 2.1, H: 1.4, AR: 0.7, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: -9.1,SUP: "62/17" },
+{ chantier: "SST_THOMERY", support: "62/17", I: 2.4, AF: 1, B: 1.5, H: 2, AR: 0.65, Enc: 1.6,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "5Pn", F: 6, P: -58.5,SUP: "62/19U" },
+{ chantier: "SST_THOMERY", support: "62/18_ANC1", I: 2.83, AF: 1.2, B: 2.1, H: 1.4, AR: 0.65, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: -6,SUP: "62/18" },
+{ chantier: "SST_THOMERY", support: "62/18_ANC2", I: 2.83, AF: 1.2, B: 2.1, H: 1.4, AR: 0.65, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: -9.1,SUP: "62/18" },
+{ chantier: "SST_THOMERY", support: "62/18", I: 2.78, AF: 0.9, B: 1.5, H: 1.8, AR: 0.65, Enc: 1.6,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 3, P: -4.5,SUP: "62/18" },
+{ chantier: "SST_THOMERY", support: "62/19", I: 2.4, AF: 0.9, B: 1.5, H: 1.8, AR: 0.6, Enc: 1.65,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 0, P: -4.5,SUP: "62/19U" },
+{ chantier: "SST_THOMERY", support: "62/20", I: 2.4, AF: 0.7, B: 1.2, H: 1.7, AR: 0.8, Enc: 1.45,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 0, P: -4.5,SUP: "62/20" },
+{ chantier: "SST_THOMERY", support: "62/21A", I: 3, AF: 0.9, B: 1.5, H: 1.8, AR: 0.65, Enc: 1.6,ECH: "320",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 0, P: -8,SUP: "62/21_Nouv" },
+{ chantier: "SST_THOMERY", support: "62/21", I: 3, AF: 1, B: 1.5, H: 2, AR: 0.65, Enc: 1.6,ECH: "320",BLIND: "NON",CARO: "NON",TYPE: "5Pn", F: 0, P: -4.5,SUP: "62/21" },
+{ chantier: "SST_THOMERY", support: "62/22_ANC-N", I: 3.15, AF: 1, B: 1.8, H: 1.4, AR: 0.7, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "4Api", F: 0, P: -7,SUP: "62/22" },
+{ chantier: "SST_THOMERY", support: "62/22_ANC-S", I: 3.15, AF: 1, B: 1.8, H: 1.4, AR: 0.7, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "4Api", F: 0, P: 7,SUP: "62/22" },
+{ chantier: "SST_THOMERY", support: "62/22", I: 3, AF: 1, B: 1.5, H: 2, AR: 0.65, Enc: 1.6,ECH: "320",BLIND: "NON",CARO: "NON",TYPE: "5Pn", F: 0, P: -4.5,SUP: "62/22" },
+{ chantier: "SST_THOMERY", support: "62/23", I: 2.4, AF: 0.7, B: 1.2, H: 1.7, AR: 0.55, Enc: 1.3,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 0, P: -4.5,SUP: "62/23" },
+{ chantier: "SST_THOMERY", support: "62/24", I: 2.4, AF: 0.9, B: 1.5, H: 1.8, AR: 0.65, Enc: 1.6,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 0, P: -4.5,SUP: "62/24" },
+{ chantier: "SST_THOMERY", support: "62/25_ANC1", I: 2.53, AF: 1.2, B: 2.1, H: 1.4, AR: 0.85, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: 6,SUP: "62/25" },
+{ chantier: "SST_THOMERY", support: "62/25_ANC2", I: 2.53, AF: 1.2, B: 2.1, H: 1.4, AR: 0.85, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: 9.1,SUP: "62/25" },
+{ chantier: "SST_THOMERY", support: "62/25", I: 2.4, AF: 0.9, B: 1.5, H: 1.8, AR: 0.85, Enc: 1.6,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 3, P: -13.5,SUP: "62/25" },
+{ chantier: "SST_THOMERY", support: "62/26_ANC1", I: 2.93, AF: 1.2, B: 2.1, H: 1.4, AR: 0.8, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: 6,SUP: "62/26" },
+{ chantier: "SST_THOMERY", support: "62/26_ANC2", I: 2.93, AF: 1.2, B: 2.1, H: 1.4, AR: 0.8, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: 9.1,SUP: "62/26" },
+{ chantier: "SST_THOMERY", support: "62/26", I: 2.8, AF: 1, B: 1.5, H: 2, AR: 0.8, Enc: 1.85,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "5Pn", F: 6, P: -13.5,SUP: "62/26" },
+{ chantier: "SST_THOMERY", support: "62/27", I: 2.4, AF: 0.7, B: 1.2, H: 1.7, AR: 0.7, Enc: 1.55,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 6, P: -13.5,SUP: "62/27" },
+{ chantier: "SST_THOMERY", support: "62/28", I: 2.8, AF: 0.7, B: 1.2, H: 1.7, AR: 0.9, Enc: 1.35,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 3, P: -13.5,SUP: "62/28" },
+{ chantier: "SST_THOMERY", support: "62/29", I: 2.4, AF: 0.7, B: 1.2, H: 1.7, AR: 0.7, Enc: 1.55,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 3, P: -13.5,SUP: "62/29" },
+{ chantier: "SST_THOMERY", support: "62/30", I: 2.8, AF: 0.7, B: 1.2, H: 1.7, AR: 0.8, Enc: 1.45,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 6, P: -13.5,SUP: "62/30" },
+{ chantier: "SST_THOMERY", support: "62/31", I: 2.8, AF: 0.8, B: 1.3, H: 1.8, AR: 0.65, Enc: 1.6,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "3Pn", F: 6, P: -13.5,SUP: "62/31" },
+{ chantier: "SST_THOMERY", support: "62/32", I: 2.8, AF: 0.7, B: 1.2, H: 1.7, AR: 0.7, Enc: 1.55,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 3, P: -13.5,SUP: "62/32" },
+{ chantier: "SST_THOMERY", support: "63/01", I: 2.4, AF: 0.7, B: 1.2, H: 1.7, AR: 0.5, Enc: 1.35,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 0, P: -58.5,SUP: "63/03" },
+{ chantier: "SST_THOMERY", support: "63/02", I: 2.8, AF: 0.7, B: 1.2, H: 1.7, AR: 0.5, Enc: 1.35,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 0, P: -4.5,SUP: "63/02" },
+{ chantier: "SST_THOMERY", support: "63/03F_ANC", I: 4.6, AF: 1, B: 1.8, H: 1.4, AR: 0.4, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "4Api", F: 0, P: 6,SUP: "63/03F" },
+{ chantier: "SST_THOMERY", support: "63/03F", I: 3.7, AF: 0.7, B: 1.1, H: 1.6, AR: 0.4, Enc: 1.45,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "1Pn", F: 3, P: -9,SUP: "63/03" },
+
+  
+  
+  
+];
+
+
+/* Initialisation */
+window.onload = () => {initChantiers();  calculer();};
+let choixExtensionA = "centre";
+let modalOuvert = false;
+let largeurEchantillon = 0;
+
+/* Gestion changement A */
+function gererChangementA() {
+  let AFval = parseFloat(document.getElementById("AF").value) || 0;
+
+  if (AFval > 0) {
+    document.getElementById("modal_saisie_A").value = document.getElementById("AF").value;
+    document.getElementById("divExtensionModal").style.display = "flex";
+    
+    setTimeout(() => {
+      document.getElementById("modal_saisie_A").focus();
+      document.getElementById("modal_saisie_A").select();
+    }, 150);
+  } else {
+    alert("⚠️ Veuillez d'abord renseigner une valeur A (via un support).");
+  }
+}
+
+/* Navigation clavier */
+function passerAEchantillon(event) {
+  if (event.key === "Enter") {
+    event.preventDefault(); 
+    document.getElementById("divEchantillonModal").style.display = "flex";
+  }
+}
+
+function validerEchantillonPopup(valeur, largeur, nomProfile) {
+  let selectE = document.getElementById("E_select");
+  let inputE = document.getElementById("E");
+  
+  // Enregistre la largeur dans la variable globale (convertie en nombre)
+  largeurEchantillon = parseFloat(largeur) || 0;
+  
+  // Stocke également la largeur de manière invisible sur l'élément HTML si besoin
+  selectE.setAttribute('data-largeur', largeurEchantillon);
+
+  // Supprime l'ancienne option temporaire si elle existe
+  let ancienneOption = selectE.querySelector('.temp-option');
+  if (ancienneOption) ancienneOption.remove();
+
+
+document.getElementById("display_nom").innerText = nomProfile;
+document.getElementById("display_larg").innerText = largeur;
+document.getElementById("display_prof").innerText = (valeur === "manuel") ? (document.getElementById("E").value || "?") : valeur;
+  if (valeur !== "manuel") {
+    let opt = document.createElement("option");
+    opt.value = valeur;
+    opt.text = nomProfile;
+    opt.classList.add("temp-option");
+    selectE.appendChild(opt);
+    selectE.value = valeur; 
+  } else {
+    selectE.value = "manuel";
+  } 
+  document.getElementById("divEchantillonModal").style.display = "none";  
+largeurEchantillon = parseFloat(largeur) || 0;
+profondeurEchantillon = parseFloat(valeur === "manuel" ? 0 : valeur) || 0;
+
+// mode manuel
+if (valeur === "manuel") {
+  selectE.value = "manuel";
+  inputE.style.display = "block";
+  inputE.value = "";
+  inputE.focus();
+}
+// mode liste
+else {
+  inputE.style.display = "none";
+  selectE.value = valeur;
+}
+
+calculer();
+syncEchantillon();
+
+
+
+}
+function syncEchantillon() {
+  let selectE = document.getElementById("E_select");
+  let inputE = document.getElementById("E");
+
+  if (selectE.value === "manuel") {
+    // mode terrain → on garde input
+  } else {
+    inputE.value = "";
+  }
+}
+
+function validerToutPopup(type) {
+  let nouvelleValeur = parseFloat(document.getElementById("modal_saisie_A").value);
+  
+  if (isNaN(nouvelleValeur) || nouvelleValeur <= 0) {
+    alert("⚠️ Saisie invalide : Veuillez entrer une valeur numérique supérieure à 0.");
+    return;
+  }
+  
+  choixExtensionA = type;
+  document.getElementById("AF").value = nouvelleValeur;
+  document.getElementById("divExtensionModal").style.display = "none";
+  calculer();
+}
+
+function validerChoixExt(type) {
+  choixExtensionA = type;
+  document.getElementById("divExtensionModal").style.display = "none";
+  modalOuvert = false;
+  calculer();
+}
+
+/* Calcul principal ====================================================================================================*/
+function calculer() {
+  /* ==========================================
+     VARIABLES PRINCIPALES
+     ========================================== */
+
+  let SOL = (parseFloat(document.getElementById("SOL").value) || 0) / 100;
+  let I_min_LTV = null;
+  let I = parseFloat(document.getElementById("I").value) || 0;
+  let AF = parseFloat(document.getElementById("AF").value) || 0;
+  let HF = parseFloat(document.getElementById("H_Fouille").value) || 0;
+  let B_Fouille = parseFloat(document.getElementById("B_Fouille").value) || 0;
+  let verif = document.getElementById("verifVoie").checked;
+  let distBlindage = parseFloat(document.getElementById("dist_blindage").value) || 0;
+  let AR_input = document.getElementById("AR").value; 
+  let selectE = document.getElementById("E_select");
+  let inputE = document.getElementById("E");
+
+let E = 0;
+
+if (selectE.value === "manuel") {
+  E = parseFloat(inputE.value) || 0;
+} else {
+  E = parseFloat(selectE.value) || 0;
+}  
+  let elA = document.getElementById("AF_ref");
+  let elB = document.getElementById("B_ref");
+  let elH = document.getElementById("H_ref");
+  let tA = parseFloat(elA?.innerText || 0) || 0;
+  let tB = parseFloat(elB?.innerText || 0) || 0;
+  let tH = parseFloat(elH?.innerText || 0) || 0;
+  let chkCarotte = document.getElementById("carotte");
+  let displayVolCarotte = document.getElementById("display_vol_carotte");
+// 1. Récupération de la valeur Encastrement (en mètres) et conversion en cm
+  let encastrementM = parseFloat(document.getElementById("Enc").value) || 0;
+  let encastrementCm = encastrementM *100;
+  // 2. Report automatique dans H_carotte si H_carotte est vide ou à 0
+  let hCarotteInput = document.getElementById("H_carotte");
+  let PCarotteInput = document.getElementById("P_carotte");
+  
+hCarotteInput.value = parseFloat(encastrementCm).toFixed(0);
+PCarotteInput.value = parseFloat((HF * 100)-encastrementCm ).toFixed(0);
+  
+  if (chkCarotte && displayVolCarotte) {
+      displayVolCarotte.style.display = chkCarotte.checked ? "inline" : "none";
+  }
+ 
+  let verifCarotte = document.getElementById("carotte").checked;
+  let verifBlindage = document.getElementById("blindageCheck").checked;
+
+  /* ==========================================
+     AFFICHAGE DES BLOCS
+     ========================================== */
+
+  document.getElementById("bloc_saisie_carotte").style.display =
+      verifCarotte ? "flex" : "none";
+
+  document.getElementById("bloc_saisie_blindage").style.display =
+      verifBlindage ? "flex" : "none";
+
+  document.getElementById("display_vol_carotte").style.display =
+      verifCarotte ? "inline" : "none";
+
+  document.getElementById("calculs_carotte_grid").style.display =
+      verifCarotte ? "grid" : "none";
+
+
+  /* ==========================================
+     VOLUME THÉORIQUE
+     ========================================== */
+
+  let vPrevu = tA * tB * tH;
+
+  document.getElementById("vol_prevu").innerText =
+      vPrevu.toFixed(2) + " m³";
+
+  /* ==========================================
+     CONTRÔLE SAISIES
+     ========================================== */
+
+/* ==========================================
+   VERIFICATION DONNEES LTV
+   ========================================== */
+let E_input = E;
+let calculLTVPossible =
+(   
+    AR_input !== "" &&
+    I > 0 &&
+    AF > 0 &&
+    HF > 0
+);
+
+  /* ==========================================
+     VOLUME RÉEL
+     ========================================== */
+
+  let vModifie = AF * B_Fouille * HF;
+
+  document.getElementById("vol_modifie").innerText =
+      vModifie.toFixed(2) + " m³";
+
+  /* ==========================================
+     CAROTTE
+     ========================================== */
+
+  if (verifCarotte) {
+
+      let ac = (parseFloat(document.getElementById("A_carotte").value) || 0) / 100;
+      let bc = (parseFloat(document.getElementById("B_carotte").value) || 0) / 100;
+      let hc = (parseFloat(document.getElementById("H_carotte").value) || 0) / 100;
+      let e1 = (parseFloat(document.getElementById("E1_carotte").value) || 0) / 100;
+      let e2 = (parseFloat(document.getElementById("E2_carotte").value) || 0) / 100;
+      let vCarotte = ac * bc * hc;
+      let betonNet = vModifie - vCarotte;
+
+      document.getElementById("vol_carotte").innerText =
+          betonNet.toFixed(2) + " m³";
+
+let largeur_m = largeurEchantillon / 1000;
+let profondeur_m = profondeurEchantillon / 1000;
+
+/* e1 = écart Fouille <-> Carotte (ce que tu veux : (Afouille - Acarotte)/2) */
+let S1 = (AF - ac) / 2;
+let S2 = (B_Fouille - bc) / 2;
+
+/* e2 = écart Carotte <-> Echantillon (profil) */
+let S3 = (ac - profondeur_m) / 2;
+let S4 = (bc - largeur_m) / 2;
+
+document.getElementById("calc_S1").innerText =(S1*100).toFixed(1); /* e1 : Afouille - Acarotte */
+document.getElementById("calc_S2").innerText =(S2*100).toFixed(1); /* e1 : Bfouille - Bcarotte */
+document.getElementById("calc_S3").innerText =(S3*100).toFixed(1); /* e2 : Acarotte - profondeur échantillon */
+document.getElementById("calc_S4").innerText =(S4*100).toFixed(1); /* e2 : Bcarotte - largeur échantillon */
+
+  } else {
+
+      document.getElementById("vol_carotte").innerText =
+          "0.00 m³";
+  }
+/* ==========================================
+   SI DONNEES LTV INCOMPLETES
+   ON ARRETE ICI
+   MAIS LES CALCULS CAROTTE
+   ONT DEJA ETE EFFECTUES
+   ========================================== */
+
+if (!calculLTVPossible) {
+    return;
+}
+  /* ==========================================
+     À PARTIR D'ICI
+     GARDE TON CODE ACTUEL
+     (BF, D, BMAX, LTV, BLINDAGE,
+      P1/P2, ALERTES, ETC...)
+     ========================================== */
+
+
+  if(document.getElementById("B_Fouille_display")) document.getElementById("B_Fouille_display").textContent = B_Fouille.toFixed(2);  
+  let ara = parseFloat(document.getElementById("AR").value) || 0;
+  let NIT_m = ((ara - 31) / 100) + HF + SOL; 
+  if(document.getElementById("NIT")) document.getElementById("NIT").value = NIT_m.toFixed(2);
+  
+  let I_cm = I * 100;  
+  if (E >= 100) E = E / 10; 
+  let AF_cm = AF * 100;  
+  
+  let tA_cm = (tA > 0 ? tA : AF) * 100; 
+  let delta_A = AF_cm - tA_cm; 
+  let BF_calcul;
+
+  /* Calcul BF selon extension */
+  if (choixExtensionA === "champ") {
+    BF_calcul = (I_cm + (E / 2)) - (tA_cm / 2) + 79;
+  } else if (choixExtensionA === "voie") {
+    BF_calcul = (I_cm + (E / 2)) - (tA_cm / 2) - delta_A + 79;
+  } else {
+    BF_calcul = (I_cm + (E / 2)) - (AF_cm / 2) + 79;
+  }
+  
+  if (isNaN(BF_calcul)) {
+    BF_calcul = (I_cm + (E / 2)) - (AF_cm / 2) + 79;
+  }
+  
+  let T_BF_cm = BF_calcul - 79 - parseFloat(document.getElementById("LT").value || 0);  
+  let D = BF_calcul / 100;  
+  
+  let P1_profondeur_dispo = (2/3) * (D - 2.5) - ((ara - 31) / 100); 
+  let deg = D - 0.79; 
+  
+  let BMax; 
+  if (D <= 2.80) { BMax = D - 0.8; }  
+  else if (D <= 3.7) { BMax = 2.0; }  
+  else if (D <= 4.7) { BMax = D - 1.7; }  
+  else { BMax = 3.0; }
+  
+  let DMin = 2.4;  
+  if (verif) { DMin -= 0.1; BMax += 0.2; } 
+  let HF_seuil = verif ? 2.2 + 0.2 : 2.2;  
+
+  if(document.getElementById("BMax_display")) document.getElementById("BMax_display").innerHTML = "<span style='color:green;'>BMax=" + BMax.toFixed(2) + "m</span>";  
+  if(document.getElementById("DMin_display")) document.getElementById("DMin_display").innerHTML = "<span style='color:green;'>DMin=" + DMin.toFixed(2) + "m</span>";  
+  if(document.getElementById("Hmax_display")) document.getElementById("Hmax_display").innerHTML = "<span style='color:green;'>Hmax=" + HF_seuil.toFixed(2) + "m</span>";
+  if(document.getElementById("BF_calcul_display")) document.getElementById("BF_calcul_display").innerHTML = "<span style='color:blue;'>" + D.toFixed(2) + "</span>";  
+  
+  let B = B_Fouille;  
+  let BLINDAGE = "";  
+  let showLTV = false;  
+  let raisonAlerte = "";
+  let Imini_Max_Alerte = 0;
+
+  let D_simul = D;
+  let BMax_simul = (D_simul <= 2.80) ? (D_simul - 0.8) : (D_simul <= 3.7 ? 2.0 : (D_simul <= 4.7 ? (D_simul - 1.7) : 3.0));
+  if (verif) BMax_simul += 0.2;
+  let I_simul_Dmini = I + (DMin - D);
+  let I_simul = 0;
+
+  if (B > BMax_simul) {
+    let maxIter = 2000;
+    let iter = 0;
+    while (BMax_simul < B && iter < maxIter) {
+      D_simul += 0.01;
+      BMax_simul = (D_simul <= 2.80) ? (D_simul - 0.8) : (D_simul <= 3.7 ? 2.0 : (D_simul <= 4.7 ? (D_simul - 1.7) : 3.0));
+      if (verif) BMax_simul += 0.2;
+      iter++;
+    }
+    I_simul = I + (D_simul - D);
+  }
+
+  /* Analyse alertes */
+  if (deg < 1.5 && ara < 81) {
+    let imini_deg = I + (1.5 - deg);
+    showLTV = true;
+    if (imini_deg > Imini_Max_Alerte) { Imini_Max_Alerte = imini_deg; raisonAlerte = "🚨 GABARIT Dégarnisseuse"; }
+  }
+  if (D < DMin) {
+    showLTV = true;
+    if (I_simul_Dmini > Imini_Max_Alerte) { Imini_Max_Alerte = I_simul_Dmini; raisonAlerte = "🚨 3a BLINDAGE D < DMin"; }
+  }
+  if (B > BMax && B <= 3.0) {
+    showLTV = true;
+    if (I_simul > Imini_Max_Alerte) { Imini_Max_Alerte = I_simul; raisonAlerte = "🚨 3b BLINDAGE B < BMax"; }
+  }
+  if (HF > HF_seuil) {
+    showLTV = true; 
+    raisonAlerte = "🚨 4 BLINDAGE Fond fouille H > " + HF_seuil.toFixed(2) + "m";
+  }
+  if (B > 3.0) {
+    showLTV = true; 
+    raisonAlerte = "🚨 3b BLINDAGE B > 3M (Interdit)";
+  }
+
+  let T_BF_m = T_BF_cm / 100; 
+  if (document.getElementById("TBF_display")) document.getElementById("TBF_display").innerHTML = T_BF_m.toFixed(2);
+  
+  if (showLTV && NIT_m > T_BF_m) {  
+    if(document.getElementById("ltv")) document.getElementById("ltv").innerHTML = D > 3.0 ? "🚨 LTV 72H après Fouille" : "🚨 LTV 72H après comblement Béton";
+    let diff = NIT_m - T_BF_m;
+    I_min_LTV = I + diff + 0.001;
+  } else {
+    if(document.getElementById("ltv")) document.getElementById("ltv").innerHTML = "";
+  }
+
+  /* Affichage résultats */
+  let texteExtensionVisualisation = "";
+  if (choixExtensionA === "champ") {
+    texteExtensionVisualisation = "<span style='color:#6d28d9; font-weight:bold;'>ℹ️ Extension : Côté CHAMP uniquement</span><br>";
+  } else if (choixExtensionA === "voie") {
+    texteExtensionVisualisation = "<span style='color:#1d4ed8; font-weight:bold;'>ℹ️ Extension : Côté VOIE uniquement</span><br>";
+  } else {
+    if (AF !== tA && tA > 0) {
+      texteExtensionVisualisation = "<span style='color:#4b5563; font-weight:bold;'>ℹ️ Extension : Les 2 côtés (Centré)</span><br>";
+    }
+  }
+
+  if (showLTV) {
+    BLINDAGE = texteExtensionVisualisation + "<span style='color:red; font-weight:bold;'>" + raisonAlerte + "</span>";
+    if (Imini_Max_Alerte > 0 && B <= 3.0 && HF <= HF_seuil) {
+      BLINDAGE += "<br><span style='color:red; font-weight:bold;'>👉 Imini requis pour enlever blindage = " + Imini_Max_Alerte.toFixed(2) + " m</span>";
+    }
+    if (I_min_LTV !== null && I_min_LTV > I && B <= 3.0 && HF <= HF_seuil) {
+      BLINDAGE += "<br><span style='color:#FF6B6B; font-weight:bold;'>👉 I mini pour éviter LTV = " + I_min_LTV.toFixed(2) + " m</span>";
+    }
+  } else {
+    let Imini_D = I + (DMin - D);
+    let Imini_B = I + (B - BMax);
+    let Imini_limite = Math.max(Imini_D, Imini_B);
+    
+    BLINDAGE = texteExtensionVisualisation + "<span style='color:green; font-weight:bold;'>✅ PAS DE BLINDAGE</span>";
+    BLINDAGE += "<br><span style='color:purple; font-weight:bold;'>I mini avant Blindage = " + Imini_limite.toFixed(2) + " m</span>";
+  }
+
+  if(document.getElementById("tbf")) document.getElementById("tbf").innerHTML = BLINDAGE;
+  
+  if (document.getElementById("I_LTV")) {
+    document.getElementById("I_LTV").innerHTML = (I_min_LTV !== null) ? "👉 I mini sans LTV = " + I_min_LTV.toFixed(2) + " m" : "";
+  }
+  
+  if (verifBlindage) {
+    let alerteBlindageHTML = "";
+    if (distBlindage > 0) {
+      let lt_m = (parseFloat(document.getElementById("LT").value) || 0) / 100; 
+      let e_m = E / 100; 
+      let a_m = AF;      
+      let nouvImplBlindage = distBlindage + lt_m + (a_m / 2) - (e_m / 2);
+      let limiteImplantationDangers = (I_min_LTV !== null) ? I_min_LTV : (I + (DMin - D));
+      if (nouvImplBlindage < limiteImplantationDangers) {
+        alerteBlindageHTML = "<span style='color:#dc3545;'>🚨 LTV Blindage : Position insuffisante !</span><br>" +
+                             "<span style='color:#dc3545;'>👉 Nouv. Implantation selon blindage = " + nouvImplBlindage.toFixed(2) + " m</span>";
+      } else {
+        alerteBlindageHTML = "<span style='color:green;'>✅ Position blindage conforme (Pas de LTV)</span><br>" +
+                             "<span style='color:green;'>👉 Nouv. Implantation selon blindage = " + nouvImplBlindage.toFixed(2) + " m</span>";
+      }
+    }
+    if(document.getElementById("alerte_blindage_bloc")) document.getElementById("alerte_blindage_bloc").innerHTML = alerteBlindageHTML;
+  }
+
+  let p1p2_div = document.getElementById("info_p1p2_bloc");
+  if (!p1p2_div) {
+    const container = document.querySelector(".schema-container");
+    if (container) {
+      container.insertAdjacentHTML('afterend', '<div id="info_p1p2_bloc" style="text-align: center; font-size: 0.85em; font-weight: bold; margin-top: 8px; margin-bottom: 5px; color: #333;"></div>');
+      p1p2_div = document.getElementById("info_p1p2_bloc");
+    }
+  }
+  
+  if (p1p2_div) {
+    let p2_calc = ((T_BF_cm / 100) - ((ara - 31) / 100) + SOL).toFixed(2);
+    let p1_calc = P1_profondeur_dispo.toFixed(2);
+    p1p2_div.innerHTML = "📏 SOL jusqu'à P2 = <span style='color: #2563eb;'>" + p2_calc + " m</span> | P1 = <span style='color: #2563eb;'>" + p1_calc + " m</span>";
+  }
+}
+
+/* Sens P (amont/aval de SUP) : la valeur saisie/affichée reste toujours absolue,
+   le sens est géré séparément dans un champ caché */
+function normaliserValeurAbsolue(id) {
+  const input = document.getElementById(id);
+  if (!input || input.value === "") return;
+  const valeur = parseFloat(input.value);
+  if (!isNaN(valeur) && valeur < 0) input.value = Math.abs(valeur);
+}
+
+function majAffichageSensP(sens) {
+  const btn = document.getElementById("btnSensP");
+  const texte = document.getElementById("sensP_texte");
+  const hidden = document.getElementById("sensP");
+  if (!btn) return;
+  if (hidden) hidden.value = sens;
+  if (sens === "AVANT") {
+    btn.innerText = "←";
+    if (texte) texte.innerText = "P mesuré en amont (avant) de SUP";
+  } else {
+    btn.innerText = "→";
+    if (texte) texte.innerText = "P mesuré en aval (après) de SUP";
+  }
+}
+
+function toggleSensP() {
+  const hidden = document.getElementById("sensP");
+  const sensActuel = hidden ? hidden.value : "APRES";
+  majAffichageSensP(sensActuel === "APRES" ? "AVANT" : "APRES");
+  calculer();
+}
+
+/* Toggle signe SOL */
+function toggleSignSOL(){
+  let input = document.getElementById("SOL");
+  let val = parseFloat(input.value) || 0;
+  input.value = -val;
+  calculer();
+}
+  
+/* Partage WhatsApp */
+function shareWhatsApp(){
+  let numSupportInput = document.getElementById("selectSupport").value.trim();
+
+  if (numSupportInput === "") {
+    alert("⚠️ Saisie obligatoire :\nVous devez inscrire un N° Support avant de pouvoir exporter les résultats.");
+    document.getElementById("selectSupport").focus();
+    return;
+  }
+
+  let textePartage = "Résultat calcul blindage - Support N°: " + numSupportInput;
+  let zone = document.querySelector(".box");
+
+  html2canvas(zone).then(canvas => {
+    canvas.toBlob(function(blob){
+      let file = new File([blob], "calcul.png", {type: "image/png"});
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({
+          files: [file],
+          title: "Calcul BF",
+          text: textePartage
+        });
+      } else {
+        alert("Partage non supporté sur ce téléphone");
+      }
+    });
+  });
+} 
+
+/* Export PDF stylé */
+/* ============================================================
+   PAD DE SIGNATURE (souris + tactile)
+   ============================================================ */
+let sigCtx = null;
+let sigDessin = false;
+let sigVide = true;
+
+function initSignature() {
+  const canvas = document.getElementById("signatureCanvas");
+  if (!canvas) return;
+  const ratio = window.devicePixelRatio || 1;
+
+  function redimensionner() {
+    const dessinPrecedent = (!sigVide && canvas.width > 0) ? canvas.toDataURL("image/png") : null;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.max(1, rect.width * ratio);
+    canvas.height = Math.max(1, rect.height * ratio);
+    sigCtx = canvas.getContext("2d");
+    sigCtx.scale(ratio, ratio);
+    sigCtx.lineWidth = 2.2;
+    sigCtx.lineCap = "round";
+    sigCtx.lineJoin = "round";
+    sigCtx.strokeStyle = "#1f2937";
+    if (dessinPrecedent) {
+      const img = new Image();
+      img.onload = () => sigCtx.drawImage(img, 0, 0, rect.width, rect.height);
+      img.src = dessinPrecedent;
+    }
+  }
+  redimensionner();
+  window.addEventListener("resize", redimensionner);
+
+  function position(e) {
+    const rect = canvas.getBoundingClientRect();
+    const point = (e.touches && e.touches[0]) ? e.touches[0] : e;
+    return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+  }
+  function debut(e) {
+    e.preventDefault();
+    sigDessin = true;
+    const p = position(e);
+    sigCtx.beginPath();
+    sigCtx.moveTo(p.x, p.y);
+  }
+  function trace(e) {
+    if (!sigDessin) return;
+    e.preventDefault();
+    const p = position(e);
+    sigCtx.lineTo(p.x, p.y);
+    sigCtx.stroke();
+    sigVide = false;
+  }
+  function fin() { sigDessin = false; }
+
+  canvas.addEventListener("mousedown", debut);
+  canvas.addEventListener("mousemove", trace);
+  window.addEventListener("mouseup", fin);
+  canvas.addEventListener("touchstart", debut, { passive: false });
+  canvas.addEventListener("touchmove", trace, { passive: false });
+  canvas.addEventListener("touchend", fin);
+  canvas.addEventListener("touchcancel", fin);
+}
+
+function effacerSignature() {
+  const canvas = document.getElementById("signatureCanvas");
+  if (!canvas || !sigCtx) return;
+  sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+  sigVide = true;
+}
+
+initSignature();
+majAffichageSensP("APRES");
+
+/* Convertit le SVG du logo en image PNG (pour intégration dans le PDF) */
+function logoSVGversPNG(largeurPx, hauteurPx) {
+  return new Promise((resolve) => {
+    try {
+      const svgEl = document.getElementById("logoSNCF");
+      if (!svgEl) { resolve(null); return; }
+      const svgData = new XMLSerializer().serializeToString(svgEl);
+      const svg64 = btoa(unescape(encodeURIComponent(svgData)));
+      const image64 = "data:image/svg+xml;base64," + svg64;
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = largeurPx;
+        canvas.height = hauteurPx;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, largeurPx, hauteurPx);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      img.onerror = () => resolve(null);
+      img.src = image64;
+    } catch (e) {
+      resolve(null);
+    }
+  });
+}
+
+/* ============================================================
+   EXPORT PDF — document structuré (pas une capture d'écran)
+   ============================================================ */
+async function exporterPDF() {
+  const numSupportInput = document.getElementById("selectSupport").value.trim();
+
+  if (numSupportInput === "") {
+    alert("⚠️ Saisie obligatoire :\nVous devez inscrire un N° Support avant de pouvoir exporter les résultats.");
+    document.getElementById("selectSupport").focus();
+    return;
+  }
+
+  const btnPdf = document.getElementById("btnExportPdf");
+  const btnOriginalHTML = btnPdf.innerHTML;
+  btnPdf.innerHTML = "⏳...";
+  btnPdf.disabled = true;
+
+  try {
+    const g = (id) => document.getElementById(id);
+    const val = (id) => { const el = g(id); return el ? (el.value || "").toString().trim() : ""; };
+    const txt = (id) => { const el = g(id); return el ? (el.innerText || "").toString().trim() : ""; };
+
+    // Retire les émojis (non supportés par les polices PDF standard)
+    const clean = (s) => (s || "")
+      .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u2139\uFE0F]/gu, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+
+    // Découpe un bloc de résultat (avec <br>) en lignes, avec couleur déduite des émojis d'origine
+    function lignesColorees(id) {
+      const el = g(id);
+      if (!el) return [];
+      const brut = el.innerText || "";
+      return brut.split("\n").map(l => l.trim()).filter(l => l.length > 0).map(l => {
+        let couleur = [40, 40, 40];
+        if (l.includes("🚨")) couleur = [200, 30, 40];
+        else if (l.includes("✅")) couleur = [22, 140, 60];
+        else if (l.includes("👉")) couleur = [110, 40, 160];
+        else if (l.includes("ℹ️")) couleur = [90, 90, 90];
+        return { texte: clean(l), couleur };
+      });
+    }
+
+    const chantierSelect = g("selectChantier");
+    const nomChantier = (chantierSelect.selectedIndex >= 0 && chantierSelect.options[chantierSelect.selectedIndex])
+      ? chantierSelect.options[chantierSelect.selectedIndex].text
+      : "";
+    const typeSupport = clean(txt("display_type")).replace(/^Type\s*:\s*/i, "");
+    const dateStr = new Date().toLocaleString("fr-FR");
+
+    const verifVoie = g("verifVoie").checked;
+    const verifCarotte = g("carotte").checked;
+    const verifBlindage = g("blindageCheck").checked;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const marge = 10;
+    const violet = [124, 34, 112];
+    const rouge = [228, 29, 37];
+    const footerReserve = 14;
+
+    // Rasterise le logo SNCF (SVG -> PNG) pour l'intégrer au PDF
+    const logoDataUrl = await logoSVGversPNG(216, 153);
+    const logoRatio = 153 / 216;
+
+    /* ---- bandeau dégradé (couleurs identité visuelle) ---- */
+    function bandeauDegrade(y0, h) {
+      const bandes = 60;
+      for (let i = 0; i < bandes; i++) {
+        const t = i / (bandes - 1);
+        const r = Math.round(violet[0] + t * (rouge[0] - violet[0]));
+        const gC = Math.round(violet[1] + t * (rouge[1] - violet[1]));
+        const b = Math.round(violet[2] + t * (rouge[2] - violet[2]));
+        doc.setFillColor(r, gC, b);
+        doc.rect(pageW * i / bandes, y0, pageW / bandes + 0.6, h, 'F');
+      }
+    }
+
+    function enteteComplete() {
+      bandeauDegrade(0, 24);
+      if (logoDataUrl) {
+        const logoH = 15;
+        const logoW = logoH / logoRatio;
+        doc.addImage(logoDataUrl, "PNG", marge, 4.5, logoW, logoH);
+      }
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14.5);
+      doc.text("FICHE DE CONTROLE FOUILLE / BLINDAGE", pageW / 2, 9.5, { align: "center" });
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.text("SNCF Reseau  -  Outil FBM", pageW / 2, 15, { align: "center" });
+      doc.setFontSize(8.3);
+      doc.setFont("helvetica", "bold");
+      doc.text("Chantier : " + (nomChantier || "-"), marge, 21);
+      doc.text("Support : " + numSupportInput, pageW - marge, 21, { align: "right" });
+    }
+
+    function enteteAllegee(numPage) {
+      doc.setFillColor(violet[0], violet[1], violet[2]);
+      doc.rect(0, 0, pageW, 12, 'F');
+      if (logoDataUrl) {
+        const logoH = 8;
+        const logoW = logoH / logoRatio;
+        doc.addImage(logoDataUrl, "PNG", marge, 2, logoW, logoH);
+      }
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text("FICHE FOUILLE/BLINDAGE - Support " + numSupportInput, pageW / 2, 8, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text("(suite)", pageW - marge, 8, { align: "right" });
+    }
+
+    function piedDePage(numPage, totalPages) {
+      doc.setDrawColor(210, 210, 210);
+      doc.line(marge, pageH - 10, pageW - marge, pageH - 10);
+      doc.setFontSize(7);
+      doc.setTextColor(130, 130, 130);
+      doc.setFont("helvetica", "normal");
+      doc.text("Document genere automatiquement - a verifier avant usage", marge, pageH - 5);
+      doc.text("Page " + numPage + "/" + totalPages, pageW - marge, pageH - 5, { align: "right" });
+    }
+
+    let y = 0;
+    enteteComplete();
+    y = 30;
+    doc.setTextColor(70, 70, 70);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text("Genere le " + dateStr + (typeSupport ? "   -   Type : " + typeSupport : ""), marge, y);
+    y += 4;
+
+    // Vérifie qu'il reste assez de place, sinon ajoute une page (avec en-tête allégée)
+    function assurerPlace(hauteurNecessaire) {
+      if (y + hauteurNecessaire > pageH - footerReserve) {
+        doc.addPage();
+        enteteAllegee();
+        y = 18;
+      }
+    }
+
+    function titreSection(titre, couleur) {
+      assurerPlace(10);
+      doc.setFillColor(couleur[0], couleur[1], couleur[2]);
+      doc.rect(marge, y, pageW - marge * 2, 6.2, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(titre, marge + 2, y + 4.4);
+      y += 6.2 + 2;
+    }
+
+    // ---------- Section 1 : paramètres de fouille ----------
+    titreSection("PARAMETRES DE FOUILLE", violet);
+
+    const echValeur = (() => {
+      const sel = g("E_select");
+      if (sel && sel.style.display !== "none") {
+        const opt = sel.options[sel.selectedIndex];
+        return opt ? opt.text : sel.value;
+      }
+      return val("E") + " cm";
+    })();
+
+    const rowsFouille = [
+      ["Implantation (I)", val("I") ? val("I") + " m" : "-", txt("I_ref")],
+      ["Echantillon", echValeur || "-", txt("ECH_ref")],
+      ["Arasement (AR)", val("AR") ? val("AR") + " m" : "-", txt("AR_ref")],
+      ["Encastrement (Enc)", val("Enc") ? val("Enc") + " m" : "-", txt("Enc_ref")],
+      ["Cote A", val("AF") ? val("AF") + " m" : "-", txt("AF_ref")],
+      ["Cote B", val("B_Fouille") ? val("B_Fouille") + " m" : "-", txt("B_ref")],
+      ["Cote H", val("H_Fouille") ? val("H_Fouille") + " m" : "-", txt("H_ref")],
+      ["F", val("valF") || "-", txt("F_ref")],
+      ["P (" + ((val("sensP") === "AVANT") ? "amont" : "aval") + " de SUP)", val("valP") || "-", txt("P_ref")],
+      ["SUP", val("valSUP") || "-", txt("SUP_ref")],
+    ];
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: marge, right: marge, bottom: footerReserve },
+      head: [["Parametre", "Valeur saisie", "Reference"]],
+      body: rowsFouille,
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 1.8, textColor: [40, 40, 40], lineColor: [225, 225, 225] },
+      headStyles: { fillColor: violet, textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      columnStyles: { 2: { textColor: [22, 130, 60], fontStyle: 'bold' } },
+      didDrawPage: function () { /* pagination gérée par autotable elle-même */ }
+    });
+    y = doc.lastAutoTable.finalY + 5;
+
+    // ---------- Section 2 : configuration ----------
+    titreSection("CONFIGURATION", [90, 90, 90]);
+    doc.autoTable({
+      startY: y,
+      margin: { left: marge, right: marge, bottom: footerReserve },
+      body: [
+        ["Voies annoncees / interceptees (TES.D)", verifVoie ? "OUI" : "NON"],
+        ["Carottage", verifCarotte ? "OUI" : "NON"],
+        ["Blindage", verifBlindage ? "OUI" : "NON"],
+      ],
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 1.8 },
+      columnStyles: { 1: { fontStyle: 'bold', halign: 'center', cellWidth: 25 } },
+    });
+    y = doc.lastAutoTable.finalY + 5;
+
+    // ---------- Section 3 (option) : carottage ----------
+    if (verifCarotte) {
+      titreSection("CAROTTAGE", [217, 119, 6]);
+      const rowsCarotte = [
+        ["A carotte", val("A_carotte") + " cm"],
+        ["B carotte", val("B_carotte") + " cm"],
+        ["Encastrement", val("H_carotte") + " cm"],
+        ["Plus petit e1", val("E1_carotte") + " cm"],
+        ["Plus petit e2", val("E2_carotte") + " cm"],
+        ["P carotte", val("P_carotte") + " cm"],
+        ["Profile", txt("display_nom") || "-"],
+        ["Largeur profile", txt("display_larg") + " mm"],
+        ["Profondeur profile", txt("display_prof") + " mm"],
+        ["e1 cote A (haut/bas)", txt("calc_S1")],
+        ["e1 cote B (gauche/droite)", txt("calc_S2")],
+        ["e2 cote A (haut/bas)", txt("calc_S3")],
+        ["e2 cote B (gauche/droite)", txt("calc_S4")],
+      ];
+      doc.autoTable({
+        startY: y,
+        margin: { left: marge, right: marge, bottom: footerReserve },
+        body: rowsCarotte,
+        theme: 'grid',
+        styles: { fontSize: 7.8, cellPadding: 1.6 },
+        columnStyles: { 1: { fontStyle: 'bold', halign: 'right' } },
+      });
+      y = doc.lastAutoTable.finalY + 5;
+    }
+
+    // ---------- Section 4 (option) : blindage ----------
+    if (verifBlindage) {
+      titreSection("BLINDAGE", [3, 105, 161]);
+      const rowsBlindage = [
+        ["Bord blindage - bord rail", val("dist_blindage") + " m"],
+        ["Traverse (LT)", val("LT") + " cm"],
+        ["Sol -> Massif", val("SOL") + " m"],
+        ["NiT -> Hbis", val("NIT") + " m"],
+      ];
+      doc.autoTable({
+        startY: y,
+        margin: { left: marge, right: marge, bottom: footerReserve },
+        body: rowsBlindage,
+        theme: 'grid',
+        styles: { fontSize: 8, cellPadding: 1.8 },
+        columnStyles: { 1: { fontStyle: 'bold', halign: 'right' } },
+      });
+      y = doc.lastAutoTable.finalY + 3;
+
+      const lignesAlerteBlindage = lignesColorees("alerte_blindage_bloc");
+      if (lignesAlerteBlindage.length > 0) {
+        assurerPlace(6 * lignesAlerteBlindage.length + 4);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        lignesAlerteBlindage.forEach(l => {
+          doc.setTextColor(l.couleur[0], l.couleur[1], l.couleur[2]);
+          doc.text(l.texte, marge + 1, y);
+          y += 4.6;
+        });
+        y += 2;
+      }
+    }
+
+    // ---------- Section 5 : volumes ----------
+    titreSection("VOLUMES", violet);
+    const rowsVolumes = [["Volume theorique", txt("vol_prevu") || "-"], ["Volume reel", txt("vol_modifie") || "-"]];
+    if (g("display_vol_carotte") && g("display_vol_carotte").style.display !== "none") {
+      rowsVolumes.push(["Beton net (hors carotte)", txt("vol_carotte") || "-"]);
+    }
+    doc.autoTable({
+      startY: y,
+      margin: { left: marge, right: marge, bottom: footerReserve },
+      body: rowsVolumes,
+      theme: 'grid',
+      styles: { fontSize: 8.5, cellPadding: 2 },
+      columnStyles: { 1: { fontStyle: 'bold', halign: 'right', textColor: [0, 100, 180] } },
+    });
+    y = doc.lastAutoTable.finalY + 5;
+
+    // ---------- Section 6 : résultat blindage / LTV ----------
+    titreSection("RESULTAT", rouge);
+
+    const lignesTbf = lignesColorees("tbf");
+    const ligneLtv = clean(txt("ltv"));
+    const ligneILtv = clean(txt("I_LTV"));
+
+    assurerPlace(6 * (lignesTbf.length + (ligneLtv ? 1 : 0) + (ligneILtv ? 1 : 0)) + 6);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    lignesTbf.forEach(l => {
+      doc.setTextColor(l.couleur[0], l.couleur[1], l.couleur[2]);
+      doc.text(l.texte, marge + 1, y);
+      y += 5;
+    });
+    if (ligneLtv) {
+      doc.setTextColor(200, 30, 40);
+      doc.text(ligneLtv, marge + 1, y);
+      y += 5;
+    }
+    if (ligneILtv) {
+      doc.setTextColor(110, 40, 160);
+      doc.text(ligneILtv, marge + 1, y);
+      y += 5;
+    }
+    y += 2;
+
+    // ---------- Section 7 : seuils réglementaires ----------
+    const seuils = [
+      ["BMax", clean(txt("BMax_display"))],
+      ["DMin", clean(txt("DMin_display"))],
+      ["Hmax", clean(txt("Hmax_display"))],
+    ];
+    doc.autoTable({
+      startY: y,
+      margin: { left: marge, right: marge, bottom: footerReserve },
+      head: [["Seuil", "Valeur"]],
+      body: seuils,
+      theme: 'grid',
+      styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
+      headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: 'bold' },
+      columnStyles: { 1: { fontStyle: 'bold', textColor: [22, 130, 60] } },
+    });
+    y = doc.lastAutoTable.finalY + 8;
+
+    // ---------- Zone de signature ----------
+    const nomRedacteur = val("nomRedacteur");
+    const canvasSignature = g("signatureCanvas");
+    const signatureRenseignee = canvasSignature && !sigVide;
+
+    assurerPlace(signatureRenseignee ? 30 : 16);
+    doc.setDrawColor(180, 180, 180);
+    doc.setFontSize(7.8);
+    doc.setTextColor(90, 90, 90);
+    doc.setFont("helvetica", "bold");
+    doc.text("Rédigé par : " + (nomRedacteur || "-"), marge, y);
+    y += 5;
+
+    doc.setFont("helvetica", "normal");
+    doc.text("Signature :", marge, y + 3);
+    if (signatureRenseignee) {
+      const sigData = canvasSignature.toDataURL("image/png");
+      const sigW = 55;
+      const sigH = sigW * (canvasSignature.height / canvasSignature.width);
+      doc.setDrawColor(210, 210, 210);
+      doc.rect(marge + 24, y - 5, sigW, Math.min(sigH, 24));
+      doc.addImage(sigData, "PNG", marge + 24, y - 5, sigW, Math.min(sigH, 24));
+      y += Math.min(sigH, 24) + 2;
+    } else {
+      doc.line(marge + 24, y + 3, marge + 90, y + 3);
+      y += 6;
+    }
+
+    // ---------- Pied de page sur toutes les pages ----------
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      piedDePage(p, totalPages);
+    }
+
+    const nomFichier = "FBM_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
+    doc.save(nomFichier);
+  } catch (err) {
+    console.error(err);
+    alert("⚠️ Erreur lors de la génération du PDF :\n" + err.message);
+  } finally {
+    btnPdf.innerHTML = btnOriginalHTML;
+    btnPdf.disabled = false;
+  }
+}
+
+function chargerChantier1() {
+
+  const index = document.getElementById("selectChantier").value;
+
+  if (index === "" || !baseChantiers[index]) return;
+
+  const data = baseChantiers[index];
+
+  console.log("Chargement chantier :", data); // 🔥 debug important
+
+  const supportInput = document.getElementById("selectSupport");
+
+  if (supportInput) {
+    supportInput.value = data.support ?? "";
+  }
+
+  document.getElementById("I").value = data.I ?? 0;
+  document.getElementById("AF").value = data.AF ?? 0;
+  document.getElementById("B_Fouille").value = data.B ?? 0;
+  document.getElementById("H_Fouille").value = data.H ?? 0;
+  document.getElementById("AR").value = data.AR ?? 0;
+  document.getElementById("Enc").value = data.Enc ?? 0;
+
+  calculer();
+}
+function chargerChantier() {
+  const index = document.getElementById("selectChantier").value;
+  if (index === "" || !baseChantiers[index]) return;
+
+  const data = baseChantiers[index];
+  const selectSupport = document.getElementById("selectSupport");
+
+  // 1. Mise à jour de la liste des supports disponibles pour ce chantier
+  // On suppose que chaque chantier a une propriété 'supports' qui est un tableau
+  selectSupport.innerHTML = '<option value="">Choisir un support...</option>';
+  
+  if (data.supports && Array.isArray(data.supports)) {
+    data.supports.forEach(supportNom => {
+      const option = document.createElement("option");
+      option.value = supportNom;
+      option.text = supportNom;
+      selectSupport.appendChild(option);
+    });
+  }
+
+  // 2. Sélectionner le premier support par défaut si vous le souhaitez
+  if (selectSupport.options.length > 1) {
+    selectSupport.selectedIndex = 1;
+    chargerSupport(); // Appeler la fonction qui remplit les inputs
+  } else {
+    resetChamps(); // Si aucun support, on vide tout
+  }
+}
+function chargerSupport() {
+    const selectSupport = document.getElementById("selectSupport");
+    const data = baseSupports.find(s => s.support === selectSupport.value);
+
+    if (!data) return;
+
+    // Fonction utilitaire pour afficher 0 au lieu de vide
+    const valOuVide = (val) => (val !== undefined && val !== null && val !== "") ? val : "";
+
+    // 1. Remplissage des champs de saisie (inputs)
+    document.getElementById("valF").value = valOuVide(data.F);
+    document.getElementById("valSUP").value = valOuVide(data.SUP);
+    document.getElementById("I").value = valOuVide(data.I);
+    document.getElementById("AF").value = valOuVide(data.AF);
+    document.getElementById("B_Fouille").value = valOuVide(data.B);
+    document.getElementById("H_Fouille").value = valOuVide(data.H);
+    document.getElementById("AR").value = valOuVide(data.AR);
+    document.getElementById("Enc").value = valOuVide(data.Enc);
+
+    // 2. Remplissage des références (spans grisés)
+    document.getElementById("F_ref").innerText = valOuVide(data.F);
+    document.getElementById("SUP_ref").innerText = valOuVide(data.SUP);
+    document.getElementById("I_ref").innerText = valOuVide(data.I);
+    document.getElementById("AF_ref").innerText = valOuVide(data.AF);
+    document.getElementById("B_ref").innerText = valOuVide(data.B);
+    document.getElementById("H_ref").innerText = valOuVide(data.H);
+    document.getElementById("AR_ref").innerText = valOuVide(data.AR);
+    document.getElementById("Enc_ref").innerText = valOuVide(data.Enc);
+
+    // 3. Gestion de P (Valeur absolue pour l'affichage)
+    const valP = (data.P !== undefined && data.P !== null) ? parseFloat(data.P) : 0;
+    const valeurAbsolueP = Math.abs(valP);
+
+    document.getElementById("P_ref_N").innerText = valeurAbsolueP;
+    document.getElementById("P_ref_S").innerText = valeurAbsolueP;
+
+    const blocN = document.getElementById("bloc-N");
+    const blocS = document.getElementById("bloc-S");
+
+    if (valP >= 0) {
+        document.getElementById("valP_S").value = valeurAbsolueP;
+        document.getElementById("valP_N").value = "";
+        blocS.style.display = "block";
+        blocN.style.display = "none";
+    } else {
+        document.getElementById("valP_N").value = valeurAbsolueP;
+        document.getElementById("valP_S").value = "";
+        blocN.style.display = "block";
+        blocS.style.display = "none";
+    }
+
+    // 4. Échantillonnage et cases à cocher
+    if (typeof appliquerEchantillon === "function") {
+        appliquerEchantillon(data.ECH);
+    }
+    
+    document.getElementById("blindageCheck").checked = (data.BLIND === "OUI");
+    document.getElementById("carotte").checked = (data.CARO === "OUI");
+
+    // 5. Mise à jour finale
+    if (typeof refreshBlocs === "function") refreshBlocs();
+    calculer();
+}
+
+
+
+
+
+/* Correspondance ECH (base support) <-> profils du popup Echantillon */
+const profilsEchantillon = {
+  "200":    { valeur: "200",     largeur: "200", nom: "HE200"   },
+  "220":    { valeur: "220",     largeur: "220", nom: "HE220"   },
+  "240":    { valeur: "240",     largeur: "240", nom: "HE240"   },
+  "260":    { valeur: "260",     largeur: "260", nom: "HE260"   },
+  "280":    { valeur: "280",     largeur: "280", nom: "HE280"   },
+  "300":    { valeur: "300",     largeur: "300", nom: "HE300"   },
+  "320":    { valeur: "320",     largeur: "300", nom: "HE320"   },
+  "JHE280": { valeur: "280",     largeur: "710", nom: "JHE280"  },
+  "JHE320": { valeur: "320",     largeur: "610", nom: "JHE320"  },
+  "Epingle":{ valeur: "Epingle", largeur: "0",   nom: "Epingle" }
+};
+
+function appliquerEchantillon(ech) {
+  if (ech === undefined || ech === null || ech === "") return;
+
+  const cle = String(ech).trim();
+  const profil = profilsEchantillon[cle];
+
+  if (profil) {
+    // Profil reconnu (ex: 240 -> HE240) : on réutilise la logique du popup
+    validerEchantillonPopup(profil.valeur, profil.largeur, profil.nom);
+  } else {
+    // Valeur non reconnue -> on la place en saisie manuelle
+    validerEchantillonPopup("manuel", "0", "Autre...");
+    document.getElementById("E").value = cle;
+    document.getElementById("display_prof").innerText = cle;
+    calculer();
+  }
+}
+function gérerVisibilitéP() {
+    // Récupérer la valeur saisie (en nombre)
+
+
+
+    const valP = parseFloat(data.P) || 0;
+    const valeurAbsolueP = Math.abs(valP).toString();
+    
+    const blocN = document.getElementById("bloc-N");
+    const blocS = document.getElementById("bloc-S");
+
+    if (valeurAbsolueP >= 0) {
+        blocS.style.display = "block";
+        blocN.style.display = "none";
+    } else {
+        blocS.style.display = "none";
+        blocN.style.display = "block";
+    }
+}
+
+function chargerSupport1() {
+    const selectSupport = document.getElementById("selectSupport");
+    const data = baseSupports.find(s => s.support === selectSupport.value);
+
+    if (!data) return;
+
+    // 1. Remplissage des champs simples
+    document.getElementById("valF").value = data.F || "";
+    document.getElementById("valSUP").value = data.SUP || "";
+    document.getElementById("I").value = data.I || "";
+    document.getElementById("AF").value = data.AF || "";
+    document.getElementById("B_Fouille").value = data.B || "";
+    document.getElementById("H_Fouille").value = data.H || "";
+    document.getElementById("AR").value = data.AR || "";
+    document.getElementById("Enc").value = data.Enc || "";
+
+    // 2. Remplissage des références (Textes verts)
+    // On remplit TOUS les spans de référence pour être sûr que la donnée est présente
+    document.getElementById("F_ref").innerText = data.F || "";
+    document.getElementById("SUP_ref").innerText = data.SUP || "";
+    document.getElementById("P_ref_N").innerText = data.P || ""; // Réf Négatif
+    document.getElementById("P_ref_S").innerText = data.P || ""; // Réf Positif
+    document.getElementById("I_ref").innerText = data.I || "";
+    document.getElementById("AF_ref").innerText = data.AF || "";
+    document.getElementById("B_ref").innerText = data.B || "";
+    document.getElementById("H_ref").innerText = data.H || "";
+    document.getElementById("AR_ref").innerText = data.AR || "";
+    document.getElementById("Enc_ref").innerText = data.Enc || "";
+
+// --- LOGIQUE P ABSOLUE ---
+    // On convertit la valeur en nombre et on prend sa valeur absolue
+    const valP = parseFloat(data.P) || 0;
+    const valeurAbsolueP = Math.abs(valP).toString();
+    
+    // On remplit les références avec la valeur absolue
+    document.getElementById("P_ref_N").innerText = valeurAbsolueP;
+    document.getElementById("P_ref_S").innerText = valeurAbsolueP;
+
+    // On affiche le bon bloc et on remplit l'input avec la valeur absolue
+    const blocN = document.getElementById("bloc-N");
+    const blocS = document.getElementById("bloc-S");
+
+    if (valP >= 0) {
+        document.getElementById("valP_S").value = valeurAbsolueP;
+        document.getElementById("valP_N").value = ""; 
+        blocS.style.display = "block";
+        blocN.style.display = "none";
+    } else {
+        document.getElementById("valP_N").value = valeurAbsolueP;
+        document.getElementById("valP_S").value = "";
+        blocN.style.display = "block";
+        blocS.style.display = "none";
+    }
+
+    // 4. Lancer les calculs finaux et mises à jour
+    if (window.refreshBlocs) window.refreshBlocs();
+    calculer();
+}
+
+function chargerSupport2() {
+    const selectSupport = document.getElementById("selectSupport");
+    const data = baseSupports.find(s => s.support === selectSupport.value);
+
+    if (!data) return;
+
+    // 1. Remplissage des champs de saisie standards
+    document.getElementById("valF").value = data.F || "";
+    document.getElementById("valSUP").value = data.SUP || "";
+    document.getElementById("I").value = data.I || "";
+    document.getElementById("AF").value = data.AF || "";
+    document.getElementById("B_Fouille").value = data.B || "";
+    document.getElementById("H_Fouille").value = data.H || "";
+    document.getElementById("AR").value = data.AR || "";
+    document.getElementById("Enc").value = data.Enc || "";
+
+    // 2. Remplissage des références (Textes grisés)
+    document.getElementById("F_ref").innerText = data.F || "";
+    document.getElementById("SUP_ref").innerText = data.SUP || "";
+    document.getElementById("I_ref").innerText = data.I || "";
+    document.getElementById("AF_ref").innerText = data.AF || "";
+    document.getElementById("B_ref").innerText = data.B || "";
+    document.getElementById("H_ref").innerText = data.H || "";
+    document.getElementById("AR_ref").innerText = data.AR || "";
+    document.getElementById("Enc_ref").innerText = data.Enc || "";
+
+    // 3. Gestion intelligente de P (Valeur absolue pour l'affichage)
+    const valP = parseFloat(data.P) || 0;
+    const valeurAbsolueP = Math.abs(valP);
+
+    // Mettre à jour les deux spans de référence (même si un est caché)
+    document.getElementById("P_ref_N").innerText = valeurAbsolueP;
+    document.getElementById("P_ref_S").innerText = valeurAbsolueP;
+
+    // Gérer l'affichage conditionnel des blocs P
+    const blocN = document.getElementById("bloc-N");
+    const blocS = document.getElementById("bloc-S");
+
+    if (valP >= 0) {
+        // P positif : on affiche le bloc S
+        document.getElementById("valP_S").value = valeurAbsolueP;
+        document.getElementById("valP_N").value = ""; // On vide l'autre par sécurité
+        blocS.style.display = "block";
+        blocN.style.display = "none";
+    } else {
+        // P négatif : on affiche le bloc N
+        document.getElementById("valP_N").value = valeurAbsolueP;
+        document.getElementById("valP_S").value = ""; // On vide l'autre par sécurité
+        blocN.style.display = "block";
+        blocS.style.display = "none";
+    }
+
+    // 4. Gestion de l'échantillonnage et des cases à cocher
+    if (typeof appliquerEchantillon === "function") {
+        appliquerEchantillon(data.ECH);
+    }
+    
+    // Mise à jour des cases à cocher blindage/carotte
+    document.getElementById("blindageCheck").checked = (data.BLIND === "OUI");
+    document.getElementById("carotte").checked = (data.CARO === "OUI");
+
+    // 5. Rafraîchissement final
+    if (window.refreshBlocs) window.refreshBlocs();
+    calculer();
+}
+
+
+function initChantiers() {
+  const select = document.getElementById("selectChantier");
+
+  const chantiersUniques = [...new Set(baseSupports.map(s => s.chantier))];
+
+  chantiersUniques.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    select.appendChild(opt);
+  });
+}
+
+function resetSaisieAvantSupport() {
+
+  // Champs numériques remplis par un support
+  document.getElementById("I").value = "";
+  document.getElementById("AR").value = "";
+  document.getElementById("Enc").value = "";
+  document.getElementById("AF").value = "";
+  document.getElementById("B_Fouille").value = "";
+  document.getElementById("H_Fouille").value = "";
+
+  document.getElementById("display_type").innerText = "";
+  document.getElementById("AF_ref").innerText = "";
+  document.getElementById("B_ref").innerText = "";
+  document.getElementById("H_ref").innerText = "";
+  document.getElementById("I_ref").innerText = "";
+  document.getElementById("AR_ref").innerText = "";
+  document.getElementById("Enc_ref").innerText = "";
+  document.getElementById("ECH_ref").innerText = "";
+
+  // Echantillon
+  let selectE = document.getElementById("E_select");
+  let inputE = document.getElementById("E");
+  if (selectE) {
+    selectE.querySelectorAll('.temp-option').forEach(opt => opt.remove());
+    selectE.value = "";
+    selectE.removeAttribute('data-largeur');
+  }
+  if (inputE) {
+    inputE.value = "";
+    inputE.style.display = "none";
+  }
+  document.getElementById("display_nom").innerText = "-";
+  document.getElementById("display_larg").innerText = "0";
+  document.getElementById("display_prof").innerText = "0";
+  largeurEchantillon = 0;
+  profondeurEchantillon = 0;
+
+  document.getElementById("blindageCheck").checked = false;
+  document.getElementById("carotte").checked = false;
+  if (window.refreshBlocs) window.refreshBlocs();
+
+  calculer();
+}
+
+function filtrerSupports() {
+  const chantier = document.getElementById("selectChantier").value;
+  const supportSelect = document.getElementById("selectSupport");
+
+  resetSaisieAvantSupport();
+
+  supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
+
+  const filtres = baseSupports.filter(s => s.chantier === chantier);
+
+  filtres.forEach(s => {
+    let opt = document.createElement("option");
+    opt.value = s.support;
+    opt.textContent = s.support;
+    supportSelect.appendChild(opt);
+  });
+}
+
+
+/* Gestion saisie échantillon */
+function gererSaisieEchantillon() {
+  let selectE = document.getElementById("E_select");
+  let inputE = document.getElementById("E");
+  if (selectE && (selectE.value === "manual" || selectE.value === "manuel")) {
+    inputE.style.display = "block";
+    inputE.value = ""; 
+    inputE.focus();
+  } else if(inputE) {
+    inputE.style.display = "none";
+  }
+  calculer();
+}
+/* ==========================================
+   GESTION AFFICHAGE CAROTTE / BLINDAGE
+   ========================================== */
+document.addEventListener("DOMContentLoaded", function () {
+
+    const chkCarotte = document.getElementById("carotte");
+    const chkBlindage = document.getElementById("blindageCheck");
+
+    const blocCarotte = document.getElementById("bloc_saisie_carotte");
+    const blocBlindage = document.getElementById("bloc_saisie_blindage");
+    const blocTraverseNit = document.getElementById("bloc_traverse_nit"); // Nouveau
+
+function resetChamps() {
+document.getElementById("valF").value = "";
+  document.getElementById("valP").value = "";
+  document.getElementById("valSUP").value = "";
+  majAffichageSensP("APRES");
+  
+  document.getElementById("F_ref").innerText = "";
+  document.getElementById("P_ref").innerText = "";
+  document.getElementById("SUP_ref").innerText = "";
+  document.getElementById("selectSupport").value = "";
+  document.getElementById("I").value = "";
+  document.getElementById("AF").value = "";
+  document.getElementById("B_Fouille").value = "";
+  document.getElementById("H_Fouille").value = "";
+  document.getElementById("AR").value = "";
+  document.getElementById("Enc").value = "";
+
+  calculer();
+}
+    function refreshBlocs() {
+
+        if (chkCarotte.checked) {
+            blocCarotte.style.display = "flex";
+
+        } else {
+            blocCarotte.style.display = "none";
+			
+        }
+
+        if (chkBlindage.checked) {
+            blocBlindage.style.display = "flex";
+			blocTraverseNit.style.display = "flex"; // Affiche si blindage coché
+        } else {
+            blocBlindage.style.display = "none";
+			blocTraverseNit.style.display = "none"; // Masque sinon
+        }
+    }
+
+    chkCarotte.addEventListener("change", refreshBlocs);
+    chkBlindage.addEventListener("change", refreshBlocs);
+
+    window.refreshBlocs = refreshBlocs;
+
+    refreshBlocs();
+});
+document.addEventListener('focusin', function(e) {
+
+    if (e.target.type === 'number') {
+        e.target.select();
+    }
+
+});
+// Au chargement complet de la page
+window.addEventListener('load', function() {
+    const selectChantier = document.getElementById("selectChantier");
+
+    // 1. On vérifie s'il y a bien un chantier à sélectionner (index 1)
+    if (selectChantier && selectChantier.options.length > 1) {
+        
+        // 2. On change la sélection
+        selectChantier.selectedIndex = 1;
+        
+        // 3. ON SIMULE L'ÉVÉNEMENT "change"
+        // C'est cette ligne qui déclenche la logique liée à la sélection
+        const event = new Event('change');
+        selectChantier.dispatchEvent(event);
+        
+        // 4. Au cas où l'événement n'est pas capté, on appelle la fonction manuellement
+        chargerChantier();
+    }
+});
+
+</script>
+</body>  
+</html>
