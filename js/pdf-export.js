@@ -341,7 +341,7 @@ async function exporterPDF() {
 
     // ---------- Section 7 : seuils réglementaires ----------
     const seuils = [
-      ["BMax", clean(txt("BMax_display"))],
+      ["BMax", clean(txt("BMax"))],
       ["DMin", clean(txt("DMin_display"))],
       ["Hmax", clean(txt("Hmax_display"))],
     ];
