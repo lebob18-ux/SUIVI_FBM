@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outil_FBM_2</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="box">
+<div class="header-row">
+<div style="display:flex; justify-content:center; margin-bottom:8px;">
+<img id="logoSNCF" src="assets/logo.svg" width="100" height="100" alt="Logo SNCF">
+</div>
+
+  <h3 id="pageTitle">SUIVI FBM</h3>
+  <div style="display:flex; gap:5px;">
+    <button onclick="shareWhatsApp()">📲 Partage</button>
+    <button id="btnExportPdf" onclick="exporterPDF()">📄 PDF</button>
+  </div>
+</div>
+
+<div class="header-row">
+<select id="selectChantier" onchange="filtrerSupports()">
+  <option value="">-- choisir chantier --</option>
+</select>
+<select id="selectSupport" onchange="chargerSupport()">
+  <option value="">-- choisir support --</option>
+</select>
+</div>
+
+<div style="height: 5px;"></div>
+
+<div class="single-field" style="margin-left: 5px; margin-bottom: 5px;">  
+  <div style="display: flex; flex-direction: row; gap: 15px; align-items: center; width: 100%;">
+    <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold;">  
+      <input type="checkbox" id="verifVoie" checked onchange="calculer()"> 🚆TES.D  
+    </label>  
+    <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold;">  
+      <input type="checkbox" id="carotte" onchange="calculer();"> 🥕CAROTTE  
+    </label>
+    <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; color: #dc3545;">  
+      <input type="checkbox" id="blindageCheck" onchange="calculer();"> 🛡️BLINDAGE  
+    </label>
+	<span id="display_type" style="font-size:0.85em; font-weight:bold; color:#7C2270; white-space:nowrap;"></span>
+  </div>
+</div> 
+
+<div class="row" style="display: flex !important; flex-direction: row !important; justify-content: space-between; width: 100%; margin-bottom: 5px;">  
+  <div class="field" style="width: 23% !important;">
+    <label>Implantation</label>
+    <input type="number" id="I" step="any" oninput="calculer()" onkeydown="passerAEchantillon(event)">
+    <span class="ref" id="I_ref"></span>
+  </div>  
+  
+  <div class="field" style="width: 23% !important;">
+    <label>Echantillon</label>
+    <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
+    <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="Saisir en cm" style="display: none; margin-top: 5px; width: 100%;">
+    <span class="ref" id="ECH_ref"></span>
+  </div>  
+  
+  <div class="field" style="width: 23% !important;">
+    <label>Arasement</label>
+    <input type="number" id="AR" oninput="calculer()">
+    <span class="ref" id="AR_ref"></span>
+  </div>  
+  
+<div class="field" style="width: 23% !important;">
+
+<label id="labelEnc">Encastrement</label>
+
+    <input type="number" id="Enc" onblur="calculer()">
+    <span class="ref" id="Enc_ref"></span>
+</div>  
+</div>
+  
+<div class="row" style="gap: 3px; justify-content: space-between;">  
+  <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
+    <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">A</label></div>
+    <input type="number" id="AF" step="any" readonly onclick="gererChangementA()" style="width: 100%; padding: 5px 2px; font-size: 0.8em; background: #fff; cursor: pointer; font-weight: bold;">
+	<span class="ref" id="AF_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
+  </div>  
+  <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
+    <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">B</label></div>
+    <input type="number" id="B_Fouille" step="any" oninput="calculer()" style="width: 100%; padding: 5px 2px; font-size: 0.8em;">
+	<span class="ref" id="B_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
+  </div>   
+  <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
+    <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">H</label></div>
+    <input type="number" id="H_Fouille" step="any" oninput="calculer()" style="width: 100%; padding: 5px 2px; font-size: 0.8em;">
+	<span class="ref" id="H_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
+  </div>
+</div>
+
+
+
+
+
+
+<div class="row" style="margin-top: 5px; justify-content: space-between; align-items: center;"> 
+  <div class="field compact" style="width: 25% !important;">
+    <label>F</label>
+	<input type="number" id="valF" oninput="calculer()">
+    <span class="ref" id="F_ref" style="margin: 0 !important; font-size: 0.7em !important;"></span>	
+  </div>  
+  
+<div id="bloc-N" style="width: 30% !important; display: none;">
+  <label>Imp depuis </label>
+  <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
+  <span class="ref" id="P_ref_N" style="margin: 0 !important; font-size: 0.7em !important;"></span>
+</div>
+
+
+	  <div class="field compact" style="width: 30% !important;">
+    <label>Support référent</label>
+    <input type="text" id="valSUP" oninput="calculer()" disabled>
+    <span class="ref" id="SUP_ref" style="margin: 0 !important; font-size: 0.7em !important;"></span>
+  </div>	
+	
+<div id="bloc-S" style="width: 30% !important; display: none;">
+  <label>Imp depuis </label>
+  <input type="text" id="valP_S" oninput="gérerVisibilitéP()">
+  <span class="ref" id="P_ref_S" style="margin: 0 !important; font-size: 0.7em !important;"></span>
+</div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #ffeba2; width: 95% !important; flex-direction: column; gap: 8px;"> 
+  <div class="row" style="display: flex; justify-content: space-between; width: 100%;">
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">A (cm)</label><input type="number" id="A_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">B (cm)</label><input type="number" id="B_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Encastrement</label><input type="number" id="H_carotte" readonly style="background: #e9ecef; cursor: not-allowed;"></div>
+  </div>
+  <div class="row" style="display: flex; justify-content: start; gap: 15px; width: 100%;">
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Plus petit e1(cm)</label><input type="number" id="E1_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();"></div>
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Plus petit e2(cm)</label><input type="number" id="E2_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();"></div>
+    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">P (cm)</label><input type="number" id="P_carotte" readonly style="background: #e9ecef; cursor: not-allowed;"></div>
+  </div>
+  <div id="info_echantillon_bloc" style="margin: 10px 0; padding: 8px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; text-align: center; font-size: 0.85em;">
+    <span style="color: #666;">Profilé : </span><span id="display_nom" style="font-weight:bold; color:#000;">-</span> | 
+    <span style="color: #666;">Larg : </span><span id="display_larg" style="font-weight:bold; color:#d97706;">0</span> mm | 
+    <span style="color: #666;">Prof : </span><span id="display_prof" style="font-weight:bold; color:#d97706;">0</span> mm
+  </div>
+  <div id="calculs_carotte_grid" style="display: none; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; font-size: 0.8em;">
+    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e1 Cote A:↕ <span id="calc_S1" style="font-weight:bold;">0.00</span></div>
+    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e1 Cote B:↔ <span id="calc_S2" style="font-weight:bold;">0.00</span></div>
+    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote A:↕ <span id="calc_S3" style="font-weight:bold;">0.00</span></div>
+    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote B:↔ <span id="calc_S4" style="font-weight:bold;">0.00</span></div>
+  </div> 
+</div> 
+ 
+ 
+<div id="bloc_saisie_blindage" style="display: none; background: #e0f2fe; padding: 6px 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #93c5fd; width: 95% !important; flex-direction: column; gap: 4px;">  
+  <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; gap: 6px;">
+    <label style="color: #0369a1; font-weight: bold; font-size: 0.8em; white-space: nowrap; flex: 1;">Bord blindage bord rail (m)</label>
+    <input type="number" id="dist_blindage" step="any" style="width: 75px !important; padding: 4px; border-radius: 4px; border: 1px solid #ccc; text-align: center;" onclick="this.select()" oninput="calculer()">
+  </div>
+  
+  <div id="bloc_traverse_nit" class="row" style="display: none;">  
+  <div class="field"><label>Traverse</label><input type="number" id="LT" value="40" oninput="calculer()"></div>  
+  <div class="field">
+    <label>Sol-->Massif</label>
+    <div style="display:flex; gap:5px;">
+      <button type="button" onclick="toggleSignSOL()">±</button>
+      <input type="number" id="SOL" step="any" value="0" oninput="calculer()" style="flex:1;">
+    </div>
+  </div>
+  <div class="field"><label>NiT-->Hbis</label><input type="number" id="NIT" readonly></div>  
+</div>
+  
+  
+  
+  
+  <div id="alerte_blindage_bloc" style="margin-top: 2px; font-size: 0.85em; font-weight: bold; text-align: left;"></div>
+</div>
+
+
+<div class="result" style="margin-top: 10px; padding: 8px; border: 1px dashed #bbb; border-radius: 8px; background: #fafafa;">
+  <div style="display: flex; justify-content: space-between; margin-bottom: 4px; flex-wrap: wrap; gap: 5px;">
+    <span>🧱 Th: <span id="vol_prevu" style="color: #008000; font-weight: bold;">0.00 m³</span></span>
+    <span>🧱 Réel: <span id="vol_modifie" style="color: #007bff; font-weight: bold;">0.00 m³</span></span>
+    <span id="display_vol_carotte" style="display: none;">🧱 Béton Net sans 🥕: <span id="vol_carotte" style="color: #d97706; font-weight: bold;">0.00 m³</span></span>
+  </div>
+</div>
+
+<div class="result">  
+  <div id="tbf"></div>  
+  <div id="ltv" style="margin-top:4px; font-weight:bold; color:teal;"></div>
+  <div id="I_LTV" style="margin-top:4px; font-weight:bold;"></div>  
+</div>
+
+<div class="result">  
+  <div class="result-line" id="bdLine">  
+    <span id="bf"></span>  
+    <span id="BMax_display"></span>  
+    <span id="DMin_display"></span> 
+    <span id="Hmax_display"></span>	
+  </div>   
+</div>  
+
+
+
+<div class="result" style="margin-top: 12px;">
+  <label style="text-align:left; display:block; margin-bottom:4px;">✍️ Signature</label>
+  <input type="text" id="nomRedacteur" placeholder="Nom du rédacteur" style="width:100%; margin-bottom:6px;">
+  <canvas id="signatureCanvas" style="width:100%; height:110px; touch-action:none; border:1px solid #ccc; border-radius:8px; background:#fff; display:block;"></canvas>
+  <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+    <button type="button" onclick="effacerSignature()" style="background:#fee2e2; color:#dc2626; font-size:0.75em; padding:5px 10px; margin:0;">🗑️ Effacer signature</button>
+  </div>
+</div>
+
+<div id="divExtensionModal" class="custom-modal">
+  <div class="custom-modal-content" style="background: white; padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
+    <p style="font-weight: bold; font-size:1em; margin-bottom: 15px; color: #333;">Configuration de la Cote A</p>
+    
+    <div style="margin-bottom: 18px; text-align: left;">
+      <label style="font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 5px; text-align: left; color: #4b5563;">Nouvelle valeur pour A :</label>
+      <input type="number" id="modal_saisie_A" step="any" placeholder="Saisir la valeur..." style="width: 100%; height: 36px; font-size: 1.1em; border: 1px solid #3b82f6; border-radius: 6px; text-align: center;" onclick="this.select()">
+    </div>
+
+    <p style="font-weight: bold; font-size:0.85em; margin-bottom: 8px; text-align: left; color: #4b5563;">Type d'élargissement :</p>
+    
+    <button onclick="validerToutPopup('centre')" style="background: #f3f4f6; color: #1f2937; font-weight: bold;">1 : Les 2 côtés (Centré)</button>
+    <button onclick="validerToutPopup('champ')" style="background: #f5f3ff; color: #6d28d9; font-weight: bold;">2 : Vers le CHAMP (Protège rail)</button>
+    <button onclick="validerToutPopup('voie')" style="background: #eff6ff; color: #1d4ed8; font-weight: bold;">3 : Vers la VOIE</button>
+    
+    <button onclick="document.getElementById('divExtensionModal').style.display='none';" style="background: #fee2e2; color: #dc2626; margin-top: 10px; font-size: 0.8em; padding: 6px;">❌ Annuler</button>
+  </div>
+</div>
+
+<div id="divEchantillonModal" class="custom-modal">
+  <div class="custom-modal-content" style="background: white; padding: 15px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
+    <p style="font-weight: bold; font-size:1em; margin-bottom: 12px; color: #333;">Sélectionner le Profilé (Échantillon)</p>   
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px;">
+      <button onclick="validerEchantillonPopup('200', '200', '200')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE200</button>
+      <button onclick="validerEchantillonPopup('220', '220', '220')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE220</button>
+      <button onclick="validerEchantillonPopup('240', '240', '240')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE240</button>
+      <button onclick="validerEchantillonPopup('260', '260', '260')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE260</button>
+      <button onclick="validerEchantillonPopup('280', '280', '280')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE280</button>
+      <button onclick="validerEchantillonPopup('300', '300', '300')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE300</button>
+      <button onclick="validerEchantillonPopup('320', '300', '320')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HE320</button>
+      <button onclick="validerEchantillonPopup('280', '710', '280')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHE280</button>
+      <button onclick="validerEchantillonPopup('320', '610', '320')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHE320</button>
+      <button onclick="validerEchantillonPopup('Epingle', '0', '0')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">Epingle</button>	
+	</div>    
+    <button onclick="validerEchantillonPopup('manuel', '0', 'Autre...')" style="background:#f5f3ff; color:#6d28d9; width:100%; padding: 10px 0; margin: 0 0 10px 0; font-weight: bold;">Autre...</button>   
+    <button onclick="document.getElementById('divEchantillonModal').style.display='none';" style="background: #fee2e2; color: #dc2626; width:100%; margin:0; font-size: 0.8em; padding: 6px;">❌ Annuler</button>
+  </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
