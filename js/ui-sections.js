@@ -7,3 +7,25 @@ function toggleSection(contentId) {
   const section = content.closest(".section");
   if (section) section.classList.toggle("collapsed");
 }
+
+/* ==========================================
+   OUVERTURE AUTOMATIQUE DU BLOC "ALERTES"
+   S'ouvre uniquement s'il y a une alerte blindage
+   et/ou une alerte LTV en cours. Se referme sinon.
+   ========================================== */
+function evaluerAlertes() {
+  const wrap = document.getElementById("sec-alertes-wrap");
+  if (!wrap) return;
+
+  const ltvEl = document.getElementById("ltv");
+  const tbfEl = document.getElementById("tbf");
+  const alerteBlindageEl = document.getElementById("alerte_blindage_bloc");
+
+  const alerteLTV = !!(ltvEl && ltvEl.innerText.trim() !== "");
+  const alerteBlindageTbf = !!(tbfEl && tbfEl.innerText.includes("🚨"));
+  const alerteBlindageBloc = !!(alerteBlindageEl && alerteBlindageEl.innerText.includes("🚨"));
+
+  const uneAlerteActive = alerteLTV || alerteBlindageTbf || alerteBlindageBloc;
+
+  wrap.classList.toggle("collapsed", !uneAlerteActive);
+}
