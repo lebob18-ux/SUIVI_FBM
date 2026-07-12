@@ -224,7 +224,7 @@ async function exporterPDF() {
       startY: y,
       margin: { left: marge, right: marge, bottom: footerReserve },
       body: [
-        ["Voies annoncees / interceptees (TES.D)", verifVoie ? "OUI" : "NON"],
+        ["Voies Vérifié (TES.D)", verifVoie ? "OUI" : "NON"],
         ["Carottage", verifCarotte ? "OUI" : "NON"],
         ["Blindage", verifBlindage ? "OUI" : "NON"],
       ],
