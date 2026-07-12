@@ -46,80 +46,140 @@
   </div>
 </div> 
 
-<div class="row" style="display: flex !important; flex-direction: row !important; justify-content: space-between; width: 100%; margin-bottom: 5px;">  
-  <div class="field" style="width: 23% !important;">
-    <label>Implantation</label>
-    <input type="number" id="I" step="any" oninput="calculer()" onkeydown="passerAEchantillon(event)">
-    <span class="ref" id="I_ref"></span>
-  </div>  
-  
-  <div class="field" style="width: 23% !important;">
-    <label>Echantillon</label>
-    <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
-    <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="Saisir en cm" style="display: none; margin-top: 5px; width: 100%;">
-    <span class="ref" id="ECH_ref"></span>
-  </div>  
-  
-  <div class="field" style="width: 23% !important;">
-    <label>Arasement</label>
-    <input type="number" id="AR" oninput="calculer()">
-    <span class="ref" id="AR_ref"></span>
-  </div>  
-  
-<div class="field" style="width: 23% !important;">
-
-<label id="labelEnc">Encastrement</label>
-
-    <input type="number" id="Enc" onblur="calculer()">
-    <span class="ref" id="Enc_ref"></span>
-</div>  
+<div class="section">
+  <div class="section-title" onclick="toggleSection('sec-implantation')">
+    <span>📍 Implantation</span>
+    <span class="section-arrow" id="arrow-sec-implantation">▾</span>
+  </div>
+  <div class="section-content" id="sec-implantation">
+    <div class="row" style="display: flex !important; flex-direction: row !important; justify-content: space-between; width: 100%; margin-bottom: 5px;">  
+      <div class="field" style="width: 23% !important;">
+        <label>Implantation</label>
+        <input type="number" id="I" step="any" oninput="calculer()" onkeydown="passerAEchantillon(event)">
+        <span class="ref" id="I_ref"></span>
+      </div>  
+      
+      <div class="field" style="width: 23% !important;">
+        <label>Echantillon</label>
+        <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
+        <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="Saisir en cm" style="display: none; margin-top: 5px; width: 100%;">
+        <span class="ref" id="ECH_ref"></span>
+      </div>  
+      
+      <div class="field" style="width: 23% !important;">
+        <label>Arasement</label>
+        <input type="number" id="AR" oninput="calculer()">
+        <span class="ref" id="AR_ref"></span>
+      </div>  
+      
+    <div class="field" style="width: 23% !important;">
+    
+    <label id="labelEnc">Encastrement</label>
+    
+        <input type="number" id="Enc" onblur="calculer()">
+        <span class="ref" id="Enc_ref"></span>
+    </div>  
+    </div>
+  </div>
 </div>
   
-<div class="row" style="gap: 3px; justify-content: space-between;">  
-  <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
-    <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">A</label></div>
-    <input type="number" id="AF" step="any" readonly onclick="gererChangementA()" style="width: 100%; padding: 5px 2px; font-size: 0.8em; background: #fff; cursor: pointer; font-weight: bold;">
-	<span class="ref" id="AF_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
-  </div>  
-  <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
-    <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">B</label></div>
-    <input type="number" id="B_Fouille" step="any" oninput="calculer()" style="width: 100%; padding: 5px 2px; font-size: 0.8em;">
-	<span class="ref" id="B_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
-  </div>   
-  <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
-    <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">H</label></div>
-    <input type="number" id="H_Fouille" step="any" oninput="calculer()" style="width: 100%; padding: 5px 2px; font-size: 0.8em;">
-	<span class="ref" id="H_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
+<div class="section">
+  <div class="section-title" onclick="toggleSection('sec-fouille')">
+    <span>📐 Cotes Fouille (A / B / H)</span>
+    <span class="section-arrow" id="arrow-sec-fouille">▾</span>
+  </div>
+  <div class="section-content" id="sec-fouille">
+    <div class="row" style="gap: 3px; justify-content: space-between;">  
+      <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
+        <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">A</label></div>
+        <input type="number" id="AF" step="any" readonly onclick="gererChangementA()" style="width: 100%; padding: 5px 2px; font-size: 0.8em; background: #fff; cursor: pointer; font-weight: bold;">
+    	<span class="ref" id="AF_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
+      </div>  
+      <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
+        <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">B</label></div>
+        <input type="number" id="B_Fouille" step="any" oninput="calculer()" style="width: 100%; padding: 5px 2px; font-size: 0.8em;">
+    	<span class="ref" id="B_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
+      </div>   
+      <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
+        <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">H</label></div>
+        <input type="number" id="H_Fouille" step="any" oninput="calculer()" style="width: 100%; padding: 5px 2px; font-size: 0.8em;">
+    	<span class="ref" id="H_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="row" style="margin-top: 5px; justify-content: space-between; align-items: center;"> 
-  <div class="field compact" style="width: 25% !important;">
-    <label>F</label>
-	<input type="number" id="valF" oninput="calculer()">
-    <span class="ref" id="F_ref" style="margin: 0 !important; font-size: 0.7em !important;"></span>	
-  </div>  
-  
-<div id="bloc-N" style="width: 30% !important; display: none;">
-  <label>Imp depuis </label>
-  <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
-  <span class="ref" id="P_ref_N" style="margin: 0 !important; font-size: 0.7em !important;"></span>
+
+
+
+
+
+<div class="section">
+  <div class="section-title" onclick="toggleSection('sec-references')">
+    <span>🔗 Références (F / Support / P)</span>
+    <span class="section-arrow" id="arrow-sec-references">▾</span>
+  </div>
+  <div class="section-content" id="sec-references">
+    <div class="row" style="margin-top: 5px; justify-content: space-between; align-items: center;"> 
+      <div class="field compact" style="width: 25% !important;">
+        <label>F</label>
+    	<input type="number" id="valF" oninput="calculer()">
+        <span class="ref" id="F_ref" style="margin: 0 !important; font-size: 0.7em !important;"></span>	
+      </div>  
+      
+    <div id="bloc-N" style="width: 30% !important; display: none;">
+      <label>Imp depuis </label>
+      <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
+      <span class="ref" id="P_ref_N" style="margin: 0 !important; font-size: 0.7em !important;"></span>
+    </div>
+    
+    
+    	  <div class="field compact" style="width: 30% !important;">
+        <label>Support référent</label>
+        <input type="text" id="valSUP" oninput="calculer()" disabled>
+        <span class="ref" id="SUP_ref" style="margin: 0 !important; font-size: 0.7em !important;"></span>
+      </div>	
+    	
+    <div id="bloc-S" style="width: 30% !important; display: none;">
+      <label>Imp depuis </label>
+      <input type="text" id="valP_S" oninput="gérerVisibilitéP()">
+      <span class="ref" id="P_ref_S" style="margin: 0 !important; font-size: 0.7em !important;"></span>
+    </div>
+    
+    </div>
+  </div>
 </div>
 
 
-	  <div class="field compact" style="width: 30% !important;">
-    <label>Support référent</label>
-    <input type="text" id="valSUP" oninput="calculer()" disabled>
-    <span class="ref" id="SUP_ref" style="margin: 0 !important; font-size: 0.7em !important;"></span>
-  </div>	
-	
-<div id="bloc-S" style="width: 30% !important; display: none;">
-  <label>Imp depuis </label>
-  <input type="text" id="valP_S" oninput="gérerVisibilitéP()">
-  <span class="ref" id="P_ref_S" style="margin: 0 !important; font-size: 0.7em !important;"></span>
-</div>
 
-</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 <div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #ffeba2; width: 95% !important; flex-direction: column; gap: 8px;"> 
@@ -249,8 +309,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
 <script src="data.js"></script>
 <script src="js/state.js"></script>
+<script src="js/ui-sections.js"></script>
 <script src="js/echantillon-modal.js"></script>
 <script src="js/calculs.js"></script>
 <script src="js/partage.js"></script>
