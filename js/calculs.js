@@ -328,6 +328,9 @@ if (!calculLTVPossible) {
     let p1_calc = P1_profondeur_dispo.toFixed(2);
     p1p2_div.innerHTML = "📏 SOL jusqu'à P2 = <span style='color: #2563eb;'>" + p2_calc + " m</span> | P1 = <span style='color: #2563eb;'>" + p1_calc + " m</span>";
   }
+
+  /* Ouvre/ferme automatiquement le bloc Alertes selon présence d'une alerte blindage/LTV */
+  if (typeof evaluerAlertes === "function") evaluerAlertes();
 }
 
 /* Sens P (amont/aval de SUP) : la valeur saisie/affichée reste toujours absolue,
@@ -368,4 +371,3 @@ function toggleSignSOL(){
   input.value = -val;
   calculer();
 }
-  
