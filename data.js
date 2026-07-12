@@ -5,7 +5,7 @@ const baseSupports = [
 { chantier: "SST_THOMERY", support: "62/05", I: 2.4, AF: 0.7, B: 1.2, H: 1.7, AR: 0.75, Enc: 1.5,ECH: "220",BLIND: "NON",CARO: "NON",TYPE: "2Pn", F: 3, P: -13.5,SUP: "62/05" },
 { chantier: "SST_THOMERY", support: "62/07_ANC1", I: 2.53, AF: 1.2, B: 2.1, H: 1.4, AR: 0.6, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: -6,SUP: "62/07" },
 { chantier: "SST_THOMERY", support: "62/07_ANC2", I: 2.53, AF: 1.2, B: 2.1, H: 1.4, AR: 0.6, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "6Api", F: 0, P: -9.1,SUP: "62/07" },
-{ chantier: "SST_THOMERY", support: "62/07", I: 2.4, AF: 0.9, B: 1.5, H: 1.8, AR: 0.6, Enc: 165,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 3, P: -13.5,SUP: "62/07" },
+{ chantier: "SST_THOMERY", support: "62/07", I: 2.4, AF: 0.9, B: 1.5, H: 1.8, AR: 0.6, Enc: 1.65,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 3, P: -13.5,SUP: "62/07" },
 { chantier: "SST_THOMERY", support: "62/09", I: 2.4, AF: 0.8, B: 1.3, H: 2.2, AR: 0.75, Enc: 1.9,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "3Pnb", F: 3, P: -13.5,SUP: "62/09" },
 { chantier: "SST_THOMERY", support: "62/11", I: 2.4, AF: 0.9, B: 1.5, H: 1.8, AR: 0.8, Enc: 1.45,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 3, P: -18,SUP: "62/11" },
 { chantier: "SST_THOMERY", support: "62/13", I: 2.4, AF: 0.9, B: 1.5, H: 1.8, AR: 0.8, Enc: 1.45,ECH: "260",BLIND: "NON",CARO: "NON",TYPE: "4Pn", F: 3, P: -22.5,SUP: "62/13" },
