@@ -392,8 +392,20 @@ async function exporterPDF() {
       piedDePage(p, totalPages);
     }
 
-    const nomFichier = "FBM_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
-    doc.save(nomFichier);
+// APRÈS
+const nomFichier = "FBM_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
+const pdfBlob = doc.output("blob");
+const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
+
+if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+  navigator.share({
+    files: [pdfFile],
+    title: "Relevé FBM",
+    text: "Résultat calcul blindage - Support N°: " + numSupportInput
+  }).catch(() => { doc.save(nomFichier); });
+} else {
+  doc.save(nomFichier);
+}
   } catch (err) {
     console.error(err);
     alert("⚠️ Erreur lors de la génération du PDF :\n" + err.message);
