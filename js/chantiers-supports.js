@@ -79,7 +79,7 @@ function chargerSupport() {
     document.getElementById("H_ref").innerText = valOuVide(data.H);
     document.getElementById("AR_ref").innerText = valOuVide(data.AR);
     document.getElementById("Enc_ref").innerText = valOuVide(data.Enc);
-    document.getElementById("ECH_ref").innerText = valOuVide(data.Enc);
+    document.getElementById("ECH_ref").innerText = valOuVide(data.ECH);
 
     // 3. Gestion de P (Valeur absolue pour l'affichage)
     const valP = (data.P !== undefined && data.P !== null) ? parseFloat(data.P) : 0;
