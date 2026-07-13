@@ -357,18 +357,25 @@ async function exporterPDF() {
     });
     y = doc.lastAutoTable.finalY + 8;
 
-    // ---------- Zone de signature ----------
-    const nomRedacteur = val("nomRedacteur");
-    const canvasSignature = g("signatureCanvas");
-    const signatureRenseignee = canvasSignature && !sigVide;
 
-    assurerPlace(signatureRenseignee ? 30 : 16);
-    doc.setDrawColor(180, 180, 180);
-    doc.setFontSize(7.8);
-    doc.setTextColor(90, 90, 90);
-    doc.setFont("helvetica", "bold");
-    doc.text("Rédigé par : " + (nomRedacteur || "-"), marge, y);
-    y += 5;
+// APRÈS
+const nomRedacteur = val("nomRedacteur");
+const emailRedacteur = val("emailRedacteur");
+const canvasSignature = g("signatureCanvas");
+const signatureRenseignee = canvasSignature && !sigVide;
+
+assurerPlace(signatureRenseignee ? 34 : 20);
+doc.setDrawColor(180, 180, 180);
+doc.setFontSize(7.8);
+doc.setTextColor(90, 90, 90);
+doc.setFont("helvetica", "bold");
+doc.text("Rédigé par : " + (nomRedacteur || "-"), marge, y);
+y += 5;
+if (emailRedacteur) {
+  doc.setFont("helvetica", "normal");
+  doc.text("Email : " + emailRedacteur, marge, y);
+  y += 5;
+}
 
     doc.setFont("helvetica", "normal");
     doc.text("Signature :", marge, y + 3);
