@@ -162,6 +162,62 @@ input[readonly]{
 .custom-modal button {
   display: block; width: 100%; margin: 8px 0; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold; font-size: 0.9em; cursor: pointer;
 }
+
+/* ==========================================
+   TABLEAU DE COTES (Saisie / Réf.)
+   ========================================== */
+.cotes-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.cotes-table th {
+  font-size: 0.85em;
+  font-weight: bold;
+  color: #7C2270;
+  text-align: center;
+  padding: 4px 2px 6px 2px;
+  border-bottom: 2px solid #f0e4ee;
+}
+
+.cotes-table td {
+  text-align: center;
+  padding: 4px 3px;
+  vertical-align: middle;
+}
+
+.cotes-table .cotes-label {
+  font-size: 0.75em;
+  font-weight: bold;
+  color: #666;
+  text-align: left;
+  width: 46px;
+  white-space: nowrap;
+}
+
+.cotes-table tr:first-child td {
+  border-bottom: 1px solid #eee;
+}
+
+.cotes-table input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 2px;
+  font-size: 0.85em;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.cotes-table .ref {
+  font-size: 0.75em;
+  color: #999;
+  font-style: italic;
+}
+
+
+
 /* ==========================================
    BLOCS PLIABLES (sections avec titre cliquable)
    ========================================== */
