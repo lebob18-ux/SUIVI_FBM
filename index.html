@@ -228,24 +228,20 @@
   </div>   
 </div>  
 
-
-
 <div class="section collapsed">
   <div class="section-title" onclick="toggleSection('sec-signature')">
-    <span>✍️ Signature</span>
+    <span>👤 Rédacteur</span>
     <span class="section-arrow" id="arrow-sec-signature">▾</span>
   </div>
   <div class="section-content" id="sec-signature">
     <div class="result" style="margin-top: 0;">
-<input type="text" id="nomRedacteur" placeholder="Nom du rédacteur" oninput="this.value = this.value.toUpperCase();" style="width:100%; margin-bottom:6px; text-transform: uppercase;">
-<input type="email" id="emailRedacteur" placeholder="Email du rédacteur" oninput="this.value = this.value.toLowerCase();" style="width:100%; margin-bottom:6px;">
-		<canvas id="signatureCanvas" style="width:100%; height:110px; touch-action:none; border:1px solid #ccc; border-radius:8px; background:#fff; display:block;"></canvas>   
-		<div style="display:flex; justify-content:flex-end; margin-top:4px;">
-        <button type="button" onclick="effacerSignature()" style="background:#fee2e2; color:#dc2626; font-size:0.75em; padding:5px 10px; margin:0;">🗑️ Effacer signature</button>
-      </div>
+      <input type="text" id="nomRedacteur" placeholder="Nom du rédacteur" oninput="this.value = this.value.toUpperCase();" style="width:100%; margin-bottom:6px; text-transform: uppercase;">
+      <input type="email" id="emailRedacteur" placeholder="Email du rédacteur" oninput="this.value = this.value.toLowerCase();" style="width:100%; margin-bottom:0;">
     </div>
   </div>
 </div>
+
+
 
 <div id="divExtensionModal" class="custom-modal">
   <div class="custom-modal-content" style="background: white; padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
@@ -305,7 +301,6 @@
 <script src="js/echantillon-modal.js"></script>
 <script src="js/calculs.js"></script>
 <script src="js/partage.js"></script>
-<script src="js/signature.js"></script>
 <script src="js/pdf-export.js"></script>
 <script src="js/autosave.js"></script>
 <script src="js/chantiers-supports.js"></script>
