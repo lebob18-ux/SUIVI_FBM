@@ -110,7 +110,7 @@ function chargerSupport() {
     
     document.getElementById("blindageCheck").checked = (data.BLIND === "OUI");
     document.getElementById("carotte").checked = (data.CARO === "OUI");
-    document.getElementById("display_type").innerText = data.TYPE ? "Type : " + data.TYPE : "";
+    document.getElementById("display_type").innerText = data.TYPE ? "🧊 " + data.TYPE : "";
     // 5. Mise à jour finale
     if (typeof refreshBlocs === "function") refreshBlocs();
 
