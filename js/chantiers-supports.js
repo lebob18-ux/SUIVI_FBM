@@ -79,6 +79,7 @@ function chargerSupport() {
     document.getElementById("H_ref").innerText = valOuVide(data.H);
     document.getElementById("AR_ref").innerText = valOuVide(data.AR);
     document.getElementById("Enc_ref").innerText = valOuVide(data.Enc);
+    document.getElementById("ECH_ref").innerText = valOuVide(data.Enc);
 
     // 3. Gestion de P (Valeur absolue pour l'affichage)
     const valP = (data.P !== undefined && data.P !== null) ? parseFloat(data.P) : 0;
@@ -198,7 +199,7 @@ function chargerSupport1() {
     document.getElementById("H_ref").innerText = data.H || "";
     document.getElementById("AR_ref").innerText = data.AR || "";
     document.getElementById("Enc_ref").innerText = data.Enc || "";
-
+    document.getElementById("ECH_ref").innerText = data.ECH || "";
 // --- LOGIQUE P ABSOLUE ---
     // On convertit la valeur en nombre et on prend sa valeur absolue
     const valP = parseFloat(data.P) || 0;
@@ -254,7 +255,7 @@ function chargerSupport2() {
     document.getElementById("H_ref").innerText = data.H || "";
     document.getElementById("AR_ref").innerText = data.AR || "";
     document.getElementById("Enc_ref").innerText = data.Enc || "";
-
+    document.getElementById("ECH_ref").innerText = data.ECH || "";
     // 3. Gestion intelligente de P (Valeur absolue pour l'affichage)
     const valP = parseFloat(data.P) || 0;
     const valeurAbsolueP = Math.abs(valP);
