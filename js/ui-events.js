@@ -79,3 +79,9 @@ window.addEventListener('load', function() {
     }
 });
 
+document.querySelector(".box")?.addEventListener("input", () => {
+  if (typeof sauvegarderLocal === "function") sauvegarderLocal();
+});
+document.querySelector(".box")?.addEventListener("change", () => {
+  if (typeof sauvegarderLocal === "function") sauvegarderLocal();
+});
