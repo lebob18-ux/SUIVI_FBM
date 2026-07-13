@@ -50,36 +50,41 @@
     <span>📍 Implantation</span>
     <span class="section-arrow" id="arrow-sec-implantation">▾</span>
   </div>
-  <div class="section-content" id="sec-implantation">
-    <div class="row" style="display: flex !important; flex-direction: row !important; justify-content: space-between; width: 100%; margin-bottom: 5px;">  
-      <div class="field" style="width: 23% !important;">
-        <label>Implantation</label>
-        <input type="number" id="I" step="any" oninput="calculer()" onkeydown="passerAEchantillon(event)">
-        <span class="ref" id="I_ref"></span>
-      </div>  
-      
-      <div class="field" style="width: 23% !important;">
-        <label>Echantillon</label>
-        <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
-        <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="Saisir en cm" style="display: none; margin-top: 5px; width: 100%;">
-        <span class="ref" id="ECH_ref"></span>
-      </div>  
-      
-      <div class="field" style="width: 23% !important;">
-        <label>Arasement</label>
-        <input type="number" id="AR" oninput="calculer()">
-        <span class="ref" id="AR_ref"></span>
-      </div>  
-      
-    <div class="field" style="width: 23% !important;">
-    
-    <label id="labelEnc">Encastrement</label>
-    
-        <input type="number" id="Enc" onblur="calculer()">
-        <span class="ref" id="Enc_ref"></span>
-    </div>  
-    </div>
-  </div>
+
+<!-- APRÈS -->
+<div class="section-content" id="sec-implantation">
+  <table class="cotes-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>I</th>
+        <th>Éch.</th>
+        <th>Ar.</th>
+        <th>Enc.</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="cotes-label">Saisie</td>
+        <td><input type="number" id="I" step="any" oninput="calculer()" onkeydown="passerAEchantillon(event)"></td>
+        <td>
+          <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
+          <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="cm" style="display: none; margin-top: 4px; width: 100%;">
+        </td>
+        <td><input type="number" id="AR" oninput="calculer()"></td>
+        <td><input type="number" id="Enc" onblur="calculer()"></td>
+      </tr>
+      <tr>
+        <td class="cotes-label">Réf.</td>
+        <td><span class="ref" id="I_ref"></span></td>
+        <td><span class="ref" id="ECH_ref"></span></td>
+        <td><span class="ref" id="AR_ref"></span></td>
+        <td><span class="ref" id="Enc_ref"></span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+	
 </div>
   
 <div class="section">
@@ -125,33 +130,43 @@
     <span>🔗 Références (FRUIT / Position longitudial)</span>
     <span class="section-arrow" id="arrow-sec-references">▾</span>
   </div>
-  <div class="section-content" id="sec-references">
-    <div class="row" style="margin-top: 5px; justify-content: space-between; align-items: center;"> 
-      <div class="field compact" style="width: 25% !important;">
-        <label>F</label>
-    	<input type="number" id="valF" oninput="calculer()">
-        <span class="ref" id="F_ref" style="margin: 0 !important; font-size: 0.7em !important;"></span>	
-      </div>  
-      
-    <div id="bloc-N" style="width: 30% !important; display: none;">
-      <label>Imp depuis </label>
-      <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
-      <span class="ref" id="P_ref_N" style="margin: 0 !important; font-size: 0.7em !important;"></span>
-    </div>    
-    	  <div class="field compact" style="width: 30% !important;">
-        <label>Support référent</label>
-        <input type="text" id="valSUP" oninput="calculer()" disabled>
-        <span class="ref" id="SUP_ref" style="margin: 0 !important; font-size: 0.7em !important;"></span>
-      </div>	
-    	
-    <div id="bloc-S" style="width: 30% !important; display: none;">
-      <label>Imp depuis </label>
-      <input type="text" id="valP_S" oninput="gérerVisibilitéP()">
-      <span class="ref" id="P_ref_S" style="margin: 0 !important; font-size: 0.7em !important;"></span>
-    </div>
-    
-    </div>
-  </div>
+
+<!-- APRÈS -->
+<div class="section-content" id="sec-references">
+  <table class="cotes-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>F</th>
+        <th>Support référent</th>
+        <th>Imp. depuis (P)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="cotes-label">Saisie</td>
+        <td><input type="number" id="valF" oninput="calculer()"></td>
+        <td><input type="text" id="valSUP" oninput="calculer()" disabled></td>
+        <td rowspan="2" style="vertical-align: middle;">
+          <div id="bloc-N" style="display: none;">
+            <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
+            <span class="ref" id="P_ref_N"></span>
+          </div>
+          <div id="bloc-S" style="display: none;">
+            <input type="text" id="valP_S" oninput="gérerVisibilitéP()">
+            <span class="ref" id="P_ref_S"></span>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="cotes-label">Réf.</td>
+        <td><span class="ref" id="F_ref"></span></td>
+        <td><span class="ref" id="SUP_ref"></span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+	
 </div>
 
 <div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #ffeba2; width: 95% !important; flex-direction: column; gap: 8px;"> 
