@@ -359,37 +359,21 @@ async function exporterPDF() {
 
 
 // APRÈS
-const nomRedacteur = val("nomRedacteur");
-const emailRedacteur = val("emailRedacteur");
-const canvasSignature = g("signatureCanvas");
-const signatureRenseignee = canvasSignature && !sigVide;
+    // ---------- Rédacteur ----------
+    const nomRedacteur = val("nomRedacteur");
+    const emailRedacteur = val("emailRedacteur");
 
-assurerPlace(signatureRenseignee ? 34 : 20);
-doc.setDrawColor(180, 180, 180);
-doc.setFontSize(7.8);
-doc.setTextColor(90, 90, 90);
-doc.setFont("helvetica", "bold");
-doc.text("Rédigé par : " + (nomRedacteur || "-"), marge, y);
-y += 5;
-if (emailRedacteur) {
-  doc.setFont("helvetica", "normal");
-  doc.text("Email : " + emailRedacteur, marge, y);
-  y += 5;
-}
-
-    doc.setFont("helvetica", "normal");
-    doc.text("Signature :", marge, y + 3);
-    if (signatureRenseignee) {
-      const sigData = canvasSignature.toDataURL("image/png");
-      const sigW = 55;
-      const sigH = sigW * (canvasSignature.height / canvasSignature.width);
-      doc.setDrawColor(210, 210, 210);
-      doc.rect(marge + 24, y - 5, sigW, Math.min(sigH, 24));
-      doc.addImage(sigData, "PNG", marge + 24, y - 5, sigW, Math.min(sigH, 24));
-      y += Math.min(sigH, 24) + 2;
-    } else {
-      doc.line(marge + 24, y + 3, marge + 90, y + 3);
-      y += 6;
+    assurerPlace(16);
+    doc.setDrawColor(180, 180, 180);
+    doc.setFontSize(7.8);
+    doc.setTextColor(90, 90, 90);
+    doc.setFont("helvetica", "bold");
+    doc.text("Rédigé par : " + (nomRedacteur || "-"), marge, y);
+    y += 5;
+    if (emailRedacteur) {
+      doc.setFont("helvetica", "normal");
+      doc.text("Email : " + emailRedacteur, marge, y);
+      y += 5;
     }
 
     // ---------- Pied de page sur toutes les pages ----------
