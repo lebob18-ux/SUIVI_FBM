@@ -22,8 +22,8 @@ function appliquerIdentite(identite) {
 }
 
 function validerIdentitePopup() {
-  const nom = document.getElementById("identiteNomInput").value.trim();
-  const email = document.getElementById("identiteEmailInput").value.trim();
+const nom = document.getElementById("identiteNomInput").value.trim().toUpperCase();
+const email = document.getElementById("identiteEmailInput").value.trim().toLowerCase();
 
   if (nom === "") {
     alert("⚠️ Le nom est obligatoire.");
