@@ -27,6 +27,7 @@ function sauvegarderLocal() {
   }
 }
 
+// APRÈS
 function restaurerLocal() {
   const cle = cleAutosave();
   if (!cle) return;
@@ -42,6 +43,8 @@ function restaurerLocal() {
       if (el.type === "checkbox") {
         el.checked = donnees[id];
       } else {
+        // Ne pas écraser une valeur de référence déjà chargée par une sauvegarde vide
+        if (donnees[id] === "" || donnees[id] === null || donnees[id] === undefined) return;
         el.value = donnees[id];
       }
     });
