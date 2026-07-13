@@ -130,9 +130,7 @@
       <label>Imp depuis </label>
       <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
       <span class="ref" id="P_ref_N" style="margin: 0 !important; font-size: 0.7em !important;"></span>
-    </div>
-    
-    
+    </div>    
     	  <div class="field compact" style="width: 30% !important;">
         <label>Support référent</label>
         <input type="text" id="valSUP" oninput="calculer()" disabled>
@@ -148,38 +146,6 @@
     </div>
   </div>
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 <div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #ffeba2; width: 95% !important; flex-direction: column; gap: 8px;"> 
   <div class="row" style="display: flex; justify-content: space-between; width: 100%;">
@@ -271,9 +237,10 @@
   </div>
   <div class="section-content" id="sec-signature">
     <div class="result" style="margin-top: 0;">
-      <input type="text" id="nomRedacteur" placeholder="Nom du rédacteur" style="width:100%; margin-bottom:6px;">
-      <canvas id="signatureCanvas" style="width:100%; height:110px; touch-action:none; border:1px solid #ccc; border-radius:8px; background:#fff; display:block;"></canvas>
-      <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+<input type="text" id="nomRedacteur" placeholder="Nom du rédacteur" style="width:100%; margin-bottom:6px;">
+<input type="email" id="emailRedacteur" placeholder="Email du rédacteur" style="width:100%; margin-bottom:6px;">
+<canvas id="signatureCanvas" style="width:100%; height:110px; touch-action:none; border:1px solid #ccc; border-radius:8px; background:#fff; display:block;"></canvas>   
+		<div style="display:flex; justify-content:flex-end; margin-top:4px;">
         <button type="button" onclick="effacerSignature()" style="background:#fee2e2; color:#dc2626; font-size:0.75em; padding:5px 10px; margin:0;">🗑️ Effacer signature</button>
       </div>
     </div>
@@ -318,7 +285,15 @@
     <button onclick="document.getElementById('divEchantillonModal').style.display='none';" style="background: #fee2e2; color: #dc2626; width:100%; margin:0; font-size: 0.8em; padding: 6px;">❌ Annuler</button>
   </div>
 </div>
-
+<div id="divIdentiteModal" class="custom-modal">
+  <div class="custom-modal-content" style="background: white; padding: 18px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
+    <p style="font-weight: bold; font-size:1em; margin-bottom: 6px; color: #333;">👋 Bienvenue</p>
+    <p style="font-size: 0.8em; color: #666; margin-bottom: 14px;">Renseigne ton nom et ton email une seule fois, ils seront réutilisés automatiquement à chaque ouverture.</p>
+    <input type="text" id="identiteNomInput" placeholder="Nom du rédacteur" style="width:100%; margin-bottom:8px; padding:8px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+    <input type="email" id="identiteEmailInput" placeholder="Email du rédacteur" style="width:100%; margin-bottom:12px; padding:8px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
+    <button onclick="validerIdentitePopup()" style="background:#7C2270; color:white; width:100%; padding: 10px 0; margin: 0; font-weight: bold;">✅ Valider</button>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
