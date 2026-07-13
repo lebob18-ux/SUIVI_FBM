@@ -113,6 +113,18 @@ function chargerSupport() {
     document.getElementById("display_type").innerText = data.TYPE ? "Type : " + data.TYPE : "";
     // 5. Mise à jour finale
     if (typeof refreshBlocs === "function") refreshBlocs();
+
+// AVANT
+if (typeof refreshBlocs === "function") refreshBlocs();
+calculer();
+
+// APRÈS
+if (typeof refreshBlocs === "function") refreshBlocs();
+if (typeof restaurerLocal === "function") restaurerLocal();
+calculer();
+
+
+  
     calculer();
 }
 
