@@ -87,25 +87,32 @@
     <span>📐 Cotes Fouille (A / B / H)</span>
     <span class="section-arrow" id="arrow-sec-fouille">▾</span>
   </div>
-  <div class="section-content" id="sec-fouille">
-    <div class="row" style="gap: 3px; justify-content: space-between;">  
-      <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
-        <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">A</label></div>
-        <input type="number" id="AF" step="any" readonly onclick="gererChangementA()" style="width: 100%; padding: 5px 2px; font-size: 0.8em; background: #fff; cursor: pointer; font-weight: bold;">
-    	<span class="ref" id="AF_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
-      </div>  
-      <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
-        <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">B</label></div>
-        <input type="number" id="B_Fouille" step="any" oninput="calculer()" style="width: 100%; padding: 5px 2px; font-size: 0.8em;">
-    	<span class="ref" id="B_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
-      </div>   
-      <div class="field compact" style="flex-direction: row !important; width: 30% !important; align-items: center !important; gap: 2px;">
-        <div style="display: flex; flex-direction: column; align-items: center; min-width: 25px;"><label style="margin: 0; font-size: 0.8em;">H</label></div>
-        <input type="number" id="H_Fouille" step="any" oninput="calculer()" style="width: 100%; padding: 5px 2px; font-size: 0.8em;">
-    	<span class="ref" id="H_ref" style="margin: 0 !important; font-size: 0.7em !important; line-height: 1;"></span>
-      </div>
-    </div>
-  </div>
+<!-- APRÈS -->
+<div class="section-content" id="sec-fouille">
+  <table class="cotes-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>A</th>
+        <th>B</th>
+        <th>H</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="cotes-label">Saisie</td>
+        <td><input type="number" id="AF" step="any" readonly onclick="gererChangementA()" style="font-weight: bold; cursor: pointer;"></td>
+        <td><input type="number" id="B_Fouille" step="any" oninput="calculer()"></td>
+        <td><input type="number" id="H_Fouille" step="any" oninput="calculer()"></td>
+      </tr>
+      <tr>
+        <td class="cotes-label">Réf.</td>
+        <td><span class="ref" id="AF_ref"></span></td>
+        <td><span class="ref" id="B_ref"></span></td>
+        <td><span class="ref" id="H_ref"></span></td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
 
