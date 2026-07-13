@@ -237,9 +237,9 @@
   </div>
   <div class="section-content" id="sec-signature">
     <div class="result" style="margin-top: 0;">
-<input type="text" id="nomRedacteur" placeholder="Nom du rédacteur" style="width:100%; margin-bottom:6px;">
-<input type="email" id="emailRedacteur" placeholder="Email du rédacteur" style="width:100%; margin-bottom:6px;">
-<canvas id="signatureCanvas" style="width:100%; height:110px; touch-action:none; border:1px solid #ccc; border-radius:8px; background:#fff; display:block;"></canvas>   
+<input type="text" id="nomRedacteur" placeholder="Nom du rédacteur" oninput="this.value = this.value.toUpperCase();" style="width:100%; margin-bottom:6px; text-transform: uppercase;">
+<input type="email" id="emailRedacteur" placeholder="Email du rédacteur" oninput="this.value = this.value.toLowerCase();" style="width:100%; margin-bottom:6px;">
+		<canvas id="signatureCanvas" style="width:100%; height:110px; touch-action:none; border:1px solid #ccc; border-radius:8px; background:#fff; display:block;"></canvas>   
 		<div style="display:flex; justify-content:flex-end; margin-top:4px;">
         <button type="button" onclick="effacerSignature()" style="background:#fee2e2; color:#dc2626; font-size:0.75em; padding:5px 10px; margin:0;">🗑️ Effacer signature</button>
       </div>
