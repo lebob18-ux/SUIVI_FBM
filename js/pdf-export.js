@@ -88,8 +88,11 @@ async function exporterPDF() {
     const footerReserve = 14;
 
     // Rasterise le logo SNCF (SVG -> PNG) pour l'intégrer au PDF
-    const logoDataUrl = await logoSVGversPNG(216, 153);
-    const logoRatio = 153 / 216;
+const logoDataUrl = await logoSVGversPNG(216, 153);
+const logoRatio = 153 / 216;
+
+const logoAinmDataUrl = (typeof logoAINMversPNG === "function") ? await logoAINMversPNG(737, 291) : null;
+const logoAinmRatio = 291.02362 / 737.00789;
 
     /* ---- bandeau dégradé (couleurs identité visuelle) ---- */
     function bandeauDegrade(y0, h) {
@@ -104,25 +107,31 @@ async function exporterPDF() {
       }
     }
 
-    function enteteComplete() {
-      bandeauDegrade(0, 24);
-      if (logoDataUrl) {
-        const logoH = 15;
-        const logoW = logoH / logoRatio;
-        doc.addImage(logoDataUrl, "PNG", marge, 4.5, logoW, logoH);
-      }
-      doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(14.5);
-      doc.text("FICHE DE CONTROLE FOUILLE / BLINDAGE", pageW / 2, 9.5, { align: "center" });
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      doc.text("SNCF Reseau  -  Outil FBM", pageW / 2, 15, { align: "center" });
-      doc.setFontSize(8.3);
-      doc.setFont("helvetica", "bold");
-      doc.text("Chantier : " + (nomChantier || "-"), marge, 21);
-      doc.text("Support : " + numSupportInput, pageW - marge, 21, { align: "right" });
-    }
+// APRÈS
+function enteteComplete() {
+  bandeauDegrade(0, 27);
+  if (logoDataUrl) {
+    const logoH = 15;
+    const logoW = logoH / logoRatio;
+    doc.addImage(logoDataUrl, "PNG", marge, 4.5, logoW, logoH);
+  }
+  if (logoAinmDataUrl) {
+    const logoAinmH = 9;
+    const logoAinmW = logoAinmH / logoAinmRatio;
+    doc.addImage(logoAinmDataUrl, "PNG", pageW - marge - logoAinmW, 3, logoAinmW, logoAinmH);
+  }
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14.5);
+  doc.text("FICHE DE CONTROLE FOUILLE / BLINDAGE", pageW / 2, 9, { align: "center" });
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.text("SNCF Reseau  -  Outil FBM", pageW / 2, 14.5, { align: "center" });
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("Chantier : " + (nomChantier || "-"), marge, 24);
+  doc.text("Support : " + numSupportInput, pageW - marge, 24, { align: "right" });
+}
 
     function enteteAllegee(numPage) {
       doc.setFillColor(violet[0], violet[1], violet[2]);
@@ -153,7 +162,7 @@ async function exporterPDF() {
 
     let y = 0;
     enteteComplete();
-    y = 30;
+    y = 33;
     doc.setTextColor(70, 70, 70);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
