@@ -69,7 +69,7 @@ function chargerSupport() {
     document.getElementById("H_Fouille").value = valOuVide(data.H);
     document.getElementById("AR").value = valOuVide(data.AR);
     document.getElementById("Enc").value = valOuVide(data.Enc);
-    document.getElementById("ECH").value = valOuVide(data.ECH);
+
     // 2. Remplissage des références (spans grisés)
     document.getElementById("F_ref").innerText = valOuVide(data.F);
     document.getElementById("SUP_ref").innerText = valOuVide(data.SUP);
