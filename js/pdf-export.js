@@ -234,20 +234,23 @@ const rowsFouille = [
     y = doc.lastAutoTable.finalY + 5;
 
     // ---------- Section 2 : configuration ----------
-    titreSection("CONFIGURATION", [90, 90, 90]);
-    doc.autoTable({
-      startY: y,
-      margin: { left: marge, right: marge, bottom: footerReserve },
-      body: [
-        ["Voies Vérifié (TES.D)", verifVoie ? "OUI" : "NON"],
-        ["Carottage", verifCarotte ? "OUI" : "NON"],
-        ["Blindage", verifBlindage ? "OUI" : "NON"],
-      ],
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 1.8 },
-      columnStyles: { 1: { fontStyle: 'bold', halign: 'center', cellWidth: 25 } },
-    });
-    y = doc.lastAutoTable.finalY + 5;
+// APRÈS
+titreSection("CONFIGURATION", [90, 90, 90]);
+doc.autoTable({
+  startY: y,
+  margin: { left: marge, right: marge, bottom: footerReserve },
+  head: [["Voies annoncees / interceptees (TES.D)", "Carottage", "Blindage"]],
+  body: [[
+    verifVoie ? "OUI" : "NON",
+    verifCarotte ? "OUI" : "NON",
+    verifBlindage ? "OUI" : "NON",
+  ]],
+  theme: 'grid',
+  styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
+  headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: 'bold', fontSize: 7.3 },
+  bodyStyles: { fontStyle: 'bold' },
+});
+y = doc.lastAutoTable.finalY + 5;
 
     // ---------- Section 3 (option) : carottage ----------
     if (verifCarotte) {
