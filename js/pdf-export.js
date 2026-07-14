@@ -192,18 +192,24 @@ async function exporterPDF() {
       return val("E") + " cm";
     })();
 
-    const rowsFouille = [
-      ["Implantation (I)", val("I") ? val("I") + " m" : "-", txt("I_ref")],
-      ["Echantillon", echValeur || "-", txt("ECH_ref")],
-      ["Arasement (AR)", val("AR") ? val("AR") + " m" : "-", txt("AR_ref")],
-      ["Encastrement (Enc)", val("Enc") ? val("Enc") + " m" : "-", txt("Enc_ref")],
-      ["Cote A", val("AF") ? val("AF") + " m" : "-", txt("AF_ref")],
-      ["Cote B", val("B_Fouille") ? val("B_Fouille") + " m" : "-", txt("B_ref")],
-      ["Cote H", val("H_Fouille") ? val("H_Fouille") + " m" : "-", txt("H_ref")],
-      ["F", val("valF") || "-", txt("F_ref")],
-      ["P (" + ((val("sensP") === "AVANT") ? "amont" : "aval") + " de SUP)", val("valP") || "-", txt("P_ref")],
-      ["SUP", val("valSUP") || "-", txt("SUP_ref")],
-    ];
+// APRÈS
+const blocNVisible = g("bloc-N") && g("bloc-N").style.display !== "none";
+const valPActuel = blocNVisible ? val("valP_N") : val("valP_S");
+const refPActuel = blocNVisible ? txt("P_ref_N") : txt("P_ref_S");
+const sensPTexte = blocNVisible ? "amont" : "aval";
+
+const rowsFouille = [
+  ["Implantation (I)", val("I") ? val("I") + " m" : "-", txt("I_ref")],
+  ["Echantillon", echValeur || "-", txt("ECH_ref")],
+  ["Arasement (AR)", val("AR") ? val("AR") + " m" : "-", txt("AR_ref")],
+  ["Encastrement (Enc)", val("Enc") ? val("Enc") + " m" : "-", txt("Enc_ref")],
+  ["Cote A", val("AF") ? val("AF") + " m" : "-", txt("AF_ref")],
+  ["Cote B", val("B_Fouille") ? val("B_Fouille") + " m" : "-", txt("B_ref")],
+  ["Cote H", val("H_Fouille") ? val("H_Fouille") + " m" : "-", txt("H_ref")],
+  ["F", val("valF") || "-", txt("F_ref")],
+  ["P (" + sensPTexte + " de SUP)", valPActuel || "-", refPActuel],
+  ["SUP", val("valSUP") || "-", txt("SUP_ref")],
+];
 
     doc.autoTable({
       startY: y,
@@ -297,20 +303,26 @@ async function exporterPDF() {
     }
 
     // ---------- Section 5 : volumes ----------
-    titreSection("VOLUMES", violet);
-    const rowsVolumes = [["Volume theorique", txt("vol_prevu") || "-"], ["Volume reel", txt("vol_modifie") || "-"]];
-    if (g("display_vol_carotte") && g("display_vol_carotte").style.display !== "none") {
-      rowsVolumes.push(["Beton net (hors carotte)", txt("vol_carotte") || "-"]);
-    }
-    doc.autoTable({
-      startY: y,
-      margin: { left: marge, right: marge, bottom: footerReserve },
-      body: rowsVolumes,
-      theme: 'grid',
-      styles: { fontSize: 8.5, cellPadding: 2 },
-      columnStyles: { 1: { fontStyle: 'bold', halign: 'right', textColor: [0, 100, 180] } },
-    });
-    y = doc.lastAutoTable.finalY + 5;
+// APRÈS
+titreSection("VOLUMES", violet);
+const volCarotteVisible = g("display_vol_carotte") && g("display_vol_carotte").style.display !== "none";
+const headVolumes = ["Volume theorique", "Volume reel"];
+const rowVolumes = [txt("vol_prevu") || "-", txt("vol_modifie") || "-"];
+if (volCarotteVisible) {
+  headVolumes.push("Beton net (hors carotte)");
+  rowVolumes.push(txt("vol_carotte") || "-");
+}
+doc.autoTable({
+  startY: y,
+  margin: { left: marge, right: marge, bottom: footerReserve },
+  head: [headVolumes],
+  body: [rowVolumes],
+  theme: 'grid',
+  styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
+  headStyles: { fillColor: violet, textColor: 255, fontStyle: 'bold' },
+  bodyStyles: { fontStyle: 'bold', textColor: [0, 100, 180] },
+});
+y = doc.lastAutoTable.finalY + 5;
 
     // ---------- Section 6 : résultat blindage / LTV ----------
     titreSection("RESULTAT", rouge);
@@ -340,22 +352,22 @@ async function exporterPDF() {
     y += 2;
 
     // ---------- Section 7 : seuils réglementaires ----------
-    const seuils = [
-      ["BMax", clean(txt("BMax_display"))],
-      ["DMin", clean(txt("DMin_display"))],
-      ["Hmax", clean(txt("Hmax_display"))],
-    ];
-    doc.autoTable({
-      startY: y,
-      margin: { left: marge, right: marge, bottom: footerReserve },
-      head: [["Seuil", "Valeur"]],
-      body: seuils,
-      theme: 'grid',
-      styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
-      headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: 'bold' },
-      columnStyles: { 1: { fontStyle: 'bold', textColor: [22, 130, 60] } },
-    });
-    y = doc.lastAutoTable.finalY + 8;
+// APRÈS
+doc.autoTable({
+  startY: y,
+  margin: { left: marge, right: marge, bottom: footerReserve },
+  head: [["BMax", "DMin", "Hmax"]],
+  body: [[
+    clean(txt("BMax_display")) || "-",
+    clean(txt("DMin_display")) || "-",
+    clean(txt("Hmax_display")) || "-",
+  ]],
+  theme: 'grid',
+  styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
+  headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: 'bold' },
+  bodyStyles: { fontStyle: 'bold', textColor: [22, 130, 60] },
+});
+y = doc.lastAutoTable.finalY + 8;
 
 
 // APRÈS
