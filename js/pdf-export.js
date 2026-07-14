@@ -186,7 +186,7 @@ function enteteComplete() {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
       doc.text(titre, marge + 2, y + 4.4);
-      y += 6.2 + 2;
+      y += 6.2 + 5;
     }
 
     // ---------- Section 1 : paramètres de fouille ----------
