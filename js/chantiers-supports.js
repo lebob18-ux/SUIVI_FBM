@@ -58,23 +58,13 @@ function chargerSupport() {
     document.getElementById("blindageCheck").checked = (data.BLIND === "OUI");
     document.getElementById("carotte").checked = (data.CARO === "OUI");
     document.getElementById("display_type").innerText = data.TYPE ? "🧊 " + data.TYPE : "";
+
+    
+}
     // 5. Mise à jour finale
     if (typeof refreshBlocs === "function") refreshBlocs();
-
-// AVANT
-if (typeof refreshBlocs === "function") refreshBlocs();
-calculer();
-
-// APRÈS
-if (typeof refreshBlocs === "function") refreshBlocs();
-if (typeof restaurerLocal === "function") restaurerLocal();
-calculer();
-
-
-  
+    if (typeof restaurerLocal === "function") restaurerLocal();
     calculer();
-}
-
 
 
 
@@ -110,26 +100,13 @@ function appliquerEchantillon(ech) {
     calculer();
   }
 }
+
 function gérerVisibilitéP() {
-    // Récupérer la valeur saisie (en nombre)
-
-
-
-    const valP = parseFloat(data.P) || 0;
-    const valeurAbsolueP = Math.abs(valP).toString();
-    
     const blocN = document.getElementById("bloc-N");
     const blocS = document.getElementById("bloc-S");
-
-    if (valeurAbsolueP >= 0) {
-        blocS.style.display = "block";
-        blocN.style.display = "none";
-    } else {
-        blocS.style.display = "none";
-        blocN.style.display = "block";
-    }
+    const inputActif = (blocN.style.display !== "none") ? document.getElementById("valP_N") : document.getElementById("valP_S");
+    calculer();
 }
-
 
 
 function initChantiers() {
