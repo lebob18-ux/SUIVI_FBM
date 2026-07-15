@@ -129,7 +129,7 @@ function enteteComplete() {
   doc.text("SNCF Reseau  -  Outil FBM", pageW / 2, 14.5, { align: "center" });
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("Chantier : " + (nomChantier || "-"), marge, 24);
+  doc.text("Chantier : " + (nomChantier || "-") + "    RJ : " + (window.numeroRJ || "-"), marge, 24);
   doc.text("Support : " + numSupportInput, pageW - marge, 24, { align: "right" });
 }
 
