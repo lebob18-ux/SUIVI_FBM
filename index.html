@@ -13,10 +13,14 @@
 <img id="logoSNCF" src="assets/ainm.svg" width="100" height="100" alt="Logo SNCF">
 </div>
 
-  <h3 id="pageTitle">SUIVI FBM</h3>
-  <div style="display:flex; gap:5px;">
-<button id="btnExportPdf" onclick="exporterPDF()">📲 Partage</button>
-  </div>
+<h3 id="pageTitle">SUIVI FBM</h3>
+<div style="display:flex; justify-content:center; margin-bottom:6px;">
+  <span id="rjBadge" onclick="document.getElementById('divRJModal').style.display='flex';" style="font-size:0.75em; font-weight:bold; color:#7C2270; background:#f5eaf3; padding:2px 10px; border-radius:10px; cursor:pointer;">RJ : --</span>
+</div>
+<div style="display:flex; gap:5px;">
+  <button onclick="shareWhatsApp()">📲 Partage</button>
+  <button id="btnExportPdf" onclick="exporterPDF()">📄 PDF</button>
+</div>
 </div>
 
 <div class="header-row">
@@ -312,11 +316,22 @@
     <button onclick="validerIdentitePopup()" style="background:#7C2270; color:white; width:100%; padding: 10px 0; margin: 0; font-weight: bold;">✅ Valider</button>
   </div>
 </div>
-
+<div id="divRJModal" class="custom-modal">
+  <div class="custom-modal-content" style="background: white; padding: 18px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
+    <p style="font-weight: bold; font-size:1em; margin-bottom: 6px; color: #333;">🌙 Nuit de travail</p>
+    <p style="font-size: 0.8em; color: #666; margin-bottom: 14px;">Indique le numéro RJ pour cette nuit. Il sera conservé automatiquement jusqu'à 8h.</p>
+    <input type="text" id="rjInput" placeholder="Numéro RJ" style="width:100%; margin-bottom:12px; padding:8px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; text-align:center; font-weight:bold;">
+    <button onclick="validerRJPopup()" style="background:#7C2270; color:white; width:100%; padding: 10px 0; margin: 0; font-weight: bold;">✅ Valider</button>
+  </div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
+
+
+<script src="js/rj.js"></script>
+<script src="js/autosave.js"></script>
 <script src="data.js"></script>
 <script src="js/state.js"></script>
 <script src="js/ui-sections.js"></script>
