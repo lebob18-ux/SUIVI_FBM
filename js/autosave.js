@@ -52,3 +52,13 @@ function restaurerLocal() {
     console.error("Erreur restauration locale :", e);
   }
 }
+function resetSauvegardeSupport() {
+  const cle = cleAutosave();
+  if (!cle) {
+    alert("⚠️ Choisis d'abord un chantier et un support.");
+    return;
+  }
+  if (!confirm("Effacer la sauvegarde locale de ce support et recharger les valeurs de référence ?")) return;
+  localStorage.removeItem(cle);
+  if (typeof chargerSupport === "function") chargerSupport();
+}
