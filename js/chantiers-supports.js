@@ -174,7 +174,7 @@ function filtrerSupports() {
 
   supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
 
-  const filtres = baseSupports.filter(s => s.chantier === chantier);
+  const filtres = baseSupports.filter(s => s.chantier === chantier && s.EFFECTUE !== 1);
 
   filtres.forEach(s => {
     let opt = document.createElement("option");
