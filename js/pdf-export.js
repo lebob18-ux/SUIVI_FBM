@@ -71,8 +71,11 @@ async function exporterPDF() {
     const nomChantier = (chantierSelect.selectedIndex >= 0 && chantierSelect.options[chantierSelect.selectedIndex])
       ? chantierSelect.options[chantierSelect.selectedIndex].text
       : "";
-    const typeSupport = clean(txt("display_type")).replace(/^Type\s*:\s*/i, "");
-    const dateStr = new Date().toLocaleString("fr-FR");
+// APRÈS
+const typeSupport = clean(txt("display_type")).replace(/^Type\s*:\s*/i, "");
+const dateStr = new Date().toLocaleString("fr-FR");
+const supportData = baseSupports.find(s => s.support === numSupportInput);
+const idSupport = supportData?.ID || "";
 
     const verifVoie = g("verifVoie").checked;
     const verifCarotte = g("carotte").checked;
@@ -166,7 +169,8 @@ function enteteComplete() {
     doc.setTextColor(70, 70, 70);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.text("Genere le " + dateStr + (typeSupport ? "   -   Type : " + typeSupport : ""), marge, y);
+  // APRÈS
+doc.text("Genere le " + dateStr + (typeSupport ? "   -   Type : " + typeSupport : "") + (idSupport ? "   -   ID : " + idSupport : ""), marge, y);
     y += 4;
 
     // Vérifie qu'il reste assez de place, sinon ajoute une page (avec en-tête allégée)
