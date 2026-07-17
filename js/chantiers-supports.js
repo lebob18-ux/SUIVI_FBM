@@ -175,11 +175,14 @@ function filtrerSupports() {
     supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
 
     // On garde uniquement ceux où EFFECTUE est explicitement 0 ou absent/null
-    const filtres = baseSupports.filter(s => 
-        s.chantier === chantier && 
-        (s.EFFECTUE == 0 || s.EFFECTUE === undefined || s.EFFECTUE === null)
-    );
 
+
+const filtres = baseSupports.filter(s => 
+    s.chantier === chantier && Number(s.EFFECTUE) !== 1
+);
+
+
+    
     filtres.forEach(s => {
         let opt = document.createElement("option");
         opt.value = s.support;
