@@ -4,7 +4,7 @@ const baseSupports = [
 { chantier: "MONTEREAU", support: "80/11A", I: 2.5, AF: 1.3, B: 1.9, H: 2.2, AR: 0.55, Enc: 0,ECH: "320",BLIND: "NON",CARO: "NON",TYPE: "8Pn", F: 0, P: 0,SUP: "0",ID:"45",EFFECTUE:"0" },
 { chantier: "MONTEREAU", support: "80/12A_ANC", I: 3.16, AF: 1.6, B: 2.5, H: 1.8, AR: 0.45, Enc: 0,ECH: "Epingle",BLIND: "OUI",CARO: "NON",TYPE: "9APi", F: 0, P: 0,SUP: "0",ID:"46",EFFECTUE:"0" },
 { chantier: "MONTEREAU", support: "80/12A", I: 3, AF: 1.3, B: 1.9, H: 2.2, AR: 0.45, Enc: 0,ECH: "320",BLIND: "NON",CARO: "NON",TYPE: "8Pn", F: 0, P: 0,SUP: "0",ID:"47",EFFECTUE:"0" },
-{ chantier: "MONTEREAU", support: "80/13A_ANC", I: 2.64, AF: 1, B: 1.8, H: 1.4, AR: 0.5, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "4APi", F: 0, P: 0,SUP: "0",ID:"48",EFFECTUE:"0" },
+{ chantier: "MONTEREAU", support: "80/13A_ANC", I: 2.64, AF: 1, B: 1.8, H: 1.4, AR: 0.5, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "4APi", F: 0, P: 0,SUP: "0",ID:"48",EFFECTUE:"1" },
 { chantier: "MONTEREAU", support: "80/13A", I: 2.5, AF: 1.8, B: 2.5, H: 2.2, AR: 0.5, Enc: 0,ECH: "280",BLIND: "OUI",CARO: "OUI",TYPE: "11Pn", F: 0, P: 0,SUP: "0",ID:"49",EFFECTUE:"0" },
 { chantier: "MONTEREAU", support: "80/14A_ANC", I: 3.94, AF: 0.9, B: 1.7, H: 1.1, AR: 0.55, Enc: 0,ECH: "Epingle",BLIND: "NON",CARO: "NON",TYPE: "3APi", F: 0, P: 0,SUP: "0",ID:"50",EFFECTUE:"0" },
 { chantier: "MONTEREAU", support: "80/14A", I: 3.8, AF: 1.8, B: 2.5, H: 2.2, AR: 0.55, Enc: 0,ECH: "320",BLIND: "OUI",CARO: "OUI",TYPE: "11Pn", F: 0, P: 0,SUP: "0",ID:"51",EFFECTUE:"0" },
