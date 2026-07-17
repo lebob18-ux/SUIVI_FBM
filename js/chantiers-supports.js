@@ -167,21 +167,25 @@ function resetSaisieAvantSupport() {
 }
 
 function filtrerSupports() {
-  const chantier = document.getElementById("selectChantier").value;
-  const supportSelect = document.getElementById("selectSupport");
+    const chantier = document.getElementById("selectChantier").value;
+    const supportSelect = document.getElementById("selectSupport");
 
-  resetSaisieAvantSupport();
+    resetSaisieAvantSupport();
 
-  supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
+    supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
 
-  const filtres = baseSupports.filter(s => s.chantier === chantier && s.EFFECTUE !== 1);
+    // On garde uniquement ceux où EFFECTUE est explicitement 0 ou absent/null
+    const filtres = baseSupports.filter(s => 
+        s.chantier === chantier && 
+        (s.EFFECTUE == 0 || s.EFFECTUE === undefined || s.EFFECTUE === null)
+    );
 
-  filtres.forEach(s => {
-    let opt = document.createElement("option");
-    opt.value = s.support;
-    opt.textContent = s.support;
-    supportSelect.appendChild(opt);
-  });
+    filtres.forEach(s => {
+        let opt = document.createElement("option");
+        opt.value = s.support;
+        opt.textContent = s.support;
+        supportSelect.appendChild(opt);
+    });
 }
 
 
