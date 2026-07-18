@@ -104,9 +104,10 @@ function verifierAdmin(){
 
     const email = localStorage.getItem("email");
 	
-    alert("Email détecté : " + email);
-	
-    const admins = [
+
+	alert("Contenu localStorage :\n\n" + JSON.stringify(localStorage, null, 2));
+
+	const admins = [
         "robert.lavignon@reseau.sncf.fr"
     ];
 
