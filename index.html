@@ -11,7 +11,7 @@
 
 <div id="tabs" class="tabs">
     <button id="tabFBM" class="tab active" onclick="ouvrirOnglet('fbm')">
-        📋 SUIVIE GC AINM1
+        📋 SUIVIE GC AINM 2
     </button>
 
     <button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">
@@ -274,14 +274,18 @@
 </div>  
 
 
+<!-- Fais ceci dans l'onglet FBM ET dans l'onglet Admin -->
 <div class="section">
+  <!-- L'ID ici sert au pliage/dépliage (ton système actuel) -->
   <div class="section-title" onclick="toggleSection('sec-recap')">
     <span>📊 Récapitulatif chantiers</span>
     <span class="section-arrow" id="arrow-sec-recap">▾</span>
   </div>
-  <div class="section-content" class="sec-recap">
+  
+  <!-- L'ID reste pour le CSS, la CLASSE sert au JS pour remplir -->
+  <div class="section-content" id="sec-recap">
     <div class="sec-recap-content" style="padding: 4px 0;">
-      <p style="color:#999; font-size:0.8em; text-align:center;">Ouvre ce bloc pour afficher le récapitulatif.</p>
+      <p style="color:#999; font-size:0.8em; text-align:center;">Chargement...</p>
     </div>
   </div>
 </div>
@@ -368,17 +372,24 @@
     <p>Bienvenue dans la zone réservée.</p>
   </div>
 
+	
+<!-- Fais ceci dans l'onglet FBM ET dans l'onglet Admin -->
 <div class="section">
+  <!-- L'ID ici sert au pliage/dépliage (ton système actuel) -->
   <div class="section-title" onclick="toggleSection('sec-recap')">
     <span>📊 Récapitulatif chantiers</span>
     <span class="section-arrow" id="arrow-sec-recap">▾</span>
   </div>
-  <div class="section-content" class="sec-recap">
+  
+  <!-- L'ID reste pour le CSS, la CLASSE sert au JS pour remplir -->
+  <div class="section-content" id="sec-recap">
     <div class="sec-recap-content" style="padding: 4px 0;">
-      <p style="color:#999; font-size:0.8em; text-align:center;">Ouvre ce bloc pour afficher le récapitulatif.</p>
+      <p style="color:#999; font-size:0.8em; text-align:center;">Chargement...</p>
     </div>
   </div>
 </div>
+<!-- Fin -->
+	
 	
 </div>
 	
