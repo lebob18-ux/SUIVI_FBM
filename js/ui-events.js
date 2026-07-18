@@ -1,21 +1,19 @@
 /* --- 1. FONCTIONS GLOBALES (Appelées par le HTML) --- */
 
 function ouvrirOnglet(nom) {
-    console.log("Le fichier ui-events est chargé !");
-    document.getElementById("fbmPage").style.display = nom === "fbm" ? "" : "none";
-    document.getElementById("adminPage").style.display = nom === "admin" ? "" : "none";
+    document.getElementById("fbmPage").style.display = nom === "fbm" ? "block" : "none";
+    document.getElementById("adminPage").style.display = nom === "admin" ? "block" : "none";
 
     document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
     document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
 
     if (nom === "admin") {
+        console.log("Appel de genererRecap avec ID: recap-content-admin");
         setTimeout(() => {
             if (typeof genererRecap === "function") {
                 genererRecap("recap-content-admin");
-            } else {
-                console.error("La fonction genererRecap est introuvable !");
             }
-        }, 50);
+        }, 100);
     }
 }
 
