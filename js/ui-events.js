@@ -17,10 +17,8 @@ function ouvrirOnglet(nom) {
             }
         }, 100);
     } else if (nom === "fbm") {
-        // AJOUT : On force l'ouverture de la section FBM si elle est "collapsed"
         const sectionFbm = document.getElementById("sec-recap-fbm");
         if (sectionFbm && sectionFbm.parentElement.classList.contains("collapsed")) {
-            // On simule un clic sur le titre pour ouvrir la section
             sectionFbm.parentElement.querySelector(".section-title")?.click();
         }
         
@@ -30,7 +28,7 @@ function ouvrirOnglet(nom) {
             }
         }, 100);
     }
-} // <--- C'EST CETTE ACCOLADE QUI MANQUAIT
+}
 
 function verifierAdmin() {
     const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur"));
@@ -63,7 +61,7 @@ function resetChamps() {
     if (typeof calculer === "function") calculer();
 }
 
-/* --- 2. INITIALISATION GÉNÉRALE (Exécuté au chargement du DOM) --- */
+/* --- 2. INITIALISATION GÉNÉRALE --- */
 
 document.addEventListener("DOMContentLoaded", function () {
     const chkCarotte = document.getElementById("carotte");
