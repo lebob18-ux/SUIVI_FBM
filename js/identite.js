@@ -14,12 +14,12 @@ function chargerIdentite() {
   }
 }
 
+// AVANT
 function appliquerIdentite(identite) {
   const champNom = document.getElementById("nomRedacteur");
   const champEmail = document.getElementById("emailRedacteur");
   if (champNom && identite.nom) champNom.value = identite.nom;
   if (champEmail && identite.email) champEmail.value = identite.email;
-  if (typeof controlerVisibiliteRecap === "function") controlerVisibiliteRecap();
 }
 
 function validerIdentitePopup() {
