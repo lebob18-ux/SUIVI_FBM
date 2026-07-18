@@ -1,26 +1,29 @@
 /* --- 1. FONCTIONS GLOBALES --- */
 function ouvrirOnglet(nom) {
-    document.getElementById("fbmPage").style.display = nom === "fbm" ? "block" : "none";
-    document.getElementById("adminPage").style.display = nom === "admin" ? "block" : "none";
-    document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
-    document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
+    // 1. Gestion des pages
+    const fbmPage = document.getElementById("fbmPage");
+    const adminPage = document.getElementById("adminPage");
+    
+    if (fbmPage) fbmPage.style.display = nom === "fbm" ? "block" : "none";
+    if (adminPage) adminPage.style.display = nom === "admin" ? "block" : "none";
+    
+    // 2. Gestion des boutons
+    document.getElementById("tabFBM")?.classList.toggle("active", nom === "fbm");
+    document.getElementById("tabAdmin")?.classList.toggle("active", nom === "admin");
 
-if (nom === "admin") {
-        // Force l'affichage de la page admin avant d'injecter les données
-        const pageAdmin = document.getElementById("adminPage");
-        if (pageAdmin) pageAdmin.style.display = "block";
-        
-        setTimeout(() => { 
+    // 3. Génération
+    if (nom === "admin") {
+        setTimeout(() => {
             if (typeof genererRecap === "function") {
-                genererRecap("recap-content-admin"); 
+                genererRecap("recap-content-admin");
             }
-        }, 100);
+        }, 50);
     } else if (nom === "fbm") {
-        const sectionFbm = document.getElementById("sec-recap-fbm");
-        if (sectionFbm && sectionFbm.parentElement.classList.contains("collapsed")) {
-            sectionFbm.parentElement.querySelector(".section-title")?.click();
-        }
-        setTimeout(() => { if (typeof genererRecap === "function") genererRecap("recap-content-fbm"); }, 100);
+        setTimeout(() => {
+            if (typeof genererRecap === "function") {
+                genererRecap("recap-content-fbm");
+            }
+        }, 50);
     }
 }
 
