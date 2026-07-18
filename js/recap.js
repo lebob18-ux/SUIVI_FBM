@@ -10,6 +10,10 @@ const RECAP_EMAILS_AUTORISES = [
 ];
 
 function genererRecap(containerId) {
+   if (typeof baseSupports === "undefined") {
+        console.error("ERREUR : baseSupports n'est pas défini !");
+        return;
+    }
    console.log("Tentative de génération dans :", containerId);
   console.log("Données trouvées :", baseSupports); // <--- AJOUTE ÇA
   const cid = containerId || "recap-content";
