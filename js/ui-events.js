@@ -74,9 +74,13 @@ window.addEventListener('load', function() {
         const event = new Event('change');
         selectChantier.dispatchEvent(event);
         
-        // 4. Au cas où l'événement n'est pas capté, on appelle la fonction manuellement
-        chargerChantier();
-    }
+// Remplace ceci :
+// chargerChantier();
+
+// Par ceci :
+if (typeof initChantiers === "function") {
+    initChantiers();
+}
 });
 
 document.querySelector(".box")?.addEventListener("input", () => {
