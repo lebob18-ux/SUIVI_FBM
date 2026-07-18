@@ -1,41 +1,46 @@
 /* ============================================================
    RÉCAPITULATIF PAR CHANTIER
+   - Nombre de massifs effectués / total
+   - m3 béton prévu total et réel total par chantier
    ============================================================ */
 
-function genererRecap() {
-  // On récupère TOUS les conteneurs de contenu (peu importe l'onglet)
-  const containers = document.querySelectorAll(".sec-recap-content");
-  if (containers.length === 0) return;
+/* Emails autorisés à voir l'onglet Admin / récapitulatif */
+const RECAP_EMAILS_AUTORISES = [
+  "ton.email@sncf.fr",
+  "autre.responsable@sncf.fr"
+];
 
-  // 1. Regrouper les données par chantier
+function genererRecap() {
+  const container = document.getElementById("recap-content");
+  if (!container) return;
+
   const chantiersMap = {};
-  if (typeof baseSupports !== 'undefined') {
-    baseSupports.forEach(s => {
-      if (!chantiersMap[s.chantier]) {
-        chantiersMap[s.chantier] = { total: 0, effectues: 0, m3Prevu: 0, m3Reel: 0 };
-      }
-      const c = chantiersMap[s.chantier];
-      c.total++;
-      c.m3Prevu += parseFloat(s.m3_prevu) || 0;
-      c.m3Reel  += parseFloat(s.m3_reel)  || 0;
-      if (s.EFFECTUE == 1) c.effectues++;
-    });
-  }
+  baseSupports.forEach(s => {
+    if (!chantiersMap[s.chantier]) {
+      chantiersMap[s.chantier] = { total: 0, effectues: 0, m3Prevu: 0, m3Reel: 0 };
+    }
+    const c = chantiersMap[s.chantier];
+    c.total++;
+    c.m3Prevu += parseFloat(s.m3_prevu) || 0;
+    c.m3Reel  += parseFloat(s.m3_reel)  || 0;
+    if (s.EFFECTUE == 1) c.effectues++;
+  });
 
   const chantiers = Object.keys(chantiersMap);
-  let html = "";
-
   if (chantiers.length === 0) {
-    html = "<p style='color:#999; font-size:0.8em; text-align:center;'>Aucune donnée disponible.</p>";
-  } else {
-    chantiers.forEach(nom => {
-      const c = chantiersMap[nom];
-      const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
-      const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
-      const ecart = c.m3Reel - c.m3Prevu;
-      const couleurEcart = ecart > 0 ? "#dc2626" : "#16a34a";
+    container.innerHTML = "<p style='color:#999; font-size:0.8em; text-align:center;'>Aucune donnée disponible.</p>";
+    return;
+  }
 
-      html += `
+  let html = "";
+  chantiers.forEach(nom => {
+    const c = chantiersMap[nom];
+    const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
+    const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
+    const ecart = c.m3Reel - c.m3Prevu;
+    const couleurEcart = ecart > 0 ? "#dc2626" : "#16a34a";
+
+    html += `
       <div style="margin-bottom:12px; border:1px solid #e5e5e5; border-radius:8px; overflow:hidden;">
         <div style="background:linear-gradient(to right,#f7f0f6,#f5f5f5); padding:6px 10px; font-weight:bold; font-size:0.82em; color:#7C2270;">
           📁 ${nom}
@@ -49,43 +54,63 @@ function genererRecap() {
             <div style="background:${couleurBarre}; width:${pct}%; height:8px; border-radius:6px;"></div>
           </div>
           <table style="width:100%; border-collapse:collapse; font-size:0.78em;">
+            <thead>
+              <tr>
+                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ prévu</th>
+                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ réel</th>
+                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">Écart</th>
+              </tr>
+            </thead>
             <tbody>
               <tr>
-                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold;">Prévu : ${c.m3Prevu.toFixed(2)} m³</td>
-                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:${couleurEcart};">Réel : ${c.m3Reel.toFixed(2)} m³</td>
-                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:${couleurEcart};">Δ : ${ecart >= 0 ? '+' : ''}${ecart.toFixed(2)}</td>
+                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold;">${c.m3Prevu.toFixed(2)}</td>
+                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:${couleurEcart};">${c.m3Reel.toFixed(2)}</td>
+                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:${couleurEcart};">${ecart >= 0 ? '+' : ''}${ecart.toFixed(2)}</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>`;
-    });
-  }
-
-  // 3. Injection dans tous les blocs trouvés
-  containers.forEach(container => {
-    container.innerHTML = html;
   });
+
+  container.innerHTML = html;
 }
 
-// Gestion intelligente du toggle
-(function() {
-  const _origToggle = window.toggleSection;
-  window.toggleSection = function(id) {
-    if (_origToggle) _origToggle(id);
-    // On rafraîchit tout dès qu'on clique sur n'importe quel bouton de section
-    setTimeout(genererRecap, 50);
-  };
-})();
+/* Contrôle visibilité onglet Admin selon email */
+function controlerVisibiliteRecap() {
+  const btnAdmin = document.getElementById("tabAdmin");
+  if (!btnAdmin) return;
+  try {
+    const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur") || "{}");
+    const email = (identite.email || "").toLowerCase().trim();
+    const autorise = RECAP_EMAILS_AUTORISES.includes(email);
+    btnAdmin.style.display = autorise ? "" : "none";
+  } catch (e) {
+    if (btnAdmin) btnAdmin.style.display = "none";
+  }
+}
 
-// Initialisation globale
-window.addEventListener('load', genererRecap);
-// Force la mise à jour dès que l'onglet Admin est cliqué
-document.getElementById('tabAdmin').addEventListener('click', () => {
-    setTimeout(genererRecap, 100);
-});
-// On surveille le bouton Admin
-document.getElementById('tabAdmin').addEventListener('click', function() {
-    console.log("Tentative de rafraîchissement Admin...");
-    setTimeout(genererRecap, 100);
-});
+/* Bascule entre onglets FBM / Admin */
+function ouvrirOnglet(nom) {
+  document.getElementById("fbmPage").style.display  = nom === "fbm"   ? "" : "none";
+  document.getElementById("adminPage").style.display = nom === "admin" ? "" : "none";
+  document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
+  document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
+  if (nom === "admin" && typeof genererRecap === "function") genererRecap();
+}
+
+/* Regénérer le récap à chaque ouverture du bloc (mode bloc pliable) */
+const _origToggle = typeof toggleSection === "function" ? toggleSection : null;
+window.toggleSection = function(id) {
+  if (_origToggle) _origToggle(id);
+  if (id === "sec-recap") {
+    setTimeout(() => {
+      const section = document.getElementById(id);
+      if (section && !section.closest(".section").classList.contains("collapsed")) {
+        genererRecap();
+      }
+    }, 50);
+  }
+};
+
+window.addEventListener("load", controlerVisibiliteRecap);
