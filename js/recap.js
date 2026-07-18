@@ -3,26 +3,7 @@
    - Nombre de massifs effectués / total
    - m3 béton prévu total et réel total par chantier
    ============================================================ */
-/* Emails autorisés à voir le récapitulatif */
-const RECAP_EMAILS_AUTORISES = [
-  "robert.lavignon@reseau.sncf.fr",
-];
 
-function controlerVisibiliteRecap() {
-  const bloc = document.querySelector(".section:has(#sec-recap)");
-  if (!bloc) return;
-
-  try {
-    const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur") || "{}");
-    const email = (identite.email || "").toLowerCase().trim();
-    const autorise = RECAP_EMAILS_AUTORISES.includes(email);
-    bloc.style.display = autorise ? "" : "none";
-  } catch (e) {
-    bloc.style.display = "none";
-  }
-}
-
-window.addEventListener("load", controlerVisibiliteRecap);
 
 
 
