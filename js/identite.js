@@ -58,8 +58,14 @@ function afficherOngletAdmin() {
     const identite = chargerIdentite();
     if (!identite) return;
 
+    const onglet = document.getElementById("tabAdmin");
+
+    if (!onglet) return;
+
     if (identite.email === "robert.lavignon@reseau.sncf.fr") {
-        document.getElementById("ongletAdmin").style.display = "inline-block";
+        onglet.style.display = "inline-block";
+    } else {
+        onglet.style.display = "none";
     }
 }
 
