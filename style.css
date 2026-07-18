@@ -288,6 +288,16 @@ input[readonly]{
     background:white;
     color:#7C2270;
 }
+/* Force l'affichage des conteneurs de récapitulatifs */
+#adminPage, #fbmPage {
+    width: 100%;
+}
+
+/* On s'assure que même si la div est dans une section, elle prend sa place */
+#recap-content-admin, #recap-content-fbm {
+    display: block !important;
+    min-height: 50px;
+}
 
 .tab.active{
     background:#e9d4e6;
