@@ -100,30 +100,7 @@ function ouvrirOnglet(page){
     document.getElementById("tab" + page.toUpperCase()).classList.add("active");
 }
 
-function verifierAdmin(){
 
-    const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur"));
-
-    if (!identite) {
-        alert("Aucune identité trouvée");
-        return;
-    }
-
-
-
-    const admins = [
-        "robert.lavignon@reseau.sncf.fr"
-    ];
-
-    if(admins.includes(identite.email)){
-
-        document.getElementById("tabAdmin").style.display = "block";
-
-    } else {
-
-        document.getElementById("tabAdmin").style.display = "none";
-    }
-}
 
 
 
