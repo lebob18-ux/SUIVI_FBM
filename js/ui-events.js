@@ -103,7 +103,9 @@ function ouvrirOnglet(page){
 function verifierAdmin(){
 
     const email = localStorage.getItem("email");
-
+	
+    alert("Email détecté : " + email);
+	
     const admins = [
         "robert.lavignon@reseau.sncf.fr"
     ];
@@ -119,5 +121,16 @@ function verifierAdmin(){
         document.getElementById("fbmPage").style.display = "block";
     }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 window.addEventListener("load", verifierAdmin);
