@@ -85,3 +85,9 @@ document.querySelector(".box")?.addEventListener("input", () => {
 document.querySelector(".box")?.addEventListener("change", () => {
   if (typeof sauvegarderLocal === "function") sauvegarderLocal();
 });
+function ouvrirOnglet(id) {
+    document.getElementById("fbm").style.display = "none";
+    document.getElementById("admin").style.display = "none";
+
+    document.getElementById(id).style.display = "block";
+}
