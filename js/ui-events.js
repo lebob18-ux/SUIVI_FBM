@@ -85,9 +85,17 @@ document.querySelector(".box")?.addEventListener("input", () => {
 document.querySelector(".box")?.addEventListener("change", () => {
   if (typeof sauvegarderLocal === "function") sauvegarderLocal();
 });
-function ouvrirOnglet(id) {
-    document.getElementById("fbm").style.display = "none";
-    document.getElementById("admin").style.display = "none";
 
-    document.getElementById(id).style.display = "block";
+
+function ouvrirOnglet(page){
+
+    document.getElementById("fbmPage").style.display = "none";
+    document.getElementById("adminPage").style.display = "none";
+
+    document.getElementById(page + "Page").style.display = "block";
+
+    document.getElementById("tabFBM").classList.remove("active");
+    document.getElementById("tabAdmin").classList.remove("active");
+
+    document.getElementById("tab" + page.toUpperCase()).classList.add("active");
 }
