@@ -29,3 +29,15 @@ function evaluerAlertes() {
 
   wrap.classList.toggle("collapsed", !uneAlerteActive);
 }
+function ouvrirOnglet(nom) {
+  // Pages
+  document.getElementById("fbmPage").style.display = nom === "fbm" ? "" : "none";
+  document.getElementById("adminPage").style.display = nom === "admin" ? "" : "none";
+
+  // Onglets actifs
+  document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
+  document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
+
+  // Générer le récap quand on ouvre l'admin
+  if (nom === "admin" && typeof genererRecap === "function") genererRecap();
+}
