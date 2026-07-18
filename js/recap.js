@@ -18,7 +18,7 @@ function genererRecap() {
     c.total++;
     c.m3Prevu += parseFloat(s.m3_prevu) || 0;
     c.m3Reel  += parseFloat(s.m3_reel)  || 0;
-    if (s.EFFECTUE === 1) c.effectues++;
+    if (s.EFFECTUE == 1) c.effectues++;
   });
 
   const chantiers = Object.keys(chantiersMap);
