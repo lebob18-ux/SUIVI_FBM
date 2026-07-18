@@ -9,28 +9,28 @@ function ouvrirOnglet(nom) {
     document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
     document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
 
-
-// Lancement du récap approprié
-if (nom === "admin") {
-    setTimeout(() => {
-        if (typeof genererRecap === "function") {
-            genererRecap("recap-content-admin");
+    // Lancement du récap approprié
+    if (nom === "admin") {
+        setTimeout(() => {
+            if (typeof genererRecap === "function") {
+                genererRecap("recap-content-admin");
+            }
+        }, 100);
+    } else if (nom === "fbm") {
+        // AJOUT : On force l'ouverture de la section FBM si elle est "collapsed"
+        const sectionFbm = document.getElementById("sec-recap-fbm");
+        if (sectionFbm && sectionFbm.parentElement.classList.contains("collapsed")) {
+            // On simule un clic sur le titre pour ouvrir la section
+            sectionFbm.parentElement.querySelector(".section-title")?.click();
         }
-    }, 100);
-} else if (nom === "fbm") {
-    // AJOUT : On force l'ouverture de la section FBM si elle est "collapsed"
-    const sectionFbm = document.getElementById("sec-recap-fbm");
-    if (sectionFbm && sectionFbm.parentElement.classList.contains("collapsed")) {
-        // On simule un clic sur le titre pour ouvrir la section
-        sectionFbm.parentElement.querySelector(".section-title")?.click();
+        
+        setTimeout(() => {
+            if (typeof genererRecap === "function") {
+                genererRecap("recap-content-fbm");
+            }
+        }, 100);
     }
-    
-    setTimeout(() => {
-        if (typeof genererRecap === "function") {
-            genererRecap("recap-content-fbm");
-        }
-    }, 100);
-}
+} // <--- C'EST CETTE ACCOLADE QUI MANQUAIT
 
 function verifierAdmin() {
     const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur"));
