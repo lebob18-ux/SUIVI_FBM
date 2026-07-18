@@ -44,12 +44,29 @@ const email = document.getElementById("identiteEmailInput").value.trim().toLower
 }
 
 function initIdentite() {
+
   const identite = chargerIdentite();
+
   if (identite) {
+
     appliquerIdentite(identite);
-    afficherOngletAdmin();   // <-- ajout
+
+    afficherOngletAdmin();
+
+    if (identite.email === "robert.lavignon@reseau.sncf.fr") {
+
+      ouvrirOnglet("admin");
+
+    } else {
+
+      ouvrirOnglet("fbm");
+
+    }
+
   } else {
+
     document.getElementById("divIdentiteModal").style.display = "flex";
+
   }
 }
 
