@@ -96,7 +96,7 @@ function ouvrirOnglet(nom) {
   document.getElementById("adminPage").style.display = nom === "admin" ? "" : "none";
   document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
   document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
-  if (nom === "admin") genererRecap("recap-content-admin");
+  if (nom === "admin") setTimeout(() => genererRecap("recap-content-admin"), 50);
 }
 
 const _origToggle = typeof toggleSection === "function" ? toggleSection : null;
