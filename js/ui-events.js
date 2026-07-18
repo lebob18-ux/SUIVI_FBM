@@ -7,6 +7,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const blocBlindage = document.getElementById("bloc_saisie_blindage");
     const blocTraverseNit = document.getElementById("bloc_traverse_nit"); // Nouveau
 
+
+function ouvrirOnglet(nom) {
+  document.getElementById("fbmPage").style.display  = nom === "fbm"   ? "" : "none";
+  document.getElementById("adminPage").style.display = nom === "admin" ? "" : "none";
+  document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
+  document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
+if (nom === "admin") {
+    // Vérifie que c'est bien écrit comme ça
+    setTimeout(() => {
+        if (typeof genererRecap === "function") {
+            genererRecap("recap-content-admin");
+        } else {
+            console.error("La fonction genererRecap n'existe pas !");
+        }
+    }, 50);
+}
+
+	
 function resetChamps() {
 document.getElementById("valF").value = "";
   document.getElementById("valP").value = "";
