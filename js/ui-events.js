@@ -109,7 +109,7 @@ function verifierAdmin(){
         return;
     }
 
-    alert("Email détecté : " + identite.email);
+
 
     const admins = [
         "robert.lavignon@reseau.sncf.fr"
