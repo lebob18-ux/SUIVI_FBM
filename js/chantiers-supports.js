@@ -59,13 +59,11 @@ function chargerSupport() {
     document.getElementById("carotte").checked = (data.CARO === "OUI");
     document.getElementById("display_type").innerText = data.TYPE ? "🧊 " + data.TYPE : "";
 
-    
-}
     // 5. Mise à jour finale
     if (typeof refreshBlocs === "function") refreshBlocs();
     if (typeof restaurerLocal === "function") restaurerLocal();
     calculer();
-
+}
 
 
 
