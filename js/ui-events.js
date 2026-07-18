@@ -1,150 +1,101 @@
-document.addEventListener("DOMContentLoaded", function () {
-
-    const chkCarotte = document.getElementById("carotte");
-    const chkBlindage = document.getElementById("blindageCheck");
-
-    const blocCarotte = document.getElementById("bloc_saisie_carotte");
-    const blocBlindage = document.getElementById("bloc_saisie_blindage");
-    const blocTraverseNit = document.getElementById("bloc_traverse_nit"); // Nouveau
-
+/* --- 1. FONCTIONS GLOBALES (Appelées par le HTML) --- */
 
 function ouvrirOnglet(nom) {
-  document.getElementById("fbmPage").style.display  = nom === "fbm"   ? "" : "none";
-  document.getElementById("adminPage").style.display = nom === "admin" ? "" : "none";
-  document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
-  document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
-if (nom === "admin") {
-    // Vérifie que c'est bien écrit comme ça
-    setTimeout(() => {
-        if (typeof genererRecap === "function") {
-            genererRecap("recap-content-admin");
-        } else {
-            console.error("La fonction genererRecap n'existe pas !");
-        }
-    }, 50);
-}
+    document.getElementById("fbmPage").style.display = nom === "fbm" ? "" : "none";
+    document.getElementById("adminPage").style.display = nom === "admin" ? "" : "none";
 
-	
-function resetChamps() {
-document.getElementById("valF").value = "";
-  document.getElementById("valP").value = "";
-  document.getElementById("valSUP").value = "";
-  majAffichageSensP("APRES");
-  
-  document.getElementById("F_ref").innerText = "";
-  document.getElementById("P_ref").innerText = "";
-  document.getElementById("SUP_ref").innerText = "";
-  document.getElementById("selectSupport").value = "";
-  document.getElementById("I").value = "";
-  document.getElementById("AF").value = "";
-  document.getElementById("B_Fouille").value = "";
-  document.getElementById("H_Fouille").value = "";
-  document.getElementById("AR").value = "";
-  document.getElementById("Enc").value = "";
+    document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
+    document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
 
-  calculer();
-}
-    function refreshBlocs() {
-
-        if (chkCarotte.checked) {
-            blocCarotte.style.display = "flex";
-
-        } else {
-            blocCarotte.style.display = "none";
-			
-        }
-
-        if (chkBlindage.checked) {
-            blocBlindage.style.display = "flex";
-			blocTraverseNit.style.display = "flex"; // Affiche si blindage coché
-        } else {
-            blocBlindage.style.display = "none";
-			blocTraverseNit.style.display = "none"; // Masque sinon
-        }
+    if (nom === "admin") {
+        setTimeout(() => {
+            if (typeof genererRecap === "function") {
+                genererRecap("recap-content-admin");
+            } else {
+                console.error("La fonction genererRecap est introuvable !");
+            }
+        }, 50);
     }
-
-    chkCarotte.addEventListener("change", refreshBlocs);
-    chkBlindage.addEventListener("change", refreshBlocs);
-
-    window.refreshBlocs = refreshBlocs;
-
-    refreshBlocs();
-});
-document.addEventListener('focusin', function(e) {
-
-    if (e.target.type === 'number') {
-        e.target.select();
-    }
-
-});
-// Au chargement complet de la page
-window.addEventListener('load', function() {
-    const selectChantier = document.getElementById("selectChantier");
-
-    // 1. On vérifie s'il y a bien un chantier à sélectionner (index 1)
-    if (selectChantier && selectChantier.options.length > 1) {
-        
-        // 2. On change la sélection
-        selectChantier.selectedIndex = 1;
-        
-        // 3. ON SIMULE L'ÉVÉNEMENT "change"
-        // C'est cette ligne qui déclenche la logique liée à la sélection
-        const event = new Event('change');
-        selectChantier.dispatchEvent(event);
-        
-// Remplace ceci :
-// chargerChantier();
-
-// Par ceci :
-if (typeof initChantiers === "function") {
-    initChantiers();
 }
-});
 
-document.querySelector(".box")?.addEventListener("input", () => {
-  if (typeof sauvegarderLocal === "function") sauvegarderLocal();
-});
-document.querySelector(".box")?.addEventListener("change", () => {
-  if (typeof sauvegarderLocal === "function") sauvegarderLocal();
-});
-
-
-
-
-
-
-
-function verifierAdmin(){
-
+function verifierAdmin() {
     const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur"));
+    if (!identite) return;
 
-    if (!identite) {
-        alert("Aucune identité trouvée");
-        return;
-    }
-
-
-
-    const admins = [
-        "robert.lavignon@reseau.sncf.fr"
-    ];
-
-    if(admins.includes(identite.email)){
-
-        document.getElementById("tabAdmin").style.display = "block";
-
-    } else {
-
-        document.getElementById("tabAdmin").style.display = "none";
+    const admins = ["robert.lavignon@reseau.sncf.fr"];
+    const tabAdmin = document.getElementById("tabAdmin");
+    if (tabAdmin) {
+        tabAdmin.style.display = admins.includes(identite.email) ? "block" : "none";
     }
 }
 
+function resetChamps() {
+    document.getElementById("valF").value = "";
+    document.getElementById("valP").value = "";
+    document.getElementById("valSUP").value = "";
+    if (typeof majAffichageSensP === "function") majAffichageSensP("APRES");
+    
+    document.getElementById("F_ref").innerText = "";
+    document.getElementById("P_ref").innerText = "";
+    document.getElementById("SUP_ref").innerText = "";
+    document.getElementById("selectSupport").value = "";
+    document.getElementById("I").value = "";
+    document.getElementById("AF").value = "";
+    document.getElementById("B_Fouille").value = "";
+    document.getElementById("H_Fouille").value = "";
+    document.getElementById("AR").value = "";
+    document.getElementById("Enc").value = "";
 
+    if (typeof calculer === "function") calculer();
+}
 
+/* --- 2. INITIALISATION GÉNÉRALE (Exécuté au chargement du DOM) --- */
 
+document.addEventListener("DOMContentLoaded", function () {
+    const chkCarotte = document.getElementById("carotte");
+    const chkBlindage = document.getElementById("blindageCheck");
+    const blocCarotte = document.getElementById("bloc_saisie_carotte");
+    const blocBlindage = document.getElementById("bloc_saisie_blindage");
+    const blocTraverseNit = document.getElementById("bloc_traverse_nit");
 
+    function refreshBlocs() {
+        if (blocCarotte) blocCarotte.style.display = chkCarotte?.checked ? "flex" : "none";
+        if (blocBlindage) blocBlindage.style.display = chkBlindage?.checked ? "flex" : "none";
+        if (blocTraverseNit) blocTraverseNit.style.display = chkBlindage?.checked ? "flex" : "none";
+    }
 
+    if (chkCarotte) chkCarotte.addEventListener("change", refreshBlocs);
+    if (chkBlindage) chkBlindage.addEventListener("change", refreshBlocs);
+    
+    window.refreshBlocs = refreshBlocs;
+    refreshBlocs();
 
+    document.addEventListener('focusin', function(e) {
+        if (e.target.type === 'number') e.target.select();
+    });
 
+    document.querySelectorAll(".box").forEach(box => {
+        box.addEventListener("input", () => {
+            if (typeof sauvegarderLocal === "function") sauvegarderLocal();
+        });
+        box.addEventListener("change", () => {
+            if (typeof sauvegarderLocal === "function") sauvegarderLocal();
+        });
+    });
+});
 
-window.addEventListener("load", verifierAdmin);
+/* --- 3. CHARGEMENT INITIAL --- */
+
+window.addEventListener('load', function() {
+    verifierAdmin();
+    
+    const selectChantier = document.getElementById("selectChantier");
+    if (selectChantier && selectChantier.options.length > 1) {
+        selectChantier.selectedIndex = 1;
+        selectChantier.dispatchEvent(new Event('change'));
+        
+        if (typeof initChantiers === "function") {
+            initChantiers();
+        }
+    }
+});
