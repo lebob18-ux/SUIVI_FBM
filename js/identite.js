@@ -47,9 +47,27 @@ function initIdentite() {
   const identite = chargerIdentite();
   if (identite) {
     appliquerIdentite(identite);
+    afficherOngletAdmin();   // <-- ajout
   } else {
     document.getElementById("divIdentiteModal").style.display = "flex";
   }
 }
+
+
+function afficherOngletAdmin() {
+    const identite = chargerIdentite();
+    if (!identite) return;
+
+    if (identite.email === "robert.lavignon@reseau.sncf.fr") {
+        document.getElementById("ongletAdmin").style.display = "inline-block";
+    }
+}
+
+
+
+
+
+
+
 
 window.addEventListener("load", initIdentite);
