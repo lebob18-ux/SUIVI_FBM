@@ -6,8 +6,7 @@
 
 /* Emails autorisés à voir l'onglet Admin / récapitulatif */
 const RECAP_EMAILS_AUTORISES = [
-  "ton.email@sncf.fr",
-  "autre.responsable@sncf.fr"
+  "robert.lavignon@reseau.sncf.fr"
 ];
 
 function genererRecap() {
