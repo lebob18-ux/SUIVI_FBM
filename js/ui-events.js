@@ -99,3 +99,25 @@ function ouvrirOnglet(page){
 
     document.getElementById("tab" + page.toUpperCase()).classList.add("active");
 }
+
+function verifierAdmin(){
+
+    const email = localStorage.getItem("email");
+
+    const admins = [
+        "robert.lavignon@reseau.sncf.fr"
+    ];
+
+    if(admins.includes(email)){
+
+        document.getElementById("tabAdmin").style.display = "block";
+
+    } else {
+
+        document.getElementById("tabAdmin").style.display = "none";
+        document.getElementById("adminPage").style.display = "none";
+        document.getElementById("fbmPage").style.display = "block";
+    }
+}
+
+window.addEventListener("load", verifierAdmin);
