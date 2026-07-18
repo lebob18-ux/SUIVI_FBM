@@ -80,3 +80,7 @@ function genererRecap() {
 
 // Initialisation globale
 window.addEventListener('load', genererRecap);
+// Force la mise à jour dès que l'onglet Admin est cliqué
+document.getElementById('tabAdmin').addEventListener('click', () => {
+    setTimeout(genererRecap, 100);
+});
