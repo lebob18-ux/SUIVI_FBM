@@ -8,17 +8,19 @@
 </head>
 <body>
 
-<div class="tabs">
-    <button onclick="ouvrirOnglet('fbm')">📋 FBM</button>
 
-    <button id="ongletAdmin"
-            onclick="ouvrirOnglet('admin')"
-            style="display:none;">
-        ⚙️ Admin
+<div id="tabs" class="tabs">
+    <button id="tabFBM" class="tab active" onclick="ouvrirOnglet('fbm')">
+        📋 FBM
+    </button>
+
+    <button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">
+        ⚙️ Administration
     </button>
 </div>
 
-<div id="fbm" class="page">
+
+
 
 
 
@@ -375,13 +377,7 @@
 <script src="js/identite.js"></script>
 <script src="js/ainm.js"></script>
 
-</div>
 
-<div id="admin" class="page" style="display:none;">
-    <h3>Administration</h3>
-
-    <!-- Ici tu mettras tes outils réservés -->
-</div>
 	
 </body>
 </html>
