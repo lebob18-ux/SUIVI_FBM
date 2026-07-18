@@ -93,13 +93,7 @@ function controlerVisibiliteRecap() {
 }
 
 /* Bascule entre onglets FBM / Admin */
-function ouvrirOnglet(nom) {
-  document.getElementById("fbmPage").style.display  = nom === "fbm"   ? "" : "none";
-  document.getElementById("adminPage").style.display = nom === "admin" ? "" : "none";
-  document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
-  document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
-  if (nom === "admin") setTimeout(() => genererRecap("recap-content-admin"), 50);
-}
+
 
 const _origToggle = typeof toggleSection === "function" ? toggleSection : null;
 window.toggleSection = function(id) {
