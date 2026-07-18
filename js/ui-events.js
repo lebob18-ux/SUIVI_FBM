@@ -88,27 +88,23 @@ document.querySelector(".box")?.addEventListener("change", () => {
 
 
 function ouvrirOnglet(page) {
-    // 1. Masquer les pages
     document.getElementById("fbmPage").style.display = "none";
     document.getElementById("adminPage").style.display = "none";
-
-    // 2. Afficher la bonne page
     document.getElementById(page + "Page").style.display = "block";
 
-    // 3. Retirer la classe active de tous les boutons
     document.getElementById("tabFBM").classList.remove("active");
     document.getElementById("tabAdmin").classList.remove("active");
 
-    // 4. Ajouter la classe active sur le bon bouton (Correction ici)
-    // On utilise une petite logique pour viser le bon ID
     const tabId = page === 'fbm' ? 'tabFBM' : 'tabAdmin';
     document.getElementById(tabId).classList.add("active");
     
-    // 5. [AJOUT] Forcer le rafraîchissement si on va sur Admin
+    // Ajout d'un petit délai pour laisser la page s'afficher avant de remplir
     if (page === 'admin') {
-        if (typeof genererRecap === 'function') {
-            genererRecap();
-        }
+        setTimeout(function() {
+            if (typeof genererRecap === 'function') {
+                genererRecap();
+            }
+        }, 50); 
     }
 }
 
