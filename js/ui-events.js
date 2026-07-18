@@ -87,26 +87,7 @@ document.querySelector(".box")?.addEventListener("change", () => {
 });
 
 
-function ouvrirOnglet(page) {
-    document.getElementById("fbmPage").style.display = "none";
-    document.getElementById("adminPage").style.display = "none";
-    document.getElementById(page + "Page").style.display = "block";
 
-    document.getElementById("tabFBM").classList.remove("active");
-    document.getElementById("tabAdmin").classList.remove("active");
-
-    const tabId = page === 'fbm' ? 'tabFBM' : 'tabAdmin';
-    document.getElementById(tabId).classList.add("active");
-    
-    // Ajout d'un petit délai pour laisser la page s'afficher avant de remplir
-    if (page === 'admin') {
-        setTimeout(function() {
-            if (typeof genererRecap === 'function') {
-                genererRecap();
-            }
-        }, 50); 
-    }
-}
 
 
 
