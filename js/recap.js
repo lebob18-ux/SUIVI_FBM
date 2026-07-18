@@ -96,17 +96,6 @@ function controlerVisibiliteRecap() {
 
 
 const _origToggle = typeof toggleSection === "function" ? toggleSection : null;
-window.toggleSection = function(id) {
-  if (_origToggle) _origToggle(id);
-  if (id === "sec-recap-fbm" || id === "sec-recap") {
-    setTimeout(() => {
-      const section = document.getElementById(id);
-      if (section && !section.closest(".section").classList.contains("collapsed")) {
-        const cid = id === "sec-recap-fbm" ? "recap-content-fbm" : "recap-content";
-        genererRecap(cid);
-      }
-    }, 50);
-  }
-};
+
 
 window.addEventListener("load", controlerVisibiliteRecap);
