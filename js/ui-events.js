@@ -5,8 +5,16 @@ function ouvrirOnglet(nom) {
     document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
     document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
 
-    if (nom === "admin") {
-        setTimeout(() => { if (typeof genererRecap === "function") genererRecap("recap-content-admin"); }, 100);
+if (nom === "admin") {
+        // Force l'affichage de la page admin avant d'injecter les données
+        const pageAdmin = document.getElementById("adminPage");
+        if (pageAdmin) pageAdmin.style.display = "block";
+        
+        setTimeout(() => { 
+            if (typeof genererRecap === "function") {
+                genererRecap("recap-content-admin"); 
+            }
+        }, 100);
     } else if (nom === "fbm") {
         const sectionFbm = document.getElementById("sec-recap-fbm");
         if (sectionFbm && sectionFbm.parentElement.classList.contains("collapsed")) {
