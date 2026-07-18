@@ -86,3 +86,7 @@ window.toggleSection = function(id) {
     setTimeout(genererRecap, 50);
   }
 };
+// On s'assure que le contenu est généré même si l'onglet est masqué
+window.addEventListener('load', () => {
+    setTimeout(genererRecap, 500);
+});
