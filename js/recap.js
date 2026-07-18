@@ -84,3 +84,8 @@ window.addEventListener('load', genererRecap);
 document.getElementById('tabAdmin').addEventListener('click', () => {
     setTimeout(genererRecap, 100);
 });
+// On surveille le bouton Admin
+document.getElementById('tabAdmin').addEventListener('click', function() {
+    console.log("Tentative de rafraîchissement Admin...");
+    setTimeout(genererRecap, 100);
+});
