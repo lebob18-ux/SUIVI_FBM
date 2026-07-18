@@ -11,7 +11,7 @@
 
 <div id="tabs" class="tabs">
     <button id="tabFBM" class="tab active" onclick="ouvrirOnglet('fbm')">
-        📋 SUIVIE GC AINM
+        📋 SUIVIE GC AINM 252
     </button>
 
     <button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">
@@ -371,16 +371,19 @@
   </div>
 
 	
-<div class="section">
-  <!-- On appelle toggle avec l'ID spécifique de cette page -->
-  <div class="section-title" onclick="toggleSection('sec-recap-admin')">
-    <span>📊 Récapitulatif chantiers</span>
-    <span class="section-arrow" id="arrow-sec-recap-admin">▾</span>
-  </div>
-  
-  <div class="section-content" id="sec-recap-admin">
-    <div class="sec-recap-content" style="padding: 4px 0;">
-      <p style="color:#999; font-size:0.8em; text-align:center;">Chargement...</p>
+<div id="adminPage" style="display:none;">
+  <div class="box">
+    <h2>⚙️ Administration</h2>
+    <p>Bienvenue dans la zone réservée.</p>
+    
+    <!-- Zone de récap -->
+    <div class="section">
+      <div class="section-title"><span>📊 Récapitulatif chantiers</span></div>
+      <div class="section-content">
+        <div class="sec-recap-content" style="padding: 4px 0;">
+          <p style="color:#999;">Chargement en cours...</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
