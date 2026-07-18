@@ -1,6 +1,7 @@
 /* --- 1. FONCTIONS GLOBALES (Appelées par le HTML) --- */
 
 function ouvrirOnglet(nom) {
+    console.log("Le fichier ui-events est chargé !");
     document.getElementById("fbmPage").style.display = nom === "fbm" ? "" : "none";
     document.getElementById("adminPage").style.display = nom === "admin" ? "" : "none";
 
