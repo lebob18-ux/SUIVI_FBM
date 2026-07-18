@@ -1,17 +1,25 @@
 /* --- 1. FONCTIONS GLOBALES (Appelées par le HTML) --- */
 
 function ouvrirOnglet(nom) {
+    // Gestion visuelle des pages
     document.getElementById("fbmPage").style.display = nom === "fbm" ? "block" : "none";
     document.getElementById("adminPage").style.display = nom === "admin" ? "block" : "none";
-
+    
+    // Gestion des boutons actifs
     document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
     document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
 
+    // Lancement du récap approprié
     if (nom === "admin") {
-        console.log("Appel de genererRecap avec ID: recap-content-admin");
         setTimeout(() => {
             if (typeof genererRecap === "function") {
-                genererRecap("recap-content-admin");
+                genererRecap("recap-content-admin"); // ID pour la page Admin
+            }
+        }, 100);
+    } else if (nom === "fbm") {
+        setTimeout(() => {
+            if (typeof genererRecap === "function") {
+                genererRecap("recap-content-fbm"); // ID pour la page FBM
             }
         }, 100);
     }
