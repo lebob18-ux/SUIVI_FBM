@@ -10,6 +10,8 @@ const RECAP_EMAILS_AUTORISES = [
 ];
 
 function genererRecap(containerId) {
+   console.log("Tentative de génération dans :", containerId);
+  console.log("Données trouvées :", baseSupports); // <--- AJOUTE ÇA
   const cid = containerId || "recap-content";
   const container = document.getElementById(cid);
   if (!container) return;
