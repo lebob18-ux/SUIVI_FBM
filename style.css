@@ -272,3 +272,23 @@ input[readonly]{
   align-items: flex-start;
   width: 98%;
 }
+.tabs{
+    display:flex;
+    background:#7C2270;
+    padding:6px;
+    gap:6px;
+}
+
+.tab{
+    flex:1;
+    border:none;
+    border-radius:10px;
+    padding:10px;
+    font-weight:bold;
+    background:white;
+    color:#7C2270;
+}
+
+.tab.active{
+    background:#e9d4e6;
+}
