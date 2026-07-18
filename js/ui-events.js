@@ -102,7 +102,7 @@ function ouvrirOnglet(page){
 
 function verifierAdmin(){
 
-    const email = localStorage.getItem("email");
+    const email = localStorage.getItem("emailRedacteur");
 	
 
 	alert("Contenu localStorage :\n\n" + JSON.stringify(localStorage, null, 2));
