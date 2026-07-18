@@ -9,8 +9,9 @@ const RECAP_EMAILS_AUTORISES = [
   "robert.lavignon@reseau.sncf.fr"
 ];
 
-function genererRecap() {
-  const container = document.getElementById("recap-content");
+function genererRecap(containerId) {
+  const cid = containerId || "recap-content";
+  const container = document.getElementById(cid);
   if (!container) return;
 
   const chantiersMap = {};
@@ -95,18 +96,18 @@ function ouvrirOnglet(nom) {
   document.getElementById("adminPage").style.display = nom === "admin" ? "" : "none";
   document.getElementById("tabFBM").classList.toggle("active", nom === "fbm");
   document.getElementById("tabAdmin").classList.toggle("active", nom === "admin");
-  if (nom === "admin" && typeof genererRecap === "function") genererRecap();
+  if (nom === "admin") genererRecap("recap-content-admin");
 }
 
-/* Regénérer le récap à chaque ouverture du bloc (mode bloc pliable) */
 const _origToggle = typeof toggleSection === "function" ? toggleSection : null;
 window.toggleSection = function(id) {
   if (_origToggle) _origToggle(id);
-  if (id === "sec-recap") {
+  if (id === "sec-recap-fbm" || id === "sec-recap") {
     setTimeout(() => {
       const section = document.getElementById(id);
       if (section && !section.closest(".section").classList.contains("collapsed")) {
-        genererRecap();
+        const cid = id === "sec-recap-fbm" ? "recap-content-fbm" : "recap-content";
+        genererRecap(cid);
       }
     }, 50);
   }
