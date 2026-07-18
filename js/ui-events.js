@@ -102,24 +102,26 @@ function ouvrirOnglet(page){
 
 function verifierAdmin(){
 
-    const email = localStorage.getItem("emailRedacteur");
-	
+    const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur"));
 
-	alert("Contenu localStorage :\n\n" + JSON.stringify(localStorage, null, 2));
+    if (!identite) {
+        alert("Aucune identité trouvée");
+        return;
+    }
 
-	const admins = [
+    alert("Email détecté : " + identite.email);
+
+    const admins = [
         "robert.lavignon@reseau.sncf.fr"
     ];
 
-    if(admins.includes(email)){
+    if(admins.includes(identite.email)){
 
         document.getElementById("tabAdmin").style.display = "block";
 
     } else {
 
         document.getElementById("tabAdmin").style.display = "none";
-        document.getElementById("adminPage").style.display = "none";
-        document.getElementById("fbmPage").style.display = "block";
     }
 }
 
