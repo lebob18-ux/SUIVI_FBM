@@ -7,6 +7,22 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+<div class="tabs">
+    <button onclick="ouvrirOnglet('fbm')">📋 FBM</button>
+
+    <button id="ongletAdmin"
+            onclick="ouvrirOnglet('admin')"
+            style="display:none;">
+        ⚙️ Admin
+    </button>
+</div>
+
+<div id="fbm" class="page">
+
+
+
+	
 <div class="box">
 <div class="header-row">
 <div style="display:flex; justify-content:center; margin-bottom:8px;">
@@ -358,5 +374,14 @@
 <script src="js/recap.js"></script>
 <script src="js/identite.js"></script>
 <script src="js/ainm.js"></script>
+
+</div>
+
+<div id="admin" class="page" style="display:none;">
+    <h3>Administration</h3>
+
+    <!-- Ici tu mettras tes outils réservés -->
+</div>
+	
 </body>
 </html>
