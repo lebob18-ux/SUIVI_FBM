@@ -82,19 +82,7 @@ function genererRecap(containerId) {
   container.innerHTML = html;
 }
 
-/* Contrôle visibilité onglet Admin selon email */
-function controlerVisibiliteRecap() {
-  const btnAdmin = document.getElementById("tabAdmin");
-  if (!btnAdmin) return;
-  try {
-    const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur") || "{}");
-    const email = (identite.email || "").toLowerCase().trim();
-    const autorise = RECAP_EMAILS_AUTORISES.includes(email);
-    btnAdmin.style.display = autorise ? "" : "none";
-  } catch (e) {
-    if (btnAdmin) btnAdmin.style.display = "none";
-  }
-}
+
 
 /* Bascule entre onglets FBM / Admin */
 
@@ -102,4 +90,3 @@ function controlerVisibiliteRecap() {
 const _origToggle = typeof toggleSection === "function" ? toggleSection : null;
 
 
-window.addEventListener("load", controlerVisibiliteRecap);
