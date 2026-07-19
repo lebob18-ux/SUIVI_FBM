@@ -66,5 +66,4 @@ const baseSupports = [
 { chantier: "auxerre1", support: "80/21A", I: 2.6, AF: 1.1, B: 1.7, H: 2, AR: 0.4, Enc: 0, ECH: "HEB 300", BLIND: "NON", CARO: "NON", TYPE: "6Pn", F: 0, P: 0, SUP: "0", ID: "107", EFFECTUE: "0", m3_prevu: 3.74, m3_reel: 0 },
 { chantier: "auxerre1", support: "80/22A_ANC", I: 3.05, AF: 1.6, B: 2.5, H: 1.8, AR: 0.45, Enc: 0, ECH: "Epingle", BLIND: "OUI", CARO: "NON", TYPE: "9APi", F: 0, P: 0, SUP: "0", ID: "108", EFFECTUE: "0", m3_prevu: 7.2, m3_reel: 0 },
 { chantier: "auxerre1", support: "80/22A", I: 2.9, AF: 1.1, B: 1.7, H: 2, AR: 0.45, Enc: 0, ECH: "HEB 300", BLIND: "NON", CARO: "NON", TYPE: "6Pn", F: 0, P: 0, SUP: "0", ID: "109", EFFECTUE: "0", m3_prevu: 3.74, m3_reel: 0 },
-
 ];
