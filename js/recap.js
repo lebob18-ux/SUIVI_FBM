@@ -1,24 +1,16 @@
 /* ============================================================
    RÉCAPITULATIF PAR CHANTIER
-   - Nombre de massifs effectués / total
-   - m3 béton prévu total et réel total par chantier
    ============================================================ */
 
-/* Emails autorisés à voir l'onglet Admin / récapitulatif */
 const RECAP_EMAILS_AUTORISES = [
   "robert.lavignon@reseau.sncf.fr"
 ];
 
 function genererRecap(containerId) {
-   if (typeof baseSupports === "undefined") {
-        console.error("ERREUR : baseSupports n'est pas défini !");
-        return;
-    }
-   console.log("Tentative de génération dans :", containerId);
-  console.log("Données trouvées :", baseSupports); // <--- AJOUTE ÇA
-  const cid = containerId || "recap-content";
+  const cid = containerId || "recap-content-fbm";
   const container = document.getElementById(cid);
-  if (!container) return;
+  if (!container) { console.warn("Container introuvable :", cid); return; }
+  if (typeof baseSupports === "undefined") { console.error("baseSupports non défini"); return; }
 
   const chantiersMap = {};
   baseSupports.forEach(s => {
@@ -82,11 +74,43 @@ function genererRecap(containerId) {
   container.innerHTML = html;
 }
 
+/* Bascule onglets FBM / Admin */
+function ouvrirOnglet(nom) {
+  const fbmPage   = document.getElementById("fbmPage");
+  const adminPage = document.getElementById("adminPage");
+  if (fbmPage)   fbmPage.style.display   = nom === "fbm"   ? "block" : "none";
+  if (adminPage) adminPage.style.display = nom === "admin" ? "block" : "none";
+  document.getElementById("tabFBM")?.classList.toggle("active", nom === "fbm");
+  document.getElementById("tabAdmin")?.classList.toggle("active", nom === "admin");
+  if (nom === "admin") setTimeout(() => genererRecap("recap-content-admin"), 100);
+  if (nom === "fbm")   setTimeout(() => genererRecap("recap-content-fbm"), 100);
+}
 
+/* Visibilité onglet Admin selon email */
+function controlerVisibiliteRecap() {
+  const btnAdmin = document.getElementById("tabAdmin");
+  if (!btnAdmin) return;
+  try {
+    const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur") || "{}");
+    const email = (identite.email || "").toLowerCase().trim();
+    btnAdmin.style.display = RECAP_EMAILS_AUTORISES.includes(email) ? "" : "none";
+  } catch (e) {
+    if (btnAdmin) btnAdmin.style.display = "none";
+  }
+}
 
-/* Bascule entre onglets FBM / Admin */
-
-
+/* Récap dans le bloc pliable FBM */
 const _origToggle = typeof toggleSection === "function" ? toggleSection : null;
+window.toggleSection = function(id) {
+  if (_origToggle) _origToggle(id);
+  if (id === "sec-recap-fbm") {
+    setTimeout(() => {
+      const section = document.getElementById(id);
+      if (section && !section.closest(".section").classList.contains("collapsed")) {
+        genererRecap("recap-content-fbm");
+      }
+    }, 50);
+  }
+};
 
-
+window.addEventListener("load", controlerVisibiliteRecap);
