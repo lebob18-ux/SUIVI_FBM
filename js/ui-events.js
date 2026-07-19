@@ -36,7 +36,7 @@ window.addEventListener('load', function() {
     if (selectChantier && selectChantier.options.length > 1) {
         selectChantier.selectedIndex = 1;
         selectChantier.dispatchEvent(new Event('change'));
-        if (typeof initChantiers === "function") initChantiers();
+ 
     }
 });
 // FIN DU FICHIER - NE RIEN SUPPRIMER APRES CETTE LIGNE
