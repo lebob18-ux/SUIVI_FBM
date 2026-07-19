@@ -14,7 +14,7 @@
         📋 SUIVIE GC AINM
     </button>
 
-<button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">⚙️ Administration 4</button>
+<button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">⚙️ Administration 5</button>
 </div>
 
 <div id="fbmPage">	
@@ -344,6 +344,7 @@
   <div class="box">
     <h2>⚙️ Administration</h2>
     <p>Bienvenue dans la zone réservée.</p>
+    <button id="btnRecapPdf" onclick="exporterRecapPDF()" style="background:#7C2270; color:white; width:100%; padding:10px; font-weight:bold; border-radius:8px; margin-bottom:12px;">📲 Partager PDF récap</button>
     <h3 style="color:#7C2270;">📊 Récapitulatif chantiers</h3>
     <div id="recap-content-admin" style="padding: 4px 0;">
       <p style="color:#999;">Chargement en cours...</p>
@@ -362,6 +363,7 @@
 <script src="js/calculs.js"></script>
 <script src="js/partage.js"></script>
 <script src="js/pdf-export.js"></script>
+<script src="js/pdf-recap.js"></script>
 <script src="js/autosave.js"></script>
 <script src="js/chantiers-supports.js"></script>
 	<script src="js/recap.js"></script>
