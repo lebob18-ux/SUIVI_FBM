@@ -67,6 +67,41 @@ function chargerSupport() {
 }
 
 
+const aliasEchantillon = {
+"HE180A":"HEA180",
+"HEA180":"HEA180",
+"HE200A":"HEA200",
+"HEA200":"HEA200",
+"HE220A":"HEA220",
+"HEA220":"HEA220",
+"HE240A":"HEA240",
+"HEA240":"HEA240",
+"HE300A":"HEA300",
+"HEA300":"HEA300",
+"HE320A":"HEA320",
+"HEA320":"HEA320",
+"HE220B":"HEB220",
+"HEB220":"HEB220",
+"HE240B":"HEB240",
+"HEB240":"HEB240",
+"HE260B":"HEB260",
+"HEB260":"HEB260",
+"HE300B":"HEB300",
+"HEB300":"HEB300",
+"HE320B":"HEB320",
+"HEB320":"HEB320",
+"JHE280A":"JHEA280",
+"JHEA280":"JHEA280",
+"JHE320A":"JHEA320",
+"JHEA320":"JHEA320",
+"JHE280B":"JHEB280",
+"JHEB280":"JHEB280",
+"JHE320B":"JHEB320",
+"JHEB320":"JHEB320",
+};
+
+
+
 
 /* Correspondance ECH (base support) <-> profils du popup Echantillon */
 const profilsEchantillon = {
@@ -85,9 +120,14 @@ const profilsEchantillon = {
 function appliquerEchantillon(ech) {
   if (ech === undefined || ech === null || ech === "") return;
 
-  const cle = String(ech).trim();
-  const profil = profilsEchantillon[cle];
+  let cle = String(ech).trim();
 
+  // Résolution des aliases (variantes de nommage)
+  if (typeof aliasEchantillon !== "undefined" && aliasEchantillon[cle]) {
+    cle = aliasEchantillon[cle];
+  }
+
+  const profil = profilsEchantillon[cle];
   if (profil) {
     // Profil reconnu (ex: 240 -> HE240) : on réutilise la logique du popup
     validerEchantillonPopup(profil.valeur, profil.largeur, profil.nom);
@@ -96,7 +136,6 @@ function appliquerEchantillon(ech) {
     validerEchantillonPopup("manuel", "0", "Autre...");
     document.getElementById("E").value = cle;
     document.getElementById("display_prof").innerText = cle;
-      
     calculer();
   }
 }
