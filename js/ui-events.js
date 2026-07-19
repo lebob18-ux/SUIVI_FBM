@@ -1,31 +1,5 @@
 /* --- 1. FONCTIONS GLOBALES --- */
-function ouvrirOnglet(nom) {
-    // 1. Gestion des pages
-    const fbmPage = document.getElementById("fbmPage");
-    const adminPage = document.getElementById("adminPage");
-    
-    if (fbmPage) fbmPage.style.display = nom === "fbm" ? "block" : "none";
-    if (adminPage) adminPage.style.display = nom === "admin" ? "block" : "none";
-    
-    // 2. Gestion des boutons
-    document.getElementById("tabFBM")?.classList.toggle("active", nom === "fbm");
-    document.getElementById("tabAdmin")?.classList.toggle("active", nom === "admin");
 
-    // 3. Génération
-    if (nom === "admin") {
-        setTimeout(() => {
-            if (typeof genererRecap === "function") {
-                genererRecap("recap-content-admin");
-            }
-        }, 50);
-    } else if (nom === "fbm") {
-        setTimeout(() => {
-            if (typeof genererRecap === "function") {
-                genererRecap("recap-content-fbm");
-            }
-        }, 50);
-    }
-}
 
 function verifierAdmin() {
     const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur"));
