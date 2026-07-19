@@ -14,7 +14,7 @@
         📋 SUIVIE GC AINM
     </button>
 
-<button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">⚙️ Administration 5</button>
+<button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">⚙️ Administration 6</button>
 </div>
 
 <div id="fbmPage">	
@@ -259,7 +259,29 @@
     <span id="Hmax_display"></span>	
   </div>   
 </div>  
+<!-- Section bl-béton -->
+<div class="section collapsed">
+  <div class="section-title" onclick="toggleSection('sec-bl-beton')">
+    <span>🧾 BL-BÉTON</span>
+    <span class="section-arrow" id="arrow-sec-bl-beton">▾</span>
+  </div>
+  <div class="section-content" id="sec-bl-beton">
+    <div style="display:flex; gap:5px; margin-bottom:6px;">
+      <input list="bl-datalist" id="bl-input" placeholder="N° BL ou scanner..."
+        style="flex:1; height:32px; font-size:0.85em;">
+      <datalist id="bl-datalist"></datalist>
+      <button type="button" onclick="scannerQR()"
+        style="background:#7C2270; color:white; padding:5px 10px; margin:0; font-size:1.1em;">📷</button>
+      <button type="button" onclick="ajouterBL()"
+        style="background:#16a34a; color:white; padding:5px 10px; margin:0; font-weight:bold;">➕</button>
+    </div>
+    <div id="bl-liste"></div>
+  </div>
+</div>
+<!-- Section bl-béton -->
 
+
+	
 
 
 
@@ -357,6 +379,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="js/rj.js"></script>
 <script src="data.js"></script>
+<script src="bl-liste.js"></script>
+<script src="js/bl-beton.js"></script>
 <script src="js/state.js"></script>
 <script src="js/ui-sections.js"></script>
 <script src="js/echantillon-modal.js"></script>
