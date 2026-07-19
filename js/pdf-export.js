@@ -341,22 +341,32 @@ doc.autoTable({
 y = doc.lastAutoTable.finalY + 5;
 
 
+
 // ---------- Section BL-BÉTON ----------
 if (typeof blsActuels !== "undefined" && blsActuels.length > 0) {
   titreSection("BONS DE LIVRAISON BÉTON", violet);
+  const rowsBL = blsActuels.map((item, i) => [
+    i + 1,
+    item.bl,
+    item.slumps.length > 0 ? item.slumps.join(" / ") + " cm" : "-"
+  ]);
   doc.autoTable({
     startY: y,
     margin: { left: marge, right: marge, bottom: footerReserve },
-    head: [["#", "Numéro BL"]],
-    body: blsActuels.map((bl, i) => [i + 1, bl]),
+    head: [["#", "N° BL", "Slump(s)"]],
+    body: rowsBL,
     theme: "grid",
     styles: { fontSize: 8.5, cellPadding: 2.5 },
     headStyles: { fillColor: violet, textColor: 255, fontStyle: "bold" },
-    columnStyles: { 0: { cellWidth: 12, halign: "center" }, 1: { fontStyle: "bold" } },
+    columnStyles: {
+      0: { cellWidth: 10, halign: "center" },
+      1: { fontStyle: "bold" },
+      2: { halign: "center", textColor: [3, 105, 161] }
+    },
   });
   y = doc.lastAutoTable.finalY + 5;
 }
-
+// ---------- Section BL-BÉTON ----------
 
     
     // ---------- Section 6 : résultat blindage / LTV ----------
