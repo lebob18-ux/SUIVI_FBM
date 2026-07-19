@@ -340,6 +340,25 @@ doc.autoTable({
 });
 y = doc.lastAutoTable.finalY + 5;
 
+
+// ---------- Section BL-BÉTON ----------
+if (typeof blsActuels !== "undefined" && blsActuels.length > 0) {
+  titreSection("BONS DE LIVRAISON BÉTON", violet);
+  doc.autoTable({
+    startY: y,
+    margin: { left: marge, right: marge, bottom: footerReserve },
+    head: [["#", "Numéro BL"]],
+    body: blsActuels.map((bl, i) => [i + 1, bl]),
+    theme: "grid",
+    styles: { fontSize: 8.5, cellPadding: 2.5 },
+    headStyles: { fillColor: violet, textColor: 255, fontStyle: "bold" },
+    columnStyles: { 0: { cellWidth: 12, halign: "center" }, 1: { fontStyle: "bold" } },
+  });
+  y = doc.lastAutoTable.finalY + 5;
+}
+
+
+    
     // ---------- Section 6 : résultat blindage / LTV ----------
     titreSection("RESULTAT", rouge);
 
