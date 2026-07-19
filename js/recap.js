@@ -83,7 +83,7 @@ function ouvrirOnglet(nom) {
   document.getElementById("tabFBM")?.classList.toggle("active", nom === "fbm");
   document.getElementById("tabAdmin")?.classList.toggle("active", nom === "admin");
   if (nom === "admin") setTimeout(() => genererRecap("recap-content-admin"), 100);
-  if (nom === "fbm")   setTimeout(() => genererRecap("recap-content-fbm"), 100);
+
 }
 
 /* Visibilité onglet Admin selon email */
