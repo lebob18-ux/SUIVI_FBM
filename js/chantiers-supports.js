@@ -62,6 +62,7 @@ function chargerSupport() {
     // 5. Mise à jour finale
     if (typeof refreshBlocs === "function") refreshBlocs();
     if (typeof restaurerLocal === "function") restaurerLocal();
+    if (typeof rechargerBLsSupport === "function") rechargerBLsSupport();
     calculer();
 }
 
@@ -95,6 +96,7 @@ function appliquerEchantillon(ech) {
     validerEchantillonPopup("manuel", "0", "Autre...");
     document.getElementById("E").value = cle;
     document.getElementById("display_prof").innerText = cle;
+      
     calculer();
   }
 }
