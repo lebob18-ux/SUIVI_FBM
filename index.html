@@ -14,7 +14,7 @@
         📋 SUIVIE GC AINM
     </button>
 
-<button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">⚙️ Administration 6</button>
+<button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">⚙️ Administration QR</button>
 </div>
 
 <div id="fbmPage">	
@@ -266,14 +266,18 @@
     <span class="section-arrow" id="arrow-sec-bl-beton">▾</span>
   </div>
   <div class="section-content" id="sec-bl-beton">
-    <div style="display:flex; gap:5px; margin-bottom:6px;">
-      <input list="bl-datalist" id="bl-input" placeholder="N° BL ou scanner..."
-        style="flex:1; height:32px; font-size:0.85em;">
+    <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
+      <input list="bl-datalist" id="bl-input" placeholder="N° BL..."
+        style="flex:2; height:32px; font-size:0.85em;">
       <datalist id="bl-datalist"></datalist>
       <button type="button" onclick="scannerQR()"
         style="background:#7C2270; color:white; padding:5px 10px; margin:0; font-size:1.1em;">📷</button>
+    </div>
+    <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
+      <input type="number" id="slump-input" placeholder="Slump (cm)"
+        style="flex:1; height:32px; font-size:0.85em;" step="1" min="0">
       <button type="button" onclick="ajouterBL()"
-        style="background:#16a34a; color:white; padding:5px 10px; margin:0; font-weight:bold;">➕</button>
+        style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">➕ Ajouter</button>
     </div>
     <div id="bl-liste"></div>
   </div>
