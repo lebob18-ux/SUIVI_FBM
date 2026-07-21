@@ -161,15 +161,12 @@ async function exporterRecapPDF() {
     const pdfBlob = doc.output("blob");
     const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
 
-    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-      await navigator.share({
-        files: [pdfFile],
-        title: "Récapitulatif Avancement Chantiers",
-        text: "AINM — Récapitulatif chantiers édité le " + dateStr
-      });
-    } else {
-      doc.save(nomFichier);
-    }
+const pdfBlob = doc.output("blob");
+if (typeof partagerPDF === "function") {
+  partagerPDF(pdfBlob, nomFichier, "Récapitulatif Avancement Chantiers");
+} else {
+  doc.save(nomFichier);
+}
 
   } catch (err) {
     console.error("Erreur PDF récap :", err);
