@@ -398,30 +398,7 @@
   </div>
 </div>
 
-<!-- Modal choix partage -->
-<div id="divPartageModal" class="custom-modal">
-  <div class="custom-modal-content" style="background:white; padding:18px; border-radius:12px; width:85%; max-width:320px; text-align:center;">
-    <p style="font-weight:bold; font-size:1em; margin-bottom:14px; color:#333;">📤 Partager le PDF</p>
-    <button onclick="choisirEmail()" style="background:#7C2270; color:white; width:100%; padding:10px; margin-bottom:8px; font-weight:bold;">📧 Email (liste de diffusion)</button>
-    <button onclick="choisirAutre()" style="background:#16a34a; color:white; width:100%; padding:10px; margin-bottom:8px; font-weight:bold;">📲 WhatsApp / Autre</button>
-    <button onclick="document.getElementById('divPartageModal').style.display='none'" style="background:#fee2e2; color:#dc2626; width:100%; padding:8px; font-size:0.85em;">❌ Annuler</button>
-  </div>
-</div>
 
-<!-- Modal email distribution -->
-<div id="divEmailModal" class="custom-modal">
-  <div class="custom-modal-content" style="background:white; padding:18px; border-radius:12px; width:90%; max-width:360px; text-align:left;">
-    <p style="font-weight:bold; font-size:1em; margin-bottom:10px; color:#333; text-align:center;">📧 Destinataires</p>
-    <div id="email-liste-fixe" style="margin-bottom:10px; max-height:180px; overflow-y:auto;"></div>
-    <div style="display:flex; gap:5px; margin-bottom:6px;">
-      <input type="email" id="email-manuel-input" placeholder="Ajouter un email..." style="flex:1; height:32px; font-size:0.82em;">
-      <button onclick="ajouterEmailManuel()" style="background:#7C2270; color:white; padding:5px 10px; margin:0; font-weight:bold;">➕</button>
-    </div>
-    <div id="email-manuel-liste" style="margin-bottom:10px;"></div>
-    <button onclick="confirmerEmailPDF()" style="background:#7C2270; color:white; width:100%; padding:10px; margin-bottom:8px; font-weight:bold;">✉️ Ouvrir email + télécharger PDF</button>
-    <button onclick="document.getElementById('divEmailModal').style.display='none'" style="background:#fee2e2; color:#dc2626; width:100%; padding:8px; font-size:0.85em;">❌ Annuler</button>
-  </div>
-</div>
 
 
 
