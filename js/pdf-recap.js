@@ -28,7 +28,7 @@ async function exporterRecapPDF() {
     /* ---- Logo AINM ---- */
     let logoAinmDataUrl = null;
     if (typeof logoAINMversPNG === "function") {
-      logoAinmDataUrl = await logoAINMversPNG(737, 291);
+      logoAinmDataUrl = await logoAINMversPNG(300, 118);
     }
 
     /* ---- En-tête ---- */
@@ -39,7 +39,7 @@ async function exporterRecapPDF() {
     // Logo AINM
     if (logoAinmDataUrl) {
       const logoH = 12;
-      const logoW = logoH / (291 / 737);
+      const logoW = logoH / (118 / 300);
       doc.addImage(logoAinmDataUrl, "PNG", marge, 9, logoW, logoH);
     }
 
