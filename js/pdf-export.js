@@ -91,11 +91,11 @@ const idSupport = supportData?.ID || "";
     const footerReserve = 14;
 
     // Rasterise le logo SNCF (SVG -> PNG) pour l'intégrer au PDF
-const logoDataUrl = await logoSVGversPNG(216, 153);
-const logoRatio = 153 / 216;
+const logoDataUrl = await logoSVGversPNG(120, 85);
+const logoRatio = 85 / 120;
 
-const logoAinmDataUrl = (typeof logoAINMversPNG === "function") ? await logoAINMversPNG(737, 291) : null;
-const logoAinmRatio = 291.02362 / 737.00789;
+const logoAinmDataUrl = (typeof logoAINMversPNG === "function") ? await logoAINMversPNG(300, 118) : null;
+const logoAinmRatio = 118 / 300;
 
     /* ---- bandeau dégradé (couleurs identité visuelle) ---- */
     function bandeauDegrade(y0, h) {
