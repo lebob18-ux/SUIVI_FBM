@@ -28,7 +28,7 @@ async function exporterRecapPDF() {
     /* ---- Logo AINM ---- */
     let logoAinmDataUrl = null;
     if (typeof logoAINMversPNG === "function") {
-      logoAinmDataUrl = await logoAINMversPNG(300, 118);
+      logoAinmDataUrl = await logoAINMversPNG(737, 291);
     }
 
     /* ---- En-tête ---- */
@@ -39,7 +39,7 @@ async function exporterRecapPDF() {
     // Logo AINM
     if (logoAinmDataUrl) {
       const logoH = 12;
-      const logoW = logoH / (118 / 300);
+      const logoW = logoH / (291 / 737);
       doc.addImage(logoAinmDataUrl, "PNG", marge, 9, logoW, logoH);
     }
 
@@ -161,12 +161,15 @@ async function exporterRecapPDF() {
     const pdfBlob = doc.output("blob");
     const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
 
-const pdfBlob = doc.output("blob");
-if (typeof partagerPDF === "function") {
-  partagerPDF(pdfBlob, nomFichier, "Récapitulatif Avancement Chantiers");
-} else {
-  doc.save(nomFichier);
-}
+    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+      await navigator.share({
+        files: [pdfFile],
+        title: "Récapitulatif Avancement Chantiers",
+        text: "AINM — Récapitulatif chantiers édité le " + dateStr
+      });
+    } else {
+      doc.save(nomFichier);
+    }
 
   } catch (err) {
     console.error("Erreur PDF récap :", err);
