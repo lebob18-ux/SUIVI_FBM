@@ -18,7 +18,7 @@ function logoAINMversPNG(largeurPx, hauteurPx) {
           canvas.height = hauteurPx;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, largeurPx, hauteurPx);
-          resolve(canvas.toDataURL("image/png"));
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
         };
         img.onerror = () => resolve(null);
         img.src = image64;
