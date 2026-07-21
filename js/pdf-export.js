@@ -15,7 +15,7 @@ function logoSVGversPNG(largeurPx, hauteurPx) {
           canvas.height = hauteurPx;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, largeurPx, hauteurPx);
-          resolve(canvas.toDataURL("image/jpeg", 0.85));
+          resolve(canvas.toDataURL("image/png"));
         };
         img.onerror = () => resolve(null);
         img.src = image64;
@@ -91,11 +91,11 @@ const idSupport = supportData?.ID || "";
     const footerReserve = 14;
 
     // Rasterise le logo SNCF (SVG -> PNG) pour l'intégrer au PDF
-const logoDataUrl = await logoSVGversPNG(120, 85);
-const logoRatio = 85 / 120;
+const logoDataUrl = await logoSVGversPNG(216, 153);
+const logoRatio = 153 / 216;
 
-const logoAinmDataUrl = (typeof logoAINMversPNG === "function") ? await logoAINMversPNG(300, 118) : null;
-const logoAinmRatio = 118 / 300;
+const logoAinmDataUrl = (typeof logoAINMversPNG === "function") ? await logoAINMversPNG(737, 291) : null;
+const logoAinmRatio = 291.02362 / 737.00789;
 
     /* ---- bandeau dégradé (couleurs identité visuelle) ---- */
     function bandeauDegrade(y0, h) {
@@ -442,17 +442,18 @@ y = doc.lastAutoTable.finalY + 8;
 
 // APRÈS
 const nomFichier = "FBM_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
-
-// APRÈS
 const pdfBlob = doc.output("blob");
-if (typeof partagerPDF === "function") {
-  partagerPDF(pdfBlob, nomFichier, "Relevé FBM — Support : " + numSupportInput);
+const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
+
+if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+  navigator.share({
+    files: [pdfFile],
+    title: "Relevé FBM",
+    text: "Résultat calcul blindage - Support N°: " + numSupportInput
+  }).catch(() => { doc.save(nomFichier); });
 } else {
   doc.save(nomFichier);
 }
-
-
-    
   } catch (err) {
     console.error(err);
     alert("⚠️ Erreur lors de la génération du PDF :\n" + err.message);
@@ -461,4 +462,3 @@ if (typeof partagerPDF === "function") {
     btnPdf.disabled = false;
   }
 }
-
