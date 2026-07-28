@@ -39,4 +39,10 @@ window.addEventListener('load', function() {
  
     }
 });
+// Sélection automatique au focus sur tous les inputs numériques
+document.addEventListener("focusin", function(e) {
+  if (e.target.tagName === "INPUT" && e.target.type === "number" && !e.target.readOnly) {
+    setTimeout(() => e.target.select(), 30);
+  }
+});
 // FIN DU FICHIER - NE RIEN SUPPRIMER APRES CETTE LIGNE
