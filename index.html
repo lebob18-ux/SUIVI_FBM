@@ -303,7 +303,19 @@
   </div>
 </div>
 
-
+<div id="divScanModal" class="custom-modal">
+  <div style="background:#000; width:90%; max-width:360px; border-radius:12px; overflow:hidden; position:relative; padding:0;">
+    <video id="scanVideo" style="width:100%; display:block;" autoplay playsinline muted></video>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+                width:200px; height:200px; border:3px solid #7C2270; border-radius:10px;
+                box-shadow:0 0 0 9999px rgba(0,0,0,0.45);"></div>
+    <p style="color:white; text-align:center; font-size:0.8em; margin:8px 0; position:relative; z-index:2;">
+      Cadre le QR code dans le carré
+    </p>
+    <button onclick="arreterScan()" style="width:100%; background:#dc2626; color:white;
+            padding:10px; margin:0; font-weight:bold; border-radius:0;">❌ Annuler</button>
+  </div>
+</div>
 
 
 <div id="divExtensionModal" class="custom-modal">
@@ -424,6 +436,7 @@
     <script src="js/ui-events.js"></script>
 <script src="js/identite.js"></script>
 <script src="js/ainm.js"></script>	
-
+<!-- CDN jsQR (fallback) -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 </body>
 </html>
