@@ -4,8 +4,7 @@
    lors de la saisie dans le bloc BL-BÉTON
    ============================================================ */
 const LISTE_BL = [
-  "BL-2024-001",
-  "BL-2024-002",
-  "BL-2024-003"
+  "C35/45 330 D20 S3 XC3 (IN34) SRPM CL0,65",
+
   /* Ajoute tes vrais numéros BL ici */
 ];
