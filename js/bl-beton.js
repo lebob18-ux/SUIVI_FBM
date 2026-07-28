@@ -146,51 +146,78 @@ function initBLDatalist() {
   dl.innerHTML = LISTE_BL.map(bl => `<option value="${bl}">`).join("");
 }
 
-/* ---- Scanner QR / code-barres via caméra ---- */
+let _scanInterval = null;
+let _scanStream = null;
+
 async function scannerQR() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.capture = "environment";
+  const modal = document.getElementById("divScanModal");
+  const video = document.getElementById("scanVideo");
+  if (!modal || !video) { alert("⚠️ Scanner non disponible."); return; }
 
-  input.onchange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const img = await createImageBitmap(file);
+  try {
+    _scanStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" }
+    });
+    video.srcObject = _scanStream;
+    await video.play();
+    modal.style.display = "flex";
+    _demarrerDetection(video);
+  } catch (err) {
+    alert("⚠️ Impossible d'accéder à la caméra : " + err.message);
+  }
+}
 
-      if ("BarcodeDetector" in window) {
-        const formats = ["qr_code", "code_128", "code_39", "ean_13", "ean_8", "data_matrix"];
-        const detector = new BarcodeDetector({ formats });
-        const codes = await detector.detect(img);
-        if (codes.length > 0) {
-          document.getElementById("bl-input").value = codes[0].rawValue;
-          document.getElementById("bl-input").focus();
-        } else {
-          alert("⚠️ Aucun code détecté. Réessaie avec une photo plus nette.");
-        }
-      } else if (typeof jsQR !== "undefined") {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width; canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
-        if (code) {
-          document.getElementById("bl-input").value = code.data;
-          document.getElementById("bl-input").focus();
-        } else {
-          alert("⚠️ Aucun QR code détecté dans la photo.");
-        }
-      } else {
-        alert("⚠️ Scanner non disponible. Saisis le numéro manuellement.");
-      }
-    } catch (err) {
-      console.error("Erreur scan QR :", err);
-      alert("⚠️ Erreur lors du scan : " + err.message);
+function _demarrerDetection(video) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  _scanInterval = setInterval(async () => {
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    let resultat = null;
+
+    // Essai 1 : BarcodeDetector natif (Chrome Android)
+    if ("BarcodeDetector" in window) {
+      try {
+        const detector = new BarcodeDetector({
+          formats: ["qr_code", "code_128", "code_39", "ean_13", "ean_8", "data_matrix"]
+        });
+        const codes = await detector.detect(canvas);
+        if (codes.length > 0) resultat = codes[0].rawValue;
+      } catch (e) {}
     }
-  };
-  input.click();
+
+    // Essai 2 : jsQR (fallback)
+    if (!resultat && typeof jsQR !== "undefined") {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert"
+      });
+      if (code) resultat = code.data;
+    }
+
+    if (resultat) {
+      arreterScan();
+      document.getElementById("bl-input").value = resultat;
+      document.getElementById("bl-input").focus();
+    }
+  }, 300); // analyse toutes les 300ms
+}
+
+function arreterScan() {
+  clearInterval(_scanInterval);
+  _scanInterval = null;
+  if (_scanStream) {
+    _scanStream.getTracks().forEach(t => t.stop());
+    _scanStream = null;
+  }
+  const modal = document.getElementById("divScanModal");
+  if (modal) modal.style.display = "none";
+  const video = document.getElementById("scanVideo");
+  if (video) video.srcObject = null;
 }
 
 /* ---- Appelée depuis chargerSupport() ---- */
