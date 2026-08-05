@@ -1,5 +1,5 @@
 const baseSupports = [
-{ chantier: "BOIS LE ROI", support: "50/01_ANC", I: 2.91, AF: 1, B: 1.8, H: 1.4, AR: 65, Enc: 0, ECH: "Epingle", BLIND: "NON", CARO: "NON", TYPE: "4APi", F: "0", P: 7, SUP: "50/01", ID: "1", EFFECTUE: "1", m3_prevu: 2.52, m3_reel: 0 },
+{ chantier: "BOIS LE ROI", support: "50/01_ANC", I: 2.91, AF: 1, B: 1.8, H: 1.4, AR: 65, Enc: 0, ECH: "Epingle", BLIND: "NON", CARO: "NON", TYPE: "4APi", F: "0", P: 7, SUP: "50/01", ID: "1", EFFECTUE: "0", m3_prevu: 2.52, m3_reel: 0 },
 { chantier: "BOIS LE ROI", support: "50/01", I: 2.8, AF: 0.7, B: 1.1, H: 1.6, AR: 65, Enc: 1.35, ECH: "HEB220", BLIND: "NON", CARO: "NON", TYPE: "1Pn", F: "0", P: 13.5, SUP: "49/33", ID: "2", EFFECTUE: "0", m3_prevu: 1.232, m3_reel: 0 },
 { chantier: "BOIS LE ROI", support: "50/03", I: 2.8, AF: 0.7, B: 1.2, H: 1.7, AR: 60, Enc: 1.2, ECH: "HEB220", BLIND: "NON", CARO: "NON", TYPE: "2Pn", F: "<3", P: 4.5, SUP: "50/01_", ID: "3", EFFECTUE: "0", m3_prevu: 1.428, m3_reel: 0 },
 { chantier: "BOIS LE ROI", support: "50/05", I: 2.25, AF: 0.7, B: 1.2, H: 1.7, AR: 80, Enc: 1.55, ECH: "HEB220", BLIND: "NON", CARO: "NON", TYPE: "2Pn", F: "<3", P: 9, SUP: "50/03_", ID: "4", EFFECTUE: "0", m3_prevu: 1.428, m3_reel: 0 },
