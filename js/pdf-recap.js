@@ -2,9 +2,11 @@
    EXPORT PDF RÉCAPITULATIF AVANCEMENT CHANTIERS
    Style AINM — violet #7C2270
    ============================================================ */
+
+
 /* ============================================================
    EXPORT PDF RÉCAPITULATIF AVANCEMENT CHANTIERS
-   Style AINM — violet #7C2270
+   Style AINM — violet #7C2270 (avec camemberts d'avancement)
    ============================================================ */
 
 async function exporterRecapPDF() {
@@ -18,6 +20,7 @@ async function exporterRecapPDF() {
     const violet    = [124, 34, 112];
     const violetCl  = [240, 228, 238];
     const gris      = [90, 90, 90];
+    const grisCl    = [225, 225, 225];
     const blanc     = [255, 255, 255];
     const vert      = [22, 163, 74];
     const orange    = [245, 158, 11];
@@ -36,30 +39,25 @@ async function exporterRecapPDF() {
     }
 
     /* ---- En-tête ---- */
-    // Bandeau violet
     doc.setFillColor(...violet);
     doc.rect(0, 0, pageW, 30, "F");
 
-    // Logo AINM
     if (logoAinmDataUrl) {
       const logoH = 12;
       const logoW = logoH / (291 / 737);
       doc.addImage(logoAinmDataUrl, "PNG", marge, 9, logoW, logoH);
     }
 
-    // Titre
     doc.setTextColor(...blanc);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("RÉCAPITULATIF AVANCEMENT CHANTIERS", pageW / 2, 13, { align: "center" });
 
-    // Date
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     const dateStr = new Date().toLocaleString("fr-FR");
     doc.text("Édité le : " + dateStr, pageW / 2, 20, { align: "center" });
 
-    // RJ si disponible
     if (window.numeroRJ) {
       doc.text("RJ : " + window.numeroRJ, pageW - marge, 20, { align: "right" });
     }
@@ -73,8 +71,8 @@ async function exporterRecapPDF() {
         chantiersMap[s.chantier] = { 
           total: 0, 
           effectues: 0, 
-          m3TotalPrevu: 0,     // Total de TOUTES les fouilles du chantier
-          m3PrevuEffectue: 0,  // Total prévu UNIQUEMENT pour les effectuées (avec 1)
+          m3TotalPrevu: 0,     
+          m3PrevuEffectue: 0,  
           m3Reel: 0 
         };
       }
@@ -82,11 +80,8 @@ async function exporterRecapPDF() {
       c.total++;
       
       const m3PrevuVal = parseFloat(s.m3_prevu) || 0;
-
-      // 1. On cumule toujours dans le total prévu du chantier (peu importe EFFECTUE)
       c.m3TotalPrevu += m3PrevuVal;
 
-      // 2. On ne cumule dans le réalisé que si EFFECTUE == 1 (en gérant chaîne ou nombre)
       if (String(s.EFFECTUE).trim() === "1") {
         c.effectues++;
         c.m3PrevuEffectue += m3PrevuVal;
@@ -101,14 +96,13 @@ async function exporterRecapPDF() {
       const ecart = c.m3Reel - c.m3PrevuEffectue;
       const couleurEcart = ecart > 0 ? rouge : vert;
 
-      // Vérifier espace restant (hauteur d'un bloc estimée à ~48mm)
-      if (y + 48 > pageH - 15) {
+      if (y + 52 > pageH - 15) {
         piedDePage();
         doc.addPage();
         y = 15;
       }
 
-      // En-tête du bloc chantier (Nom du chantier + Total béton prévu global)
+      // En-tête du bloc chantier
       doc.setFillColor(...violet);
       doc.roundedRect(marge, y, colW, 7, 1, 1, "F");
       doc.setTextColor(...blanc);
@@ -120,37 +114,56 @@ async function exporterRecapPDF() {
       doc.text("Total chantier : " + c.m3TotalPrevu.toFixed(2) + " m³", pageW - marge - 3, y + 4.8, { align: "right" });
       y += 8;
 
-      // Corps du bloc (fond légèrement grisé/violet très clair pour le style pro)
+      // Corps du bloc
       doc.setFillColor(250, 248, 250);
-      doc.setDrawnColor(220, 210, 220);
-      doc.roundedRect(marge, y, colW, 36, 2, 2, "FD");
+      doc.setDrawColor(220, 210, 220); // Corrigé ici (setDrawColor avec un D majuscule)
+      doc.roundedRect(marge, y, colW, 40, 2, 2, "FD");
 
-      let innerY = y + 5;
+      let innerY = y + 6;
 
-      // Massifs + pourcentage
+      const leftInfoX = marge + 6;
+      const rightChartX = pageW - marge - 18;
+      const chartY = innerY + 11;
+
+      // Texte Massifs et pourcentage
       doc.setTextColor(...gris);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.text("Massifs réalisés : " + c.effectues + " / " + c.total, marge + 4, innerY);
-      doc.setTextColor(...couleurBarre);
+      doc.setFontSize(8.5);
+      doc.text("Massifs réalisés :", leftInfoX, innerY);
       doc.setFont("helvetica", "bold");
-      doc.text(pct + "%", pageW - marge - 4, innerY, { align: "right" });
-      innerY += 5;
+      doc.setTextColor(30, 30, 30);
+      doc.text(c.effectues + " / " + c.total, leftInfoX + 38, innerY);
 
-      // Barre de progression — fond gris
-      doc.setFillColor(225, 225, 225);
-      doc.roundedRect(marge + 4, innerY, colW - 8, 3, 1.5, 1.5, "F");
-      // Barre remplie
-      if (pct > 0) {
-        doc.setFillColor(...couleurBarre);
-        doc.roundedRect(marge + 4, innerY, (colW - 8) * pct / 100, 3, 1.5, 1.5, "F");
-      }
       innerY += 6;
 
-      // Tableau m³ (faits vs réels)
+      // Barre de progression linéaire
+      doc.setFillColor(...grisCl);
+      doc.roundedRect(leftInfoX, innerY, colW - 38, 3, 1.5, 1.5, "F");
+      if (pct > 0) {
+        doc.setFillColor(...couleurBarre);
+        doc.roundedRect(leftInfoX, innerY, (colW - 38) * pct / 100, 3, 1.5, 1.5, "F");
+      }
+
+      // Indicateur Donut / Camembert à droite
+      const rayonDonut = 9;
+      doc.setFillColor(...grisCl);
+      doc.circle(rightChartX, chartY, rayonDonut, "F");
+      doc.setFillColor(...couleurBarre);
+      doc.circle(rightChartX, chartY, rayonDonut, "F");
+      doc.setFillColor(250, 248, 250);
+      doc.circle(rightChartX, chartY, rayonDonut * 0.6, "F");
+
+      doc.setTextColor(...couleurBarre);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.text(pct + "%", rightChartX, chartY + 2.5, { align: "center" });
+
+      innerY += 10;
+
+      // Tableau m³
       doc.autoTable({
         startY: innerY,
-        margin: { left: marge + 4, right: marge + 4 },
+        margin: { left: leftInfoX, right: marge + 28 },
         head: [["m³ prévu (faits)", "m³ réel", "Écart"]],
         body: [[
           c.m3PrevuEffectue.toFixed(2),
@@ -167,7 +180,7 @@ async function exporterRecapPDF() {
         },
       });
 
-      y += 40; // Incrémentation globale du bloc
+      y += 44;
     });
 
     /* ---- Pied de page ---- */
@@ -208,6 +221,12 @@ async function exporterRecapPDF() {
     if (btnPdf) { btnPdf.disabled = false; btnPdf.innerHTML = "📄 Exporter PDF"; }
   }
 }
+
+/* ============================================================
+   EXPORT PDF RÉCAPITULATIF AVANCEMENT CHANTIERS
+   Style AINM — violet #7C2270
+   ============================================================ */
+
 async function exporterRecapPDF1() {
   const btnPdf = document.getElementById("btnRecapPdf");
   if (btnPdf) { btnPdf.disabled = true; btnPdf.innerHTML = "⏳ Génération..."; }
