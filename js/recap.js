@@ -49,10 +49,7 @@ function genererRecap(containerId) {
   chantiers.forEach(nom => {
     const c = chantiersMap[nom];
 
-    // 🛑 Masquer le chantier de la liste s'il est totalement terminé (100%)
-    if (c.total > 0 && c.effectues === c.total) {
-      return; 
-    }
+ 
 
     const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
     const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
