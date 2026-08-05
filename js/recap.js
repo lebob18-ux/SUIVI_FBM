@@ -15,15 +15,28 @@ function genererRecap(containerId) {
   const chantiersMap = {};
   baseSupports.forEach(s => {
     if (!chantiersMap[s.chantier]) {
-      chantiersMap[s.chantier] = { total: 0, effectues: 0, m3Prevu: 0, m3Reel: 0 };
+      chantiersMap[s.chantier] = { 
+        total: 0, 
+        effectues: 0, 
+        m3TotalPrevu: 0,     // Total de TOUTES les fouilles du chantier
+        m3PrevuEffectue: 0,  // Total prévu UNIQUEMENT pour les effectuées (avec 1)
+        m3Reel: 0 
+      };
     }
     const c = chantiersMap[s.chantier];
     c.total++;
-  if (s.EFFECTUE == 1) {
-    c.effectues++;
-    c.m3Prevu += parseFloat(s.m3_prevu) || 0;
-    c.m3Reel  += parseFloat(s.m3_reel)  || 0;
-  }
+    
+    const m3PrevuVal = parseFloat(s.m3_prevu) || 0;
+
+    // 1. On cumule toujours dans le total prévu du chantier (peu importe EFFECTUE)
+    c.m3TotalPrevu += m3PrevuVal;
+
+    // 2. On ne cumule dans le réalisé/effectué que si EFFECTUE == 1
+    if (s.EFFECTUE == 1) {
+      c.effectues++;
+      c.m3PrevuEffectue += m3PrevuVal;
+      c.m3Reel  += parseFloat(s.m3_reel) || 0;
+    }
   });
 
   const chantiers = Object.keys(chantiersMap);
@@ -37,13 +50,16 @@ function genererRecap(containerId) {
     const c = chantiersMap[nom];
     const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
     const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
-    const ecart = c.m3Reel - c.m3Prevu;
+    
+    // L'écart se calcule entre le réel et le prévu des éléments effectivement réalisés
+    const ecart = c.m3Reel - c.m3PrevuEffectue;
     const couleurEcart = ecart > 0 ? "#dc2626" : "#16a34a";
 
     html += `
       <div style="margin-bottom:12px; border:1px solid #e5e5e5; border-radius:8px; overflow:hidden;">
-        <div style="background:linear-gradient(to right,#f7f0f6,#f5f5f5); padding:6px 10px; font-weight:bold; font-size:0.82em; color:#7C2270;">
-          📁 ${nom}
+        <div style="background:linear-gradient(to right,#f7f0f6,#f5f5f5); padding:6px 10px; font-weight:bold; font-size:0.82em; color:#7C2270; display:flex; justify-content:space-between; align-items:center;">
+          <span>📁 ${nom}</span>
+          <span style="font-size:0.95em; color:#333;">Total chantier : <strong>${c.m3TotalPrevu.toFixed(2)} m³</strong></span>
         </div>
         <div style="padding:8px 10px;">
           <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#555; margin-bottom:4px;">
@@ -56,14 +72,14 @@ function genererRecap(containerId) {
           <table style="width:100%; border-collapse:collapse; font-size:0.78em;">
             <thead>
               <tr>
-                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ prévu</th>
+                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ prévu (faits)</th>
                 <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ réel</th>
                 <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">Écart</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold;">${c.m3Prevu.toFixed(2)}</td>
+                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold;">${c.m3PrevuEffectue.toFixed(2)}</td>
                 <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:${couleurEcart};">${c.m3Reel.toFixed(2)}</td>
                 <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:${couleurEcart};">${ecart >= 0 ? '+' : ''}${ecart.toFixed(2)}</td>
               </tr>
