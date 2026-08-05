@@ -18,8 +18,8 @@ function genererRecap(containerId) {
       chantiersMap[s.chantier] = { 
         total: 0, 
         effectues: 0, 
-        m3TotalPrevu: 0,     // Total de TOUTES les fouilles du chantier
-        m3PrevuEffectue: 0,  // Total prévu UNIQUEMENT pour les effectuées (avec 1)
+        m3TotalPrevu: 0,     
+        m3PrevuEffectue: 0,  
         m3Reel: 0 
       };
     }
@@ -28,14 +28,14 @@ function genererRecap(containerId) {
     
     const m3PrevuVal = parseFloat(s.m3_prevu) || 0;
 
-    // 1. On cumule toujours dans le total prévu du chantier (peu importe EFFECTUE)
+    // 1. On cumule toujours le total prévu du chantier (peu importe l'état)
     c.m3TotalPrevu += m3PrevuVal;
 
-    // 2. On ne cumule dans le réalisé/effectué que si EFFECTUE == 1
-    if (s.EFFECTUE == 1) {
+    // 2. On vérifie si EFFECTUE vaut 1 (en gérant le format chaîne "" ou nombre)
+    if (String(s.EFFECTUE).trim() === "1") {
       c.effectues++;
       c.m3PrevuEffectue += m3PrevuVal;
-      c.m3Reel  += parseFloat(s.m3_reel) || 0;
+      c.m3Reel += parseFloat(s.m3_reel) || 0;
     }
   });
 
@@ -51,7 +51,6 @@ function genererRecap(containerId) {
     const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
     const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
     
-    // L'écart se calcule entre le réel et le prévu des éléments effectivement réalisés
     const ecart = c.m3Reel - c.m3PrevuEffectue;
     const couleurEcart = ecart > 0 ? "#dc2626" : "#16a34a";
 
@@ -72,8 +71,8 @@ function genererRecap(containerId) {
           <table style="width:100%; border-collapse:collapse; font-size:0.78em;">
             <thead>
               <tr>
-                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ prévu (faits)</th>
-                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ réel</th>
+                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ prévu (à date)</th>
+                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ réel (à date)</th>
                 <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">Écart</th>
               </tr>
             </thead>
