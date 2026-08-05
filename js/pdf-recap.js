@@ -108,10 +108,10 @@ async function exporterRecapPDF() {
       doc.setTextColor(...blanc);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8.5);
-      doc.text("📁 " + nom, marge + 3, y + 4.8);
+      doc.text("CHANTIER " + nom, marge + 3, y + 4.8);
       
       doc.setFontSize(8);
-      doc.text("Total chantier : " + c.m3TotalPrevu.toFixed(2) + " m³", pageW - marge - 3, y + 4.8, { align: "right" });
+      doc.text("Total béton prévu : " + c.m3TotalPrevu.toFixed(2) + " m³", pageW - marge - 3, y + 4.8, { align: "right" });
       y += 8;
 
       // Corps du bloc
