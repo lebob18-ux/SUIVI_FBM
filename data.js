@@ -135,4 +135,7 @@ const baseSupports = [
 { chantier: "CEPOY", support: "114/15", I: 4, AF: 0.9, B: 1.5, H: 1.8, AR: 50, Enc: 1.35, ECH: "HEA320", BLIND: "NON", CARO: "NON", TYPE: "4Pn", F: "<3", P: 0, SUP: "114/15_", ID: "134", EFFECTUE: "0", m3_prevu: 2.43, m3_reel: 0 },
 { chantier: "CEPOY", support: "114/15_ANC", I: 4.15, AF: 1, B: 1.8, H: 1.4, AR: 50, Enc: 0, ECH: "Epingle", BLIND: "NON", CARO: "NON", TYPE: "4APi", F: "0", P: 7, SUP: "114/15", ID: "135", EFFECTUE: "0", m3_prevu: 2.52, m3_reel: 0 },
 { chantier: "CEPOY", support: "114/20_ANC", I: 2.33, AF: 1, B: 1.8, H: 1.4, AR: 80, Enc: 0, ECH: "Epingle", BLIND: "NON", CARO: "NON", TYPE: "4APi", F: "0", P: 7, SUP: "114/20", ID: "136", EFFECTUE: "0", m3_prevu: 2.52, m3_reel: 0 },
+{ chantier: "BOB", support: "114/15", I: 4, AF: 0.9, B: 1.5, H: 1.8, AR: 50, Enc: 1.35, ECH: "HEA320", BLIND: "NON", CARO: "NON", TYPE: "4Pn", F: "<3", P: 0, SUP: "114/15_", ID: "137", EFFECTUE: "0", m3_prevu: 2.43, m3_reel: 0 },
+{ chantier: "BOB", support: "114/15_ANC", I: 4.15, AF: 1, B: 1.8, H: 1.4, AR: 50, Enc: 0, ECH: "Epingle", BLIND: "NON", CARO: "NON", TYPE: "4APi", F: "0", P: 7, SUP: "114/15", ID: "138", EFFECTUE: "0", m3_prevu: 2.52, m3_reel: 0 },
+{ chantier: "BOB", support: "114/20_ANC", I: 2.33, AF: 1, B: 1.8, H: 1.4, AR: 80, Enc: 0, ECH: "Epingle", BLIND: "NON", CARO: "NON", TYPE: "4APi", F: "0", P: 7, SUP: "114/20", ID: "139", EFFECTUE: "0", m3_prevu: 2.52, m3_reel: 0 },
 ];
