@@ -198,60 +198,13 @@ function initChantiers() {
 
 
 
-function initChantiers2() {
-  const select = document.getElementById("selectChantier");
-  if (!select) return;
-
-  // 1. On analyse l'état de chaque chantier
-  const chantiersMap = {};
-  baseSupports.forEach(s => {
-    if (!chantiersMap[s.chantier]) {
-      chantiersMap[s.chantier] = { total: 0, effectues: 0 };
-    }
-    chantiersMap[s.chantier].total++;
-    if (String(s.EFFECTUE).trim() === "1") {
-      chantiersMap[s.chantier].effectues++;
-    }
-  });
-
-  // On vide le select avant de le remplir (pour éviter les doublons si la fonction est relancée)
-  select.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
-
-  // 2. On récupère la liste unique des chantiers
-  const chantiersUniques = [...new Set(baseSupports.map(s => s.chantier))];
-
-  // 3. On les ajoute au select uniquement s'ils ne sont pas à 100%
-  chantiersUniques.forEach(c => {
-    const data = chantiersMap[c];
-
-    // 🛑 Si 100% des massifs/fouilles sont effectués, on passe au suivant (on ne l'ajoute pas)
-    if (data && data.total > 0 && data.effectues === data.total) {
-      return; 
-    }
-
-    const opt = document.createElement("option");
-    opt.value = c;
-    opt.textContent = c;
-    select.appendChild(opt);
-  });
-}
 
 
 
 
 
-function initChantiers1() {
-  const select = document.getElementById("selectChantier");
 
-  const chantiersUniques = [...new Set(baseSupports.map(s => s.chantier))];
 
-  chantiersUniques.forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = c;
-    opt.textContent = c;
-    select.appendChild(opt);
-  });
-}
 
 function resetSaisieAvantSupport() {
 
@@ -308,9 +261,7 @@ function filtrerSupports() {
     // On garde uniquement ceux où EFFECTUE est explicitement 0 ou absent/null
 
 
-const filtres = baseSupports.filter(s => 
-    s.chantier === chantier && Number(s.EFFECTUE) !== 1
-);
+const filtres = baseSupports.filter(s => s.chantier === chantier && String(s.EFFECTUE).trim() !== "1");
 
 
     
