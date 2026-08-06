@@ -170,9 +170,9 @@ function initChantiers() {
     }
     chantiersMap[s.chantier].total++;
     
-    // Détection sécurisée de la propriété effectuée
+    // 🛠️ Version robuste : gère le nombre 1, le texte "1", et la casse
     const valEff = s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : "");
-    if (String(valEff).trim() === "1") {
+    if (valEff === 1 || String(valEff).trim() === "1") {
       chantiersMap[s.chantier].effectues++;
     }
   });
@@ -183,7 +183,6 @@ function initChantiers() {
   chantiersUniques.forEach(c => {
     const data = chantiersMap[c];
 
-    // Si le chantier est à 100%, on le masque de la liste déroulante GC
     if (data && data.total > 0 && data.effectues === data.total) {
       return; 
     }
@@ -194,9 +193,6 @@ function initChantiers() {
     select.appendChild(opt);
   });
 }
-
-
-
 
 
 
