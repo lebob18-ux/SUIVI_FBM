@@ -30,10 +30,9 @@ function genererRecap(containerId) {
     const m3PrevuVal = parseFloat(s.m3_prevu) || 0;
     c.m3TotalPrevu += m3PrevuVal;
 
-    // Détection sécurisée de la propriété effectuée
     const valEff = s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : "");
 
-    if (String(valEff).trim() === "1") {
+    if (valEff === 1 || String(valEff).trim() === "1") {
       c.effectues++;
       c.m3PrevuEffectue += m3PrevuVal;
       c.m3Reel += parseFloat(s.m3_reel) || 0;
