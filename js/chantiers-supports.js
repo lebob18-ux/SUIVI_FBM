@@ -254,12 +254,12 @@ function filtrerSupports() {
 
     supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
 
-    // On garde uniquement ceux où EFFECTUE est explicitement 0 ou absent/null
-
-
-const filtres = baseSupports.filter(s => s.chantier === chantier && String(s.EFFECTUE).trim() !== "1");
-
-
+    // 🛠️ On filtre proprement en acceptant le nombre 1 ou la chaîne "1" (ainsi que les minuscules)
+    const filtres = baseSupports.filter(s => {
+        if (s.chantier !== chantier) return false;
+        const valEff = s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : "");
+        return valEff !== 1 && String(valEff).trim() !== "1";
+    });
     
     filtres.forEach(s => {
         let opt = document.createElement("option");
