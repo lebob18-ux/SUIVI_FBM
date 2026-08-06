@@ -163,6 +163,45 @@ function initChantiers() {
   const select = document.getElementById("selectChantier");
   if (!select) return;
 
+  const chantiersMap = {};
+  baseSupports.forEach(s => {
+    if (!chantiersMap[s.chantier]) {
+      chantiersMap[s.chantier] = { total: 0, effectues: 0 };
+    }
+    chantiersMap[s.chantier].total++;
+    
+    // Détection sécurisée de la propriété effectuée
+    const valEff = s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : "");
+    if (String(valEff).trim() === "1") {
+      chantiersMap[s.chantier].effectues++;
+    }
+  });
+
+  select.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
+  const chantiersUniques = [...new Set(baseSupports.map(s => s.chantier))];
+
+  chantiersUniques.forEach(c => {
+    const data = chantiersMap[c];
+
+    // Si le chantier est à 100%, on le masque de la liste déroulante GC
+    if (data && data.total > 0 && data.effectues === data.total) {
+      return; 
+    }
+
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    select.appendChild(opt);
+  });
+}
+
+
+
+
+function initChantiers2() {
+  const select = document.getElementById("selectChantier");
+  if (!select) return;
+
   // 1. On analyse l'état de chaque chantier
   const chantiersMap = {};
   baseSupports.forEach(s => {
