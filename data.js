@@ -142,4 +142,6 @@ const baseSupports = [
 { chantier: "ST-PIERRE", support: "87/30A", I: 2.25, AF: 0.8, B: 1.3, H: 1.8, AR: 40, Enc: 1.45, ECH: "HEB260", BLIND: "NON", CARO: "NON", TYPE: "3Pn", F: "0", P: 4.5, SUP: "87/30_", ID: "141", EFFECTUE: "1", m3_prevu: 1.872, m3_reel: 3.552 },
 { chantier: "ST-PIERRE", support: "87/30B", I: 2.25, AF: 0.8, B: 1.3, H: 1.8, AR: 40, Enc: 1.45, ECH: "HEB260", BLIND: "NON", CARO: "NON", TYPE: "3Pn", F: "0", P: 4.5, SUP: "87/30A", ID: "142", EFFECTUE: "1", m3_prevu: 1.872, m3_reel: 3.762 },
 { chantier: "ST-PIERRE", support: "87/29A", I: 2.9, AF: 0.8, B: 1.3, H: 1.8, AR: 60, Enc: 1.65, ECH: "HEB260", BLIND: "NON", CARO: "NON", TYPE: "3Pn", F: "0", P: 4.5, SUP: "87/29_", ID: "143", EFFECTUE: "1", m3_prevu: 1.872, m3_reel: 3.179 },
+{ chantier: "SOUPPES", support: "87/29A", I: 2.9, AF: 0.8, B: 1.3, H: 1.8, AR: 60, Enc: 1.65, ECH: "HEB260", BLIND: "NON", CARO: "NON", TYPE: "3Pn", F: "0", P: 4.5, SUP: "87/29_", ID: "144", EFFECTUE: "1", m3_prevu: 1.872, m3_reel: 3.179 },
+
 ];
