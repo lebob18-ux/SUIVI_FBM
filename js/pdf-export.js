@@ -1,3 +1,4 @@
+/* ---- export 20 chantier ---- */
 async function exporterRecapPDF() {
   const btnPdf = document.getElementById("btnRecapPdf");
   if (btnPdf) { btnPdf.disabled = true; btnPdf.innerHTML = "⏳ Génération..."; }
