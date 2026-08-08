@@ -17,8 +17,11 @@ async function exporterRecapPDF() {
 
     const pageW  = doc.internal.pageSize.getWidth();
     const pageH  = doc.internal.pageSize.getHeight();
-    const marge  = 10;
-    const colW   = pageW - marge * 2;
+    const marge  = 8;
+    
+    // Calcul pour faire 2 colonnes côte à côte
+    const gap = 4; // Espace entre les 2 colonnes
+    const colW = (pageW - (marge * 2) - gap) / 2; 
 
     /* ---- Logo AINM ---- */
     let logoAinmDataUrl = null;
@@ -28,7 +31,7 @@ async function exporterRecapPDF() {
 
     const dateStr = new Date().toLocaleString("fr-FR");
 
-    /* ---- Étape 1 : Organiser et regrouper les données par Entreprise (EE) puis par Chantier ---- */
+    /* ---- Étape 1 : Regrouper les données par Entreprise puis par Chantier ---- */
     const entreprisesMap = {};
 
     baseSupports.forEach(s => {
@@ -70,7 +73,7 @@ async function exporterRecapPDF() {
       return;
     }
 
-    /* ---- Étape 2 : Générer une page par Entreprise ---- */
+    /* ---- Étape 2 : Générer une page par Entreprise avec grille 2 colonnes ---- */
     let isFirstPage = true;
 
     entriesEntreprises.forEach(([eeNom, chantiersMap]) => {
@@ -79,83 +82,83 @@ async function exporterRecapPDF() {
       }
       isFirstPage = false;
 
-      let y = 10;
+      let startY = 8;
 
-      /* -- En-tête de page pour l'entreprise -- */
+      /* -- En-tête de page -- */
       doc.setFillColor(...violet);
-      doc.rect(0, y, pageW, 22, "F");
+      doc.rect(0, startY, pageW, 18, "F");
 
       if (logoAinmDataUrl) {
-        const logoH = 10;
+        const logoH = 9;
         const logoW = logoH / (291 / 737);
-        doc.addImage(logoAinmDataUrl, "PNG", marge, y + 6, logoW, logoH);
+        doc.addImage(logoAinmDataUrl, "PNG", marge, startY + 4.5, logoW, logoH);
       }
 
       doc.setTextColor(...blanc);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text("ENTREPRISE : " + eeNom, pageW / 2, y + 9, { align: "center" });
+      doc.setFontSize(10);
+      doc.text("ENTREPRISE : " + eeNom, pageW / 2, startY + 7, { align: "center" });
 
-      doc.setFontSize(7.5);
+      doc.setFontSize(7);
       doc.setFont("helvetica", "normal");
-      doc.text("Édité le : " + dateStr, pageW / 2, y + 16, { align: "center" });
+      doc.text("Édité le : " + dateStr, pageW / 2, startY + 13, { align: "center" });
 
       if (window.numeroRJ) {
-        doc.text("RJ : " + window.numeroRJ, pageW - marge, y + 16, { align: "right" });
+        doc.text("RJ : " + window.numeroRJ, pageW - marge, startY + 13, { align: "right" });
       }
 
-      y += 26;
+      startY += 21;
 
-      /* -- Dessiner les 10 chantiers de manière compacte pour tenir sur la page -- */
+      /* -- Affichage en grille 2 colonnes -- */
       const entriesChantiers = Object.entries(chantiersMap);
-      
+      let index = 0;
+
       entriesChantiers.forEach(([nom, c]) => {
+        const colIndex = index % 2; // 0 pour la colonne de gauche, 1 pour la droite
+        const rowIndex = Math.floor(index / 2);
+
+        const x = marge + colIndex * (colW + gap);
+        // On calcule la position verticale selon la ligne (5 lignes max pour 10 chantiers)
+        const blockH = 25;
+        const rowGap = 3;
+        const y = startY + rowIndex * (blockH + rowGap);
+
         const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
         const couleurBarre = pct === 100 ? vert : pct >= 50 ? orange : violet;
         const ecart = c.m3Reel - c.m3PrevuEffectue;
         const couleurEcart = ecart > 0 ? rouge : vert;
 
-        // Dimensions réduites pour caser ~10 chantiers sur une seule page A4
-        const blockH = 22; 
-
-        // En-tête du bloc chantier
+        // En-tête du mini-bloc chantier
         doc.setFillColor(...violet);
-        doc.roundedRect(marge, y, colW, 5, 0.8, 0.8, "F");
+        doc.roundedRect(x, y, colW, 4.5, 0.6, 0.6, "F");
         doc.setTextColor(...blanc);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(7.5);
-        doc.text("CHANTIER " + nom, marge + 2, y + 3.5);
-        
         doc.setFontSize(7);
-        doc.text("Prévu total : " + c.m3TotalPrevu.toFixed(1) + " m³", pageW - marge - 2, y + 3.5, { align: "right" });
-        y += 5.5;
+        doc.text("CH. " + nom, x + 1.5, y + 3.2);
+        
+        doc.setFontSize(6.5);
+        doc.text("Tot: " + c.m3TotalPrevu.toFixed(1) + "m³", x + colW - 1.5, y + 3.2, { align: "right" });
+        
+        let innerY = y + 5;
 
-        // Corps compact du bloc chantier
+        // Corps du mini-bloc
         doc.setFillColor(250, 248, 250);
         doc.setDrawColor(220, 210, 220);
-        doc.roundedRect(marge, y, colW, blockH, 1, 1, "FD");
+        doc.roundedRect(x, innerY, colW, blockH - 4.5, 0.8, 0.8, "FD");
 
-        let innerY = y + 4;
-        const leftInfoX = marge + 4;
-        const rightChartX = pageW - marge - 12;
-        const chartY = innerY + 7.5;
+        let contentY = innerY + 3.5;
+        const leftInfoX = x + 2.5;
+        const rightChartX = x + colW - 10;
+        const chartY = contentY + 5.5;
 
-        // Infos Massifs et Barre de progression
+        // Infos massifs & camembert miniature
         doc.setTextColor(...gris);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(7.5);
-        doc.text("Massifs : " + c.effectues + " / " + c.total, leftInfoX, innerY);
+        doc.setFontSize(6.5);
+        doc.text("Massifs: " + c.effectues + "/" + c.total, leftInfoX, contentY);
 
-        // Mini barre linéaire
-        doc.setFillColor(...grisCl);
-        doc.roundedRect(leftInfoX + 38, innerY - 2.5, 65, 2, 1, 1, "F");
-        if (pct > 0) {
-          doc.setFillColor(...couleurBarre);
-          doc.roundedRect(leftInfoX + 38, innerY - 2.5, 65 * pct / 100, 2, 1, 1, "F");
-        }
-
-        // Mini Camembert / Donut à droite
-        const rayonDonut = 7;
+        // Petit camembert à droite
+        const rayonDonut = 5.5;
         doc.setFillColor(...grisCl);
         doc.circle(rightChartX, chartY, rayonDonut, "F");
         doc.setFillColor(...couleurBarre);
@@ -165,16 +168,16 @@ async function exporterRecapPDF() {
 
         doc.setTextColor(...couleurBarre);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(6.5);
-        doc.text(pct + "%", rightChartX, chartY + 2, { align: "center" });
+        doc.setFontSize(6);
+        doc.text(pct + "%", rightChartX, chartY + 1.8, { align: "center" });
 
-        innerY += 4.5;
+        contentY += 4.5;
 
-        // Mini Tableau m³ ultra compact
+        // Mini tableau des volumes adapté à la largeur de la colonne
         doc.autoTable({
-          startY: innerY,
-          margin: { left: leftInfoX, right: marge + 22 },
-          head: [["m³ tot.", "m³ fait", "m³ réel", "Écart"]],
+          startY: contentY,
+          margin: { left: leftInfoX, right: pageW - (x + colW) + 12 },
+          head: [["Prév.", "Fait", "Réel", "Écart"]],
           body: [[
             c.m3TotalPrevu.toFixed(1),
             c.m3PrevuEffectue.toFixed(1),
@@ -182,8 +185,8 @@ async function exporterRecapPDF() {
             (ecart >= 0 ? "+" : "") + ecart.toFixed(1)
           ]],
           theme: "grid",
-          styles: { fontSize: 6.5, cellPadding: 0.8, halign: "center", lineColor: [215, 205, 215] },
-          headStyles: { fillColor: violet, textColor: blanc, fontStyle: "bold", cellPadding: 0.8 },
+          styles: { fontSize: 5.5, cellPadding: 0.5, halign: "center", lineColor: [215, 205, 215] },
+          headStyles: { fillColor: violet, textColor: blanc, fontStyle: "bold", cellPadding: 0.5 },
           bodyStyles: { fontStyle: "bold", textColor: [50, 50, 50] },
           columnStyles: {
             2: { textColor: couleurEcart },
@@ -191,20 +194,20 @@ async function exporterRecapPDF() {
           },
         });
 
-        y += blockH + 2.5; // Espacement serré entre les chantiers
+        index++;
       });
 
-      /* -- Pied de page propre par entreprise -- */
+      /* -- Pied de page -- */
       doc.setFillColor(...violetCl);
-      doc.rect(0, pageH - 8, pageW, 8, "F");
+      doc.rect(0, pageH - 7, pageW, 7, "F");
       doc.setTextColor(...violet);
       doc.setFontSize(6.5);
       doc.setFont("helvetica", "normal");
-      doc.text("AINM — Récapitulatif Entreprise " + eeNom, marge, pageH - 3);
-      doc.text("Page " + doc.internal.getNumberOfPages(), pageW - marge, pageH - 3, { align: "right" });
+      doc.text("AINM — Entreprise " + eeNom, marge, pageH - 2.5);
+      doc.text("Page " + doc.internal.getNumberOfPages(), pageW - marge, pageH - 2.5, { align: "right" });
     });
 
-    /* ---- Étape 3 : Partage natif ou téléchargement global ---- */
+    /* ---- Partage ou Téléchargement ---- */
     const nomFichier = "RECAP_ENTREPRISES_" + new Date().toISOString().slice(0, 10) + ".pdf";
     const pdfBlob = doc.output("blob");
     const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
@@ -213,7 +216,7 @@ async function exporterRecapPDF() {
       await navigator.share({
         files: [pdfFile],
         title: "Récapitulatif Chantiers par Entreprise",
-        text: "AINM — Récapitulatif des chantiers par entreprise édité le " + dateStr
+        text: "AINM — Récapitulatif édité le " + dateStr
       });
     } else {
       doc.save(nomFichier);
