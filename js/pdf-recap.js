@@ -65,34 +65,30 @@ async function exporterRecapPDF() {
       doc.circle(x, y, rayon * 0.6, "F");
     }
 
-    function dessinerChantier(x, y, nom, c, couleurEE) {
-      const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
-      let couleurBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurEE;
-      const ecart = c.m3Reel - c.m3PrevuEffectue;
-      const colEcart = ecart > 0 ? rouge : vert;
+function dessinerCamembert(doc, x, y, rayon, pct, couleur) {
+      // 1. Fond gris
+      doc.setFillColor(...gris);
+      doc.circle(x, y, rayon, "F");
 
-      // Header bloc
-      doc.setFillColor(...couleurEE);
-      doc.roundedRect(x, y, colW, 6, 0.5, 0.5, "F");
-      doc.setTextColor(...blanc);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
-      doc.text("CH. " + nom, x + 1.5, y + 3.5);
+      // 2. Secteur coloré (partie effectuée)
+      if (pct > 0) {
+        doc.setFillColor(...couleur);
+        // On définit le chemin pour un secteur de cercle
+        // 'm' = move, 'a' = arc (déplacement relatif)
+        const angle = (pct * 3.6); 
+        doc.moveTo(x, y);
+        // On dessine le secteur via un path SVG simple
+        doc.path([{op: 'm', c: [x, y]}, 
+                  {op: 'l', c: [x, y - rayon]}, 
+                  {op: 'a', c: [rayon, rayon, 0, (angle > 180 ? 1 : 0), 1, 
+                               x + rayon * Math.sin(angle * Math.PI / 180), 
+                               y - rayon * Math.cos(angle * Math.PI / 180)]}, 
+                  {op: 'l', c: [x, y]}], 'F');
+      }
 
-      // Camembert
-      dessinerCamembert(doc, x + colW - 4, y + 3, 2.2, pct, couleurBarre);
-
-      // Tableau
-      doc.autoTable({
-        startY: y + 6,
-        margin: { left: x, right: pageW - (x + colW) },
-        head: [["Prév.", "Fait", "Réel", "Écart"]],
-        body: [[c.m3TotalPrevu.toFixed(0), c.m3PrevuEffectue.toFixed(0), c.m3Reel.toFixed(0), (ecart >= 0 ? "+" : "") + ecart.toFixed(0)]],
-        theme: "grid",
-        styles: { fontSize: 5, cellPadding: 0.5, halign: "center" },
-        headStyles: { fillColor: couleurEE, textColor: blanc },
-        columnStyles: { 2: { textColor: colEcart }, 3: { textColor: colEcart } }
-      });
+      // 3. Cercle blanc au centre (effet donut)
+      doc.setFillColor(255, 255, 255);
+      doc.circle(x, y, rayon * 0.6, "F");
     }
 
     // ---- En-tête Global ----
