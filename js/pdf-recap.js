@@ -51,19 +51,7 @@ async function exporterRecapPDF() {
     });
 
     // ---- Fonctions de dessin ----
-    function dessinerCamembert(doc, x, y, rayon, pct, couleur) {
-      doc.setFillColor(...gris);
-      doc.circle(x, y, rayon, "F");
-      if (pct > 0) {
-        doc.setFillColor(...couleur);
-        doc.moveTo(x, y);
-        doc.arc(x, y, rayon, -Math.PI / 2, (pct * 3.6 - 90) * Math.PI / 180);
-        doc.lineTo(x, y);
-        doc.fill();
-      }
-      doc.setFillColor(255, 255, 255);
-      doc.circle(x, y, rayon * 0.6, "F");
-    }
+
 
 function dessinerCamembert(doc, x, y, rayon, pct, couleur) {
       // 1. Fond gris
