@@ -235,18 +235,24 @@ async function exporterRecapPDF() {
       doc.text("Page " + doc.internal.getNumberOfPages(), pageW - marge, pageH - 2.5, { align: "right" });
     });
 
-    // 4. Exportation finale
+// 4. Exportation finale via Partage (ou téléchargement si le partage échoue)
     const nomFichier = "RECAP_ENTREPRISES_" + new Date().toISOString().slice(0, 10) + ".pdf";
     const pdfBlob = doc.output("blob");
     const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
 
-    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-      await navigator.share({
-        files: [pdfFile],
-        title: "Récapitulatif Chantiers par Entreprise",
-        text: "AINM — Récapitulatif édité le " + dateStr
-      });
-    } else {
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        await navigator.share({
+          files: [pdfFile],
+          title: "Récapitulatif Chantiers par Entreprise",
+          text: "AINM — Récapitulatif chantiers"
+        });
+      } else {
+        // Fallback si le partage n'est pas supporté (ex: PC ou navigateur incompatible)
+        doc.save(nomFichier);
+      }
+    } catch (err) {
+      console.warn("Partage annulé ou échoué, téléchargement forcé :", err);
       doc.save(nomFichier);
     }
 
