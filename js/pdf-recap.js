@@ -1,22 +1,24 @@
 /* ============================================================
-   EXPORT PDF SUIVI GC PCLE-MMM — COMPLET ET CORRIGÉ
+   EXPORT PDF SUIVI GC PCLE-MMM — VERSION AVEC BARRE PROGRESSION
    ============================================================ */
 
 async function exporterRecapPDF() {
+  // Désactive le bouton pendant la génération pour éviter les clics multiples
   const btnPdf = document.getElementById("btnRecapPdf");
   if (btnPdf) { btnPdf.disabled = true; btnPdf.innerHTML = "⏳ Génération..."; }
 
   try {
     const { jsPDF } = window.jspdf;
+    // Création du document PDF (Format A4 standard)
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-    // Couleurs
+    // --- Configuration des couleurs ---
     const violet = [124, 34, 112];
     const blanc = [255, 255, 255];
     const vert = [22, 163, 74];
     const orange = [245, 158, 11];
     const rouge = [220, 38, 38];
-    const gris = [200, 200, 200];
+    const grisClair = [230, 230, 230];
 
     const couleursEE = {
       "TSO": [30, 144, 255],
@@ -25,23 +27,30 @@ async function exporterRecapPDF() {
       "SANS ENTREPRISE": [100, 100, 100]
     };
 
+    // --- Paramètres de mise en page ---
     const pageW = doc.internal.pageSize.getWidth();
     const marge = 8;
-    const gap = 3;
-    const colW = (pageW - marge * 2 - gap) / 2;
-    const blockH = 21; 
+    const gap = 3; // Espace entre les deux colonnes
+    const colW = (pageW - marge * 2 - gap) / 2; // Largeur d'une colonne
+    const blockH = 22; // Hauteur totale d'un bloc chantier
 
-    // ---- Regroupement des données ----
+    // --- Regroupement des données ---
     const entreprisesMap = {};
     baseSupports.forEach(s => {
       const eeNom = (s.EE || "SANS ENTREPRISE").trim().toUpperCase();
       const ch = s.chantier || "INCONNU";
+      
       if (!entreprisesMap[eeNom]) entreprisesMap[eeNom] = {};
-      if (!entreprisesMap[eeNom][ch]) entreprisesMap[eeNom][ch] = { total: 0, effectues: 0, m3TotalPrevu: 0, m3PrevuEffectue: 0, m3Reel: 0 };
+      if (!entreprisesMap[eeNom][ch]) {
+        entreprisesMap[eeNom][ch] = { total: 0, effectues: 0, m3TotalPrevu: 0, m3PrevuEffectue: 0, m3Reel: 0 };
+      }
+      
       const c = entreprisesMap[eeNom][ch];
       c.total++;
       const m3p = parseFloat(s.m3_prevu) || 0;
       c.m3TotalPrevu += m3p;
+      
+      // Si la colonne EFFECTUE vaut 1, on cumule
       if (String(s.EFFECTUE).trim() === "1") {
         c.effectues++;
         c.m3PrevuEffectue += m3p;
@@ -49,82 +58,84 @@ async function exporterRecapPDF() {
       }
     });
 
-    // ---- Fonction Camembert Corrigée ----
-    function dessinerCamembert(doc, x, y, rayon, pct, couleur) {
-      doc.setFillColor(...gris);
-      doc.circle(x, y, rayon, "F");
-      if (pct > 0) {
-        doc.setFillColor(...couleur);
-        const angle = pct * 3.6;
-        const rad = angle * Math.PI / 180;
-        doc.moveTo(x, y);
-        doc.path([{op: 'm', c: [x, y]}, 
-                  {op: 'l', c: [x, y - rayon]}, 
-                  {op: 'a', c: [rayon, rayon, 0, (angle > 180 ? 1 : 0), 1, 
-                               x + rayon * Math.sin(rad), 
-                               y - rayon * Math.cos(rad)]}, 
-                  {op: 'l', c: [x, y]}], 'F');
-      }
-      doc.setFillColor(...blanc);
-      doc.circle(x, y, rayon * 0.6, "F");
-    }
-
-    // ---- Fonction Bloc Chantier ----
+    // --- Fonction pour dessiner chaque bloc chantier ---
     function dessinerChantier(x, y, nom, c, couleurEE) {
+      // Calcul du pourcentage d'avancement
       const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
-      let couleurBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurEE;
+      // Couleur de la barre : Vert si fini, Orange si en cours, Bleu (EE) sinon
+      let couleurBarre = pct === 100 ? vert : (pct >= 50 ? orange : couleurEE);
       const ecart = c.m3Reel - c.m3PrevuEffectue;
-      const colEcart = ecart > 0 ? rouge : vert;
 
+      // 1. En-tête du bloc
       doc.setFillColor(...couleurEE);
       doc.roundedRect(x, y, colW, 6, 0.5, 0.5, "F");
       doc.setTextColor(...blanc);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(6.5);
-      doc.text("CH. " + nom, x + 1.5, y + 3.5);
+      doc.text("CH. " + nom, x + 1.5, y + 4);
 
-      dessinerCamembert(doc, x + colW - 4, y + 3, 2.2, pct, couleurBarre);
+      // 2. Dessin de la barre de progression
+      const barX = x + 1.5;
+      const barY = y + 7;
+      const barW = colW - 3;
+      // Fond de la barre (gris)
+      doc.setFillColor(...grisClair);
+      doc.rect(barX, barY, barW, 2, "F");
+      // Partie colorée (proportionnelle)
+      doc.setFillColor(...couleurBarre);
+      doc.rect(barX, barY, barW * (pct / 100), 2, "F");
 
+      // 3. Tableau des volumes (autoTable est idéal pour les colonnes propres)
       doc.autoTable({
-        startY: y + 6,
+        startY: y + 10,
         margin: { left: x, right: pageW - (x + colW) },
         head: [["Prév.", "Fait", "Réel", "Écart"]],
-        body: [[c.m3TotalPrevu.toFixed(0), c.m3PrevuEffectue.toFixed(0), c.m3Reel.toFixed(0), (ecart >= 0 ? "+" : "") + ecart.toFixed(0)]],
+        body: [[
+          c.m3TotalPrevu.toFixed(1),      // Volume prévu total
+          c.m3PrevuEffectue.toFixed(1),  // Volume prévu des effectués
+          c.m3Reel.toFixed(1),           // Volume réel mesuré
+          (ecart >= 0 ? "+" : "") + ecart.toFixed(1) // Écart
+        ]],
         theme: "grid",
-        styles: { fontSize: 5, cellPadding: 0.5, halign: "center" },
-        headStyles: { fillColor: couleurEE, textColor: blanc },
-        columnStyles: { 2: { textColor: colEcart }, 3: { textColor: colEcart } }
+        styles: { fontSize: 5.5, cellPadding: 0.5, halign: "center" },
+        headStyles: { fillColor: [80, 80, 80], textColor: blanc },
+        columnStyles: { 3: { textColor: ecart > 0 ? rouge : vert } } // Rouge si dépassement
       });
     }
 
-    // ---- Construction PDF ----
+    // --- Construction du PDF ---
+    // Titre Global
     doc.setFillColor(...violet);
     doc.rect(0, 0, pageW, 15, "F");
     doc.setTextColor(...blanc);
-    doc.setFontSize(10);
+    doc.setFontSize(12);
     doc.text("SUIVI GC PCLE-MMM", pageW / 2, 9, { align: "center" });
 
-    let currentY = 18;
+    let currentY = 20;
+    // Boucle sur chaque entreprise
     Object.entries(entreprisesMap).forEach(([eeNom, chantiersEE]) => {
-      if (currentY > 250) { doc.addPage(); currentY = 10; }
+      // Nouvelle page si on dépasse le bas de la feuille
+      if (currentY > 260) { doc.addPage(); currentY = 15; }
       
       const couleurEE = couleursEE[eeNom] || [30, 144, 255];
       doc.setTextColor(...couleurEE);
-      doc.setFontSize(8);
+      doc.setFontSize(9);
       doc.text("■ " + eeNom, marge, currentY);
-      currentY += 4;
+      currentY += 5;
 
+      // Boucle sur les chantiers (2 colonnes)
       Object.entries(chantiersEE).forEach(([nom, c], i) => {
         const col = i % 2;
         const row = Math.floor(i / 2);
         const x = marge + col * (colW + gap);
-        const y = currentY + row * (blockH + 2);
+        const y = currentY + row * (blockH + 5);
         dessinerChantier(x, y, nom, c, couleurEE);
-        if (i === Object.keys(chantiersEE).length - 1) currentY = y + blockH + 5;
+        // Mise à jour de la position Y pour le prochain groupe
+        if (i === Object.keys(chantiersEE).length - 1) currentY = y + blockH + 10;
       });
     });
 
-    // ---- Partage ou Téléchargement ----
+    // --- Exportation (Partage prioritaire) ---
     const nomFichier = "SUIVI_GC_" + new Date().toISOString().slice(0, 10) + ".pdf";
     const pdfBlob = doc.output("blob");
     const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
@@ -136,7 +147,7 @@ async function exporterRecapPDF() {
     }
 
   } catch (err) {
-    alert("Erreur PDF : " + err.message);
+    alert("Erreur : " + err.message);
   } finally {
     if (btnPdf) { btnPdf.disabled = false; btnPdf.innerHTML = "📄 Exporter PDF"; }
   }
