@@ -1,5 +1,5 @@
 /* ============================================================
-   EXPORT PDF RÉCAPITULATIF PAR ENTREPRISE (Couleurs TSO, ETF, HP-ELECT)
+   EXPORT PDF RÉCAPITULATIF - VERSION COMPACTE (1 Page)
    ============================================================ */
 
 async function exporterRecapPDF() {
@@ -13,245 +13,119 @@ async function exporterRecapPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-    // Palette de couleurs communes
-    const gris      = [90, 90, 90];
-    const grisCl    = [225, 225, 225];
-    const blanc     = [255, 255, 255];
-    const vert      = [22, 163, 74];
-    const orange    = [245, 158, 11];
-    const rouge     = [220, 38, 38];
+    // Palette de couleurs
+    const gris = [90, 90, 90];
+    const grisCl = [225, 225, 225];
+    const blanc = [255, 255, 255];
+    const vert = [22, 163, 74];
+    const orange = [245, 158, 11];
+    const rouge = [220, 38, 38];
 
-    // Palette de couleurs spécifique par Entreprise (EE)
     const couleursEE = {
-      "TSO": [30, 144, 255],      // Bleu (avec accents jaune/bleu)
-      "ETF": [29, 78, 216],       // Bleu (associé au rouge)
-      "HP-ELECT": [15, 23, 42],   // Bleu foncé
-      "SANS ENTREPRISE": [100, 100, 100] // Gris par défaut
+      "TSO": [30, 144, 255],
+      "ETF": [29, 78, 216],
+      "HP-ELECT": [15, 23, 42],
+      "SANS ENTREPRISE": [100, 100, 100]
     };
 
-    const pageW  = doc.internal.pageSize.getWidth();
-    const pageH  = doc.internal.pageSize.getHeight();
-    const marge  = 8;
-    const gap = 4; // Espace entre les deux colonnes
+    const pageW = doc.internal.pageSize.getWidth();
+    const marge = 8;
+    const gap = 4;
     const colW = (pageW - (marge * 2) - gap) / 2; 
 
-    // Chargement optionnel du logo
-    let logoAinmDataUrl = null;
-    if (typeof logoAINMversPNG === "function") {
-      logoAinmDataUrl = await logoAINMversPNG(737, 291);
-    }
-
-    const dateStr = new Date().toLocaleString("fr-FR");
-
-    // 1. Regroupement des données par Entreprise (EE) puis par Chantier
+    // ... (Logique de regroupement identique à votre code)
     const entreprisesMap = {};
-
     baseSupports.forEach(s => {
       const eeNom = (s.EE || "SANS ENTREPRISE").trim().toUpperCase();
       const chantierNom = s.chantier || "INCONNU";
-
-      if (!entreprisesMap[eeNom]) {
-        entreprisesMap[eeNom] = {};
-      }
+      if (!entreprisesMap[eeNom]) entreprisesMap[eeNom] = {};
+      const c = entreprisesMap[eeNom][chantierNom] || { total: 0, effectues: 0, m3TotalPrevu: 0, m3PrevuEffectue: 0, m3Reel: 0 };
       
-      const chantiersEE = entreprisesMap[eeNom];
-      if (!chantiersEE[chantierNom]) {
-        chantiersEE[chantierNom] = { 
-          total: 0, 
-          effectues: 0, 
-          m3TotalPrevu: 0,     
-          m3PrevuEffectue: 0,  
-          m3Reel: 0 
-        };
-      }
-
-      const c = chantiersEE[chantierNom];
       c.total++;
-      
       const m3PrevuVal = parseFloat(s.m3_prevu) || 0;
       c.m3TotalPrevu += m3PrevuVal;
-
-      const valEff = s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : "");
-      if (valEff === 1 || String(valEff).trim() === "1") {
+      const valEff = s.EFFECTUE ?? s.effectue ?? "";
+      if (valEff == 1 || String(valEff).trim() == "1") {
         c.effectues++;
         c.m3PrevuEffectue += m3PrevuVal;
         c.m3Reel += parseFloat(s.m3_reel) || 0;
       }
+      entreprisesMap[eeNom][chantierNom] = c;
     });
 
-    const entriesEntreprises = Object.entries(entreprisesMap);
-    if (entriesEntreprises.length === 0) {
-      alert("⚠️ Aucune donnée d'entreprise trouvée.");
-      return;
-    }
-
-    // 2. Génération des pages par Entreprise
+    // Génération
     let isFirstPage = true;
-
-    entriesEntreprises.forEach(([eeNom, chantiersMap]) => {
-      if (!isFirstPage) {
-        doc.addPage();
-      }
+    Object.entries(entreprisesMap).forEach(([eeNom, chantiersMap]) => {
+      if (!isFirstPage) doc.addPage();
       isFirstPage = false;
 
-      // Attribution de la couleur selon l'entreprise (ou bleu par défaut)
       const couleurEE = couleursEE[eeNom] || [30, 144, 255];
-      const couleurClairEE = [
-        Math.min(255, couleurEE[0] + 150),
-        Math.min(255, couleurEE[1] + 150),
-        Math.min(255, couleurEE[2] + 150)
-      ];
-
       let startY = 8;
 
-      // En-tête de page aux couleurs de l'entreprise
+      // En-tête simplifié
       doc.setFillColor(...couleurEE);
-      doc.rect(0, startY, pageW, 18, "F");
-
-      if (logoAinmDataUrl) {
-        const logoH = 9;
-        const logoW = logoH / (291 / 737);
-        doc.addImage(logoAinmDataUrl, "PNG", marge, startY + 4.5, logoW, logoH);
-      }
-
+      doc.rect(0, startY, pageW, 12, "F");
       doc.setTextColor(...blanc);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
+      doc.setFontSize(9);
       doc.text("ENTREPRISE : " + eeNom, pageW / 2, startY + 7, { align: "center" });
 
-      doc.setFontSize(7);
-      doc.setFont("helvetica", "normal");
-      doc.text("Édité le : " + dateStr, pageW / 2, startY + 13, { align: "center" });
+      startY += 15;
 
-      if (window.numeroRJ) {
-        doc.text("RJ : " + window.numeroRJ, pageW - marge, startY + 13, { align: "right" });
-      }
-
-      startY += 21;
-
-      // 3. Affichage des chantiers en grille 2 colonnes
       const entriesChantiers = Object.entries(chantiersMap);
-      let index = 0;
-
-      entriesChantiers.forEach(([nom, c]) => {
+      entriesChantiers.forEach(([nom, c], index) => {
         const colIndex = index % 2; 
         const rowIndex = Math.floor(index / 2);
-
+        // HAUTEUR RÉDUITE : 21mm au lieu de 25mm
+        const blockH = 21; 
+        const rowGap = 2; // Réduit pour gagner de la place
         const x = marge + colIndex * (colW + gap);
-        const blockH = 25;
-        const rowGap = 3;
         const y = startY + rowIndex * (blockH + rowGap);
 
         const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
-        
-        // Adaptation des couleurs de camembert selon l'entreprise si besoin
         let couleurBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurEE;
-        if (eeNom === "TSO" && pct < 50) couleurBarre = [234, 179, 8]; // Jaune pour TSO si en cours
-        if (eeNom === "ETF" && pct < 50) couleurBarre = [220, 38, 38]; // Rouge pour ETF si en cours
 
-        const ecart = c.m3Reel - c.m3PrevuEffectue;
-        const couleurEcart = ecart > 0 ? rouge : vert;
-
-        // En-tête du mini-bloc chantier
+        // Bloc compact
         doc.setFillColor(...couleurEE);
-        doc.roundedRect(x, y, colW, 4.5, 0.6, 0.6, "F");
+        doc.roundedRect(x, y, colW, 4, 0.5, 0.5, "F");
         doc.setTextColor(...blanc);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7);
-        doc.text("CH. " + nom, x + 1.5, y + 3.2);
-        
-        doc.setFontSize(6.5);
-        doc.text("Tot: " + c.m3TotalPrevu.toFixed(1) + "m³", x + colW - 1.5, y + 3.2, { align: "right" });
-        
-        let innerY = y + 5;
-
-        // Corps du mini-bloc
-        doc.setFillColor(250, 248, 250);
-        doc.setDrawColor(220, 210, 220);
-        doc.roundedRect(x, innerY, colW, blockH - 4.5, 0.8, 0.8, "FD");
-
-        let contentY = innerY + 3.5;
-        const leftInfoX = x + 2.5;
-        const rightChartX = x + colW - 10;
-        const chartY = contentY + 5.5;
-
-        doc.setTextColor(...gris);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(6.5);
-        doc.text("Massifs: " + c.effectues + "/" + c.total, leftInfoX, contentY);
-
-        // Camembert miniature
-        const rayonDonut = 5.5;
-        doc.setFillColor(...grisCl);
-        doc.circle(rightChartX, chartY, rayonDonut, "F");
-        doc.setFillColor(...couleurBarre);
-        doc.circle(rightChartX, chartY, rayonDonut, "F");
-        doc.setFillColor(250, 248, 250);
-        doc.circle(rightChartX, chartY, rayonDonut * 0.6, "F");
-
-        doc.setTextColor(...couleurBarre);
-        doc.setFont("helvetica", "bold");
         doc.setFontSize(6);
-        doc.text(pct + "%", rightChartX, chartY + 1.8, { align: "center" });
+        doc.text("CH. " + nom, x + 1, y + 2.8);
+        
+        doc.setFillColor(250, 250, 250);
+        doc.roundedRect(x, y + 4, colW, blockH - 4, 0.5, 0.5, "FD");
 
-        contentY += 4.5;
-
-        // Mini tableau des volumes
+        // Mini tableau ultra-compact
         doc.autoTable({
-          startY: contentY,
-          margin: { left: leftInfoX, right: pageW - (x + colW) + 12 },
+          startY: y + 4.5,
+          margin: { left: x + 0.5, right: pageW - (x + colW) + 0.5 },
           head: [["Prév.", "Fait", "Réel", "Écart"]],
           body: [[
-            c.m3TotalPrevu.toFixed(1),
-            c.m3PrevuEffectue.toFixed(1),
-            c.m3Reel.toFixed(1),
-            (ecart >= 0 ? "+" : "") + ecart.toFixed(1)
+            c.m3TotalPrevu.toFixed(0),
+            c.m3PrevuEffectue.toFixed(0),
+            c.m3Reel.toFixed(0),
+            (c.m3Reel - c.m3PrevuEffectue).toFixed(0)
           ]],
           theme: "grid",
-          styles: { fontSize: 5.5, cellPadding: 0.5, halign: "center", lineColor: [215, 205, 215] },
-          headStyles: { fillColor: couleurEE, textColor: blanc, fontStyle: "bold", cellPadding: 0.5 },
-          bodyStyles: { fontStyle: "bold", textColor: [50, 50, 50] },
-          columnStyles: {
-            2: { textColor: couleurEcart },
-            3: { textColor: couleurEcart }
-          },
+          styles: { fontSize: 5, cellPadding: 0.3, halign: "center" },
+          headStyles: { fillColor: couleurEE, textColor: blanc, cellPadding: 0.2 },
         });
-
-        index++;
       });
-
-      // Pied de page
-      doc.setFillColor(...couleurClairEE);
-      doc.rect(0, pageH - 7, pageW, 7, "F");
-      doc.setTextColor(...couleurEE);
-      doc.setFontSize(6.5);
-      doc.setFont("helvetica", "bold");
-      doc.text("AINM — Entreprise " + eeNom, marge, pageH - 2.5);
-      doc.text("Page " + doc.internal.getNumberOfPages(), pageW - marge, pageH - 2.5, { align: "right" });
     });
 
-    // 4. Exportation finale
-    const nomFichier = "RECAP_ENTREPRISES_" + new Date().toISOString().slice(0, 10) + ".pdf";
+    // 4. Exportation (le partage qui marchait)
+    const nomFichier = "RECAP_" + new Date().toISOString().slice(0, 10) + ".pdf";
     const pdfBlob = doc.output("blob");
     const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
 
     if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-      await navigator.share({
-        files: [pdfFile],
-        title: "Récapitulatif Chantiers par Entreprise",
-        text: "AINM — Récapitulatif édité le " + dateStr
-      });
+      await navigator.share({ files: [pdfFile], title: "Récap", text: "AINM" });
     } else {
       doc.save(nomFichier);
     }
-
   } catch (err) {
-    console.error("Erreur PDF récap :", err);
-    alert("⚠️ Erreur lors de la génération du PDF :\n" + err.message);
+    alert("Erreur : " + err.message);
   } finally {
-    if (btnPdf) { 
-      btnPdf.disabled = false; 
-      btnPdf.innerHTML = "📄 Exporter PDF"; 
-    }
+    if (btnPdf) { btnPdf.disabled = false; btnPdf.innerHTML = "📄 Exporter PDF"; }
   }
 }
