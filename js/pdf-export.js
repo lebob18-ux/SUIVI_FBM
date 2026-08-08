@@ -214,7 +214,7 @@ const sensPTexte = blocNVisible ? "amont" : "aval";
 const rowsFouille = [
   ["Implantation (I)", val("I") ? val("I") + " m" : "-", txt("I_ref")],
   ["Echantillon", echValeur || "-", txt("ECH_ref")],
-  ["Arasement (AR)", val("AR") ? val("AR") + " m" : "-", txt("AR_ref")],
+  ["Arasement (AR)", val("AR") ? val("AR") + " Cm" : "-", txt("AR_ref")],
   ["Encastrement (Enc)", val("Enc") ? val("Enc") + " m" : "-", txt("Enc_ref")],
   ["Cote A", val("AF") ? val("AF") + " m" : "-", txt("AF_ref")],
   ["Cote B", val("B_Fouille") ? val("B_Fouille") + " m" : "-", txt("B_ref")],
