@@ -1,13 +1,19 @@
+/* ============================================================
+   EXPORT PDF RÉCAPITULATIF PAR ENTREPRISE (Couleurs TSO, ETF, HP-ELECT)
+   ============================================================ */
+
 async function exporterRecapPDF() {
   const btnPdf = document.getElementById("btnRecapPdf");
-  if (btnPdf) { btnPdf.disabled = true; btnPdf.innerHTML = "⏳ Génération..."; }
+  if (btnPdf) { 
+    btnPdf.disabled = true; 
+    btnPdf.innerHTML = "⏳ Génération..."; 
+  }
 
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-    const violet    = [124, 34, 112];
-    const violetCl  = [240, 228, 238];
+    // Palette de couleurs communes
     const gris      = [90, 90, 90];
     const grisCl    = [225, 225, 225];
     const blanc     = [255, 255, 255];
@@ -15,15 +21,21 @@ async function exporterRecapPDF() {
     const orange    = [245, 158, 11];
     const rouge     = [220, 38, 38];
 
+    // Palette de couleurs spécifique par Entreprise (EE)
+    const couleursEE = {
+      "TSO": [30, 144, 255],      // Bleu (avec accents jaune/bleu)
+      "ETF": [29, 78, 216],       // Bleu (associé au rouge)
+      "HP-ELECT": [15, 23, 42],   // Bleu foncé
+      "SANS ENTREPRISE": [100, 100, 100] // Gris par défaut
+    };
+
     const pageW  = doc.internal.pageSize.getWidth();
     const pageH  = doc.internal.pageSize.getHeight();
     const marge  = 8;
-    
-    // Calcul pour faire 2 colonnes côte à côte
-    const gap = 4; // Espace entre les 2 colonnes
+    const gap = 4; // Espace entre les deux colonnes
     const colW = (pageW - (marge * 2) - gap) / 2; 
 
-    /* ---- Logo AINM ---- */
+    // Chargement optionnel du logo
     let logoAinmDataUrl = null;
     if (typeof logoAINMversPNG === "function") {
       logoAinmDataUrl = await logoAINMversPNG(737, 291);
@@ -31,7 +43,7 @@ async function exporterRecapPDF() {
 
     const dateStr = new Date().toLocaleString("fr-FR");
 
-    /* ---- Étape 1 : Regrouper les données par Entreprise puis par Chantier ---- */
+    // 1. Regroupement des données par Entreprise (EE) puis par Chantier
     const entreprisesMap = {};
 
     baseSupports.forEach(s => {
@@ -73,7 +85,7 @@ async function exporterRecapPDF() {
       return;
     }
 
-    /* ---- Étape 2 : Générer une page par Entreprise avec grille 2 colonnes ---- */
+    // 2. Génération des pages par Entreprise
     let isFirstPage = true;
 
     entriesEntreprises.forEach(([eeNom, chantiersMap]) => {
@@ -82,10 +94,18 @@ async function exporterRecapPDF() {
       }
       isFirstPage = false;
 
+      // Attribution de la couleur selon l'entreprise (ou bleu par défaut)
+      const couleurEE = couleursEE[eeNom] || [30, 144, 255];
+      const couleurClairEE = [
+        Math.min(255, couleurEE[0] + 150),
+        Math.min(255, couleurEE[1] + 150),
+        Math.min(255, couleurEE[2] + 150)
+      ];
+
       let startY = 8;
 
-      /* -- En-tête de page -- */
-      doc.setFillColor(...violet);
+      // En-tête de page aux couleurs de l'entreprise
+      doc.setFillColor(...couleurEE);
       doc.rect(0, startY, pageW, 18, "F");
 
       if (logoAinmDataUrl) {
@@ -109,27 +129,31 @@ async function exporterRecapPDF() {
 
       startY += 21;
 
-      /* -- Affichage en grille 2 colonnes -- */
+      // 3. Affichage des chantiers en grille 2 colonnes
       const entriesChantiers = Object.entries(chantiersMap);
       let index = 0;
 
       entriesChantiers.forEach(([nom, c]) => {
-        const colIndex = index % 2; // 0 pour la colonne de gauche, 1 pour la droite
+        const colIndex = index % 2; 
         const rowIndex = Math.floor(index / 2);
 
         const x = marge + colIndex * (colW + gap);
-        // On calcule la position verticale selon la ligne (5 lignes max pour 10 chantiers)
         const blockH = 25;
         const rowGap = 3;
         const y = startY + rowIndex * (blockH + rowGap);
 
         const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
-        const couleurBarre = pct === 100 ? vert : pct >= 50 ? orange : violet;
+        
+        // Adaptation des couleurs de camembert selon l'entreprise si besoin
+        let couleurBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurEE;
+        if (eeNom === "TSO" && pct < 50) couleurBarre = [234, 179, 8]; // Jaune pour TSO si en cours
+        if (eeNom === "ETF" && pct < 50) couleurBarre = [220, 38, 38]; // Rouge pour ETF si en cours
+
         const ecart = c.m3Reel - c.m3PrevuEffectue;
         const couleurEcart = ecart > 0 ? rouge : vert;
 
         // En-tête du mini-bloc chantier
-        doc.setFillColor(...violet);
+        doc.setFillColor(...couleurEE);
         doc.roundedRect(x, y, colW, 4.5, 0.6, 0.6, "F");
         doc.setTextColor(...blanc);
         doc.setFont("helvetica", "bold");
@@ -151,13 +175,12 @@ async function exporterRecapPDF() {
         const rightChartX = x + colW - 10;
         const chartY = contentY + 5.5;
 
-        // Infos massifs & camembert miniature
         doc.setTextColor(...gris);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(6.5);
         doc.text("Massifs: " + c.effectues + "/" + c.total, leftInfoX, contentY);
 
-        // Petit camembert à droite
+        // Camembert miniature
         const rayonDonut = 5.5;
         doc.setFillColor(...grisCl);
         doc.circle(rightChartX, chartY, rayonDonut, "F");
@@ -173,7 +196,7 @@ async function exporterRecapPDF() {
 
         contentY += 4.5;
 
-        // Mini tableau des volumes adapté à la largeur de la colonne
+        // Mini tableau des volumes
         doc.autoTable({
           startY: contentY,
           margin: { left: leftInfoX, right: pageW - (x + colW) + 12 },
@@ -186,7 +209,7 @@ async function exporterRecapPDF() {
           ]],
           theme: "grid",
           styles: { fontSize: 5.5, cellPadding: 0.5, halign: "center", lineColor: [215, 205, 215] },
-          headStyles: { fillColor: violet, textColor: blanc, fontStyle: "bold", cellPadding: 0.5 },
+          headStyles: { fillColor: couleurEE, textColor: blanc, fontStyle: "bold", cellPadding: 0.5 },
           bodyStyles: { fontStyle: "bold", textColor: [50, 50, 50] },
           columnStyles: {
             2: { textColor: couleurEcart },
@@ -197,17 +220,17 @@ async function exporterRecapPDF() {
         index++;
       });
 
-      /* -- Pied de page -- */
-      doc.setFillColor(...violetCl);
+      // Pied de page
+      doc.setFillColor(...couleurClairEE);
       doc.rect(0, pageH - 7, pageW, 7, "F");
-      doc.setTextColor(...violet);
+      doc.setTextColor(...couleurEE);
       doc.setFontSize(6.5);
-      doc.setFont("helvetica", "normal");
+      doc.setFont("helvetica", "bold");
       doc.text("AINM — Entreprise " + eeNom, marge, pageH - 2.5);
       doc.text("Page " + doc.internal.getNumberOfPages(), pageW - marge, pageH - 2.5, { align: "right" });
     });
 
-    /* ---- Partage ou Téléchargement ---- */
+    // 4. Exportation finale
     const nomFichier = "RECAP_ENTREPRISES_" + new Date().toISOString().slice(0, 10) + ".pdf";
     const pdfBlob = doc.output("blob");
     const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
@@ -226,6 +249,9 @@ async function exporterRecapPDF() {
     console.error("Erreur PDF récap :", err);
     alert("⚠️ Erreur lors de la génération du PDF :\n" + err.message);
   } finally {
-    if (btnPdf) { btnPdf.disabled = false; btnPdf.innerHTML = "📄 Exporter PDF"; }
+    if (btnPdf) { 
+      btnPdf.disabled = false; 
+      btnPdf.innerHTML = "📄 Exporter PDF"; 
+    }
   }
 }
