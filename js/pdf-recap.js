@@ -1,5 +1,5 @@
 /* ============================================================
-   EXPORT PDF SUIVI GC PCLE-MMM — COMPLET AVEC CAMEMBERTS
+   EXPORT PDF SUIVI GC PCLE-MMM — COMPLET ET CORRIGÉ
    ============================================================ */
 
 async function exporterRecapPDF() {
@@ -10,8 +10,8 @@ async function exporterRecapPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
+    // Couleurs
     const violet = [124, 34, 112];
-    const violetCl = [240, 228, 238];
     const blanc = [255, 255, 255];
     const vert = [22, 163, 74];
     const orange = [245, 158, 11];
@@ -26,13 +26,12 @@ async function exporterRecapPDF() {
     };
 
     const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
     const marge = 8;
     const gap = 3;
     const colW = (pageW - marge * 2 - gap) / 2;
-    const blockH = 21; // Hauteur ajustée pour faire tenir 20 chantiers
+    const blockH = 21; 
 
-    // ---- Regroupement ----
+    // ---- Regroupement des données ----
     const entreprisesMap = {};
     baseSupports.forEach(s => {
       const eeNom = (s.EE || "SANS ENTREPRISE").trim().toUpperCase();
@@ -50,45 +49,63 @@ async function exporterRecapPDF() {
       }
     });
 
-    // ---- Fonctions de dessin ----
-
-
-function dessinerCamembert(doc, x, y, rayon, pct, couleur) {
-      // 1. Fond gris
+    // ---- Fonction Camembert Corrigée ----
+    function dessinerCamembert(doc, x, y, rayon, pct, couleur) {
       doc.setFillColor(...gris);
       doc.circle(x, y, rayon, "F");
-
-      // 2. Secteur coloré (partie effectuée)
       if (pct > 0) {
         doc.setFillColor(...couleur);
-        // On définit le chemin pour un secteur de cercle
-        // 'm' = move, 'a' = arc (déplacement relatif)
-        const angle = (pct * 3.6); 
+        const angle = pct * 3.6;
+        const rad = angle * Math.PI / 180;
         doc.moveTo(x, y);
-        // On dessine le secteur via un path SVG simple
         doc.path([{op: 'm', c: [x, y]}, 
                   {op: 'l', c: [x, y - rayon]}, 
                   {op: 'a', c: [rayon, rayon, 0, (angle > 180 ? 1 : 0), 1, 
-                               x + rayon * Math.sin(angle * Math.PI / 180), 
-                               y - rayon * Math.cos(angle * Math.PI / 180)]}, 
+                               x + rayon * Math.sin(rad), 
+                               y - rayon * Math.cos(rad)]}, 
                   {op: 'l', c: [x, y]}], 'F');
       }
-
-      // 3. Cercle blanc au centre (effet donut)
-      doc.setFillColor(255, 255, 255);
+      doc.setFillColor(...blanc);
       doc.circle(x, y, rayon * 0.6, "F");
     }
 
-    // ---- En-tête Global ----
+    // ---- Fonction Bloc Chantier ----
+    function dessinerChantier(x, y, nom, c, couleurEE) {
+      const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
+      let couleurBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurEE;
+      const ecart = c.m3Reel - c.m3PrevuEffectue;
+      const colEcart = ecart > 0 ? rouge : vert;
+
+      doc.setFillColor(...couleurEE);
+      doc.roundedRect(x, y, colW, 6, 0.5, 0.5, "F");
+      doc.setTextColor(...blanc);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6.5);
+      doc.text("CH. " + nom, x + 1.5, y + 3.5);
+
+      dessinerCamembert(doc, x + colW - 4, y + 3, 2.2, pct, couleurBarre);
+
+      doc.autoTable({
+        startY: y + 6,
+        margin: { left: x, right: pageW - (x + colW) },
+        head: [["Prév.", "Fait", "Réel", "Écart"]],
+        body: [[c.m3TotalPrevu.toFixed(0), c.m3PrevuEffectue.toFixed(0), c.m3Reel.toFixed(0), (ecart >= 0 ? "+" : "") + ecart.toFixed(0)]],
+        theme: "grid",
+        styles: { fontSize: 5, cellPadding: 0.5, halign: "center" },
+        headStyles: { fillColor: couleurEE, textColor: blanc },
+        columnStyles: { 2: { textColor: colEcart }, 3: { textColor: colEcart } }
+      });
+    }
+
+    // ---- Construction PDF ----
     doc.setFillColor(...violet);
     doc.rect(0, 0, pageW, 15, "F");
     doc.setTextColor(...blanc);
     doc.setFontSize(10);
     doc.text("SUIVI GC PCLE-MMM", pageW / 2, 9, { align: "center" });
 
-    // ---- Boucle Entreprises ----
     let currentY = 18;
-    Object.entries(entreprisesMap).forEach(([eeNom, chantiersEE], idx) => {
+    Object.entries(entreprisesMap).forEach(([eeNom, chantiersEE]) => {
       if (currentY > 250) { doc.addPage(); currentY = 10; }
       
       const couleurEE = couleursEE[eeNom] || [30, 144, 255];
@@ -107,7 +124,7 @@ function dessinerCamembert(doc, x, y, rayon, pct, couleur) {
       });
     });
 
-    // ---- Exportation ----
+    // ---- Partage ou Téléchargement ----
     const nomFichier = "SUIVI_GC_" + new Date().toISOString().slice(0, 10) + ".pdf";
     const pdfBlob = doc.output("blob");
     const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
@@ -119,7 +136,7 @@ function dessinerCamembert(doc, x, y, rayon, pct, couleur) {
     }
 
   } catch (err) {
-    alert("Erreur : " + err.message);
+    alert("Erreur PDF : " + err.message);
   } finally {
     if (btnPdf) { btnPdf.disabled = false; btnPdf.innerHTML = "📄 Exporter PDF"; }
   }
