@@ -1,5 +1,5 @@
 /* ============================================================
-   EXPORT PDF RÉCAPITULATIF PAR ENTREPRISE (Couleurs TSO, ETF, HP-ELECT)
+   EXPORT PDF RÉCAPITULATIF PAR ENTREPRISE (Optimisé anti-chevauchement)
    ============================================================ */
 
 async function exporterRecapPDF() {
@@ -21,12 +21,12 @@ async function exporterRecapPDF() {
     const orange    = [245, 158, 11];
     const rouge     = [220, 38, 38];
 
-    // Palette de couleurs spécifique par Entreprise (EE)
+    // Palette de couleurs par Entreprise (EE)
     const couleursEE = {
-      "TSO": [30, 144, 255],      // Bleu (avec accents jaune/bleu)
-      "ETF": [29, 78, 216],       // Bleu (associé au rouge)
+      "TSO": [30, 144, 255],      // Bleu
+      "ETF": [29, 78, 216],       // Bleu / Rouge
       "HP-ELECT": [15, 23, 42],   // Bleu foncé
-      "SANS ENTREPRISE": [100, 100, 100] // Gris par défaut
+      "SANS ENTREPRISE": [100, 100, 100]
     };
 
     const pageW  = doc.internal.pageSize.getWidth();
@@ -51,9 +51,14 @@ async function exporterRecapPDF() {
       const chantierNom = s.chantier || "INCONNU";
 
       if (!entreprisesMap[eeNom]) {
-        entreprisesMap[eeNom] = {};
+        entreprisesMap[eeNom] {};
       }
       
+      // Sécurité si l'objet n'a pas été initialisé correctement
+      if (!entreprisesMap[eeNom]) {
+        entreprisesMap[eeNom] = {};
+      }
+
       const chantiersEE = entreprisesMap[eeNom];
       if (!chantiersEE[chantierNom]) {
         chantiersEE[chantierNom] = { 
@@ -94,7 +99,6 @@ async function exporterRecapPDF() {
       }
       isFirstPage = false;
 
-      // Attribution de la couleur selon l'entreprise (ou bleu par défaut)
       const couleurEE = couleursEE[eeNom] || [30, 144, 255];
       const couleurClairEE = [
         Math.min(255, couleurEE[0] + 150),
@@ -104,7 +108,7 @@ async function exporterRecapPDF() {
 
       let startY = 8;
 
-      // En-tête de page aux couleurs de l'entreprise
+      // En-tête de page
       doc.setFillColor(...couleurEE);
       doc.rect(0, startY, pageW, 18, "F");
 
@@ -138,16 +142,15 @@ async function exporterRecapPDF() {
         const rowIndex = Math.floor(index / 2);
 
         const x = marge + colIndex * (colW + gap);
-        const blockH = 25;
-        const rowGap = 3;
+        const blockH = 24; // Hauteur légèrement resserrée
+        const rowGap = 2.5; 
         const y = startY + rowIndex * (blockH + rowGap);
 
         const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
         
-        // Adaptation des couleurs de camembert selon l'entreprise si besoin
         let couleurBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurEE;
-        if (eeNom === "TSO" && pct < 50) couleurBarre = [234, 179, 8]; // Jaune pour TSO si en cours
-        if (eeNom === "ETF" && pct < 50) couleurBarre = [220, 38, 38]; // Rouge pour ETF si en cours
+        if (eeNom === "TSO" && pct < 50) couleurBarre = [234, 179, 8]; 
+        if (eeNom === "ETF" && pct < 50) couleurBarre = [220, 38, 38]; 
 
         const ecart = c.m3Reel - c.m3PrevuEffectue;
         const couleurEcart = ecart > 0 ? rouge : vert;
@@ -163,25 +166,27 @@ async function exporterRecapPDF() {
         doc.setFontSize(6.5);
         doc.text("Tot: " + c.m3TotalPrevu.toFixed(1) + "m³", x + colW - 1.5, y + 3.2, { align: "right" });
         
-        let innerY = y + 5;
+        let innerY = y + 4.5;
 
         // Corps du mini-bloc
         doc.setFillColor(250, 248, 250);
         doc.setDrawColor(220, 210, 220);
         doc.roundedRect(x, innerY, colW, blockH - 4.5, 0.8, 0.8, "FD");
 
-        let contentY = innerY + 3.5;
-        const leftInfoX = x + 2.5;
-        const rightChartX = x + colW - 10;
-        const chartY = contentY + 5.5;
+        let contentY = innerY + 3;
+        const leftInfoX = x + 2;
+        
+        // Position du camembert décalée un peu plus vers la droite pour éviter tout conflit
+        const rightChartX = x + colW - 8.5;
+        const chartY = contentY + 5;
 
         doc.setTextColor(...gris);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(6.5);
+        doc.setFontSize(6);
         doc.text("Massifs: " + c.effectues + "/" + c.total, leftInfoX, contentY);
 
         // Camembert miniature
-        const rayonDonut = 5.5;
+        const rayonDonut = 5;
         doc.setFillColor(...grisCl);
         doc.circle(rightChartX, chartY, rayonDonut, "F");
         doc.setFillColor(...couleurBarre);
@@ -191,15 +196,15 @@ async function exporterRecapPDF() {
 
         doc.setTextColor(...couleurBarre);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(6);
-        doc.text(pct + "%", rightChartX, chartY + 1.8, { align: "center" });
+        doc.setFontSize(5.5);
+        doc.text(pct + "%", rightChartX, chartY + 1.5, { align: "center" });
 
-        contentY += 4.5;
+        contentY += 4;
 
-        // Mini tableau des volumes
+        // Mini tableau des volumes : marge droite élargie (18mm) pour s'arrêter avant le camembert
         doc.autoTable({
           startY: contentY,
-          margin: { left: leftInfoX, right: pageW - (x + colW) + 12 },
+          margin: { left: leftInfoX, right: pageW - (x + colW) + 17 },
           head: [["Prév.", "Fait", "Réel", "Écart"]],
           body: [[
             c.m3TotalPrevu.toFixed(1),
@@ -208,8 +213,8 @@ async function exporterRecapPDF() {
             (ecart >= 0 ? "+" : "") + ecart.toFixed(1)
           ]],
           theme: "grid",
-          styles: { fontSize: 5.5, cellPadding: 0.5, halign: "center", lineColor: [215, 205, 215] },
-          headStyles: { fillColor: couleurEE, textColor: blanc, fontStyle: "bold", cellPadding: 0.5 },
+          styles: { fontSize: 5, cellPadding: 0.4, halign: "center", lineColor: [215, 205, 215] },
+          headStyles: { fillColor: couleurEE, textColor: blanc, fontStyle: "bold", cellPadding: 0.4 },
           bodyStyles: { fontStyle: "bold", textColor: [50, 50, 50] },
           columnStyles: {
             2: { textColor: couleurEcart },
