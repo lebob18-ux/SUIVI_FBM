@@ -103,13 +103,31 @@ async function exporterRecapPDF() {
       });
     }
 
+// 1. Récupération de la date la plus récente (MAX)
+const dates = baseSupports
+  .map(s => s.date) // On extrait toutes les dates
+  .filter(d => d)   // On enlève les vides
+  .sort();          // On trie par ordre alphabétique (le format ISO rend le tri parfait)
+
+const derniereDate = dates.length > 0 ? dates[dates.length - 1] : "N/A";
+
+// 2. Conversion pour l'affichage (ex: 2026-08-08 -> 08/08/2026)
+const dateAffichee = derniereDate !== "N/A" 
+  ? derniereDate.split('-').reverse().join('/') 
+  : "Aucune date";
+
+
+     
     // --- Construction du PDF ---
     // Titre Global
-    doc.setFillColor(...violet);
-    doc.rect(0, 0, pageW, 15, "F");
-    doc.setTextColor(...blanc);
-    doc.setFontSize(12);
-    doc.text("SUIVI GC PCLE-MMM", pageW / 2, 9, { align: "center" });
+// Titre Global avec la date dynamique
+doc.setFillColor(...violet);
+doc.rect(0, 0, pageW, 15, "F");
+doc.setTextColor(...blanc);
+doc.setFontSize(12);
+doc.text("SUIVI GC PCLE-MMM", pageW / 2, 8, { align: "center" });
+doc.setFontSize(8);
+doc.text("Dernier relevé : " + dateAffichee, pageW / 2, 13, { align: "center" });
 
     let currentY = 20;
     // Boucle sur chaque entreprise
