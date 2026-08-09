@@ -94,7 +94,7 @@ async function exporterRecapPDF() {
     // ================================================================
     // PAGE 1 : SUIVI PAR CPT
     // ================================================================
-    dessinerEntete("SUIVI GC PCLE-MMM — PAR COMPTE F");
+    dessinerEntete("SUIVI GC PCLE-MMM — PAR CPT");
 
     const cptMap = {};
     donneesActives.forEach(s => {
@@ -291,10 +291,10 @@ async function exporterRecapPDF() {
     });
 
     // ================================================================
-    // PAGE 3 : SUIVI PAR EE (Entreprise Exécutante)
+    // PAGE 3 : SUIVI PAR EE (Entreprise Exécutante) — Hauteur élargie
     // ================================================================
     doc.addPage();
-    dessinerEntete("SUIVI GC PCLE-MMM — PAR ENTREPRISE ");
+    dessinerEntete("SUIVI GC PCLE-MMM — PAR ENTREPRISE (EE)");
 
     const eeMap = {};
     donneesActives.forEach(s => {
@@ -324,7 +324,12 @@ async function exporterRecapPDF() {
     const eeEntries = Object.entries(eeMap).sort((a, b) => a[0].localeCompare(b[0]));
 
     eeEntries.forEach(([eeNom, cc]) => {
-      if (eeY + 32 > 285) { doc.addPage(); eeY = 15; }
+      const chEntriesEE = Object.entries(cc.chantiers);
+      // Calcul dynamique de la hauteur nécessaire pour loger tous les chantiers (sur 2 colonnes)
+      const nbLignesChantiers = Math.ceil(chEntriesEE.length / 2);
+      const blocHauteur = Math.max(34, 22 + (nbLignesChantiers * 5.2));
+
+      if (eeY + blocHauteur > 285) { doc.addPage(); eeY = 15; }
 
       const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
       const couleurEEActuelle = couleursEE[eeNom] || [30, 144, 255];
@@ -332,63 +337,58 @@ async function exporterRecapPDF() {
       const ecart = cc.m3Calculé - cc.m3Fait;
 
       doc.setFillColor(...couleurEEActuelle.map(v => Math.min(255, v + 150)));
-      doc.rect(marge, eeY, pageW - marge*2, 5, "F");
+      doc.rect(marge, eeY, pageW - marge*2, 6, "F");
       doc.setFillColor(...couleurEEActuelle);
-      doc.rect(marge, eeY, 2.5, 5, "F");
+      doc.rect(marge, eeY, 3, 6, "F");
       doc.setTextColor(...couleurEEActuelle);
-      doc.setFont("helvetica", "bold"); doc.setFontSize(7.5);
-      doc.text("EE : " + eeNom, marge + 4, eeY + 3.6);
-      eeY += 5.5;
+      doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+      doc.text("EE : " + eeNom, marge + 4, eeY + 4.3);
+      eeY += 7;
 
       const donutImg = genererDonut(cc.effectues, cc.total, coulBarre);
-      const donutMM = 18;
+      const donutMM = 22;
       doc.addImage(donutImg, "JPEG", marge, eeY, donutMM, donutMM);
 
-      const statsX = marge + donutMM + 3;
-      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6);
-      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, eeY + 2.5);
-      doc.text(`m³ prévu : ${cc.m3Prevu.toFixed(1)}`, statsX, eeY + 6);
-      doc.text(`m³ calculé : ${cc.m3Calculé.toFixed(1)}`, statsX, eeY + 9.5);
-      doc.text(`m³ fait : ${cc.m3Fait.toFixed(1)}`, statsX, eeY + 13);
+      const statsX = marge + donutMM + 4;
+      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6.5);
+      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, eeY + 3);
+      doc.text(`m³ prévu : ${cc.m3Prevu.toFixed(1)}`, statsX, eeY + 7);
+      doc.text(`m³ calculé : ${cc.m3Calculé.toFixed(1)}`, statsX, eeY + 11);
+      doc.text(`m³ fait : ${cc.m3Fait.toFixed(1)}`, statsX, eeY + 15);
       
       const coulEcart = ecart > 0 ? rouge : vert;
       doc.setTextColor(...coulEcart); doc.setFont("helvetica", "bold");
-      doc.text(`Écart (Calc-Fait) : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, eeY + 16.5);
+      doc.text(`Écart (Calc-Fait) : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, eeY + 19);
 
-      const chEntriesEE = Object.entries(cc.chantiers);
-      const listeX = statsX + 48;
-      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(5.5);
+      const listeX = statsX + 50;
+      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6);
       
       const nbColsChantierEE = chEntriesEE.length === 1 ? 1 : 2;
 
-      chEntriesEE.slice(0, 8).forEach(([ch, cv], idx) => {
+      // Affichage de TOUS les chantiers sans limitation à 8
+      chEntriesEE.forEach(([ch, cv], idx) => {
         const p = cv.total > 0 ? Math.round((cv.effectues/cv.total)*100) : 0;
         const col = idx % nbColsChantierEE; 
         const row = Math.floor(idx / nbColsChantierEE);
-        const cx2 = listeX + col * 34; 
-        const cy2 = eeY + row * 4.2;
+        const cx2 = listeX + col * 36; 
+        const cy2 = eeY + (row * 5.2);
         
         doc.setTextColor(80,80,80); 
-        doc.text(ch, cx2, cy2 + 3);
+        doc.text(ch, cx2, cy2 + 3.5);
         
         doc.setFillColor(...grisClair); 
-        doc.roundedRect(cx2, cy2 + 3.3, 18, 1, 0.2, 0.2, "F");
+        doc.roundedRect(cx2, cy2 + 3.8, 20, 1.2, 0.2, 0.2, "F");
         if (p > 0) { 
           doc.setFillColor(...coulBarre); 
-          doc.roundedRect(cx2, cy2 + 3.3, 18*p/100, 1, 0.2, 0.2, "F"); 
+          doc.roundedRect(cx2, cy2 + 3.8, 20*p/100, 1.2, 0.2, 0.2, "F"); 
         }
         doc.setTextColor(...coulBarre); 
         doc.setFont("helvetica","bold"); 
-        doc.setFontSize(5);
-        doc.text(p+"%", cx2+19, cy2+4.1);
+        doc.setFontSize(5.5);
+        doc.text(p+"%", cx2+21, cy2+4.5);
       });
 
-      if (chEntriesEE.length > 8) {
-        doc.setTextColor(150,150,150); doc.setFontSize(5);
-        doc.text("+" + (chEntriesEE.length-8) + " autres", listeX, eeY + 18);
-      }
-
-      eeY += donutMM + 2.5;
+      eeY += donutMM + 4;
     });
 
     // ================================================================
