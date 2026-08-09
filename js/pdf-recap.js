@@ -102,16 +102,21 @@ async function exporterRecapPDF() {
       if (!cptMap[cpt]) cptMap[cpt] = { total:0, effectues:0, m3Prevu:0, m3Calculé:0, m3Fait:0, chantiers:{} };
       const cc = cptMap[cpt];
       cc.total++;
+      
       const m3p = parseFloat(s.m3_prevu) || 0;
-      const m3c = parseFloat(s.m3_calcule || s.m3_calculé) || 0;
+      // Utilisation de la colonne 'reel' pour le calculé
+      const m3c = parseFloat(s.reel !== undefined ? s.reel : (s.m3_calcule !== undefined ? s.m3_calcule : s.m3_calculé)) || 0;
+      
       cc.m3Prevu += m3p;
       cc.m3Calculé += m3c;
+      
       const ch = s.chantier || "?";
       if (!cc.chantiers[ch]) cc.chantiers[ch] = { total:0, effectues:0 };
       cc.chantiers[ch].total++;
+      
       if (String(s.EFFECTUE).trim() === "1") {
         cc.effectues++;
-        cc.m3Fait += m3p;
+        cc.m3Fait += m3p; 
         cc.chantiers[ch].effectues++;
       }
     });
@@ -202,12 +207,16 @@ async function exporterRecapPDF() {
       };
       const cc = chantierMap[ch];
       cc.total++;
+      
       const m3p = parseFloat(s.m3_prevu) || 0;
-      const m3c = parseFloat(s.m3_calcule || s.m3_calculé) || 0;
+      const m3c = parseFloat(s.reel !== undefined ? s.reel : (s.m3_calcule !== undefined ? s.m3_calcule : s.m3_calculé)) || 0;
+      
       cc.m3Prevu += m3p;
       cc.m3Calculé += m3c;
+      
       if (!cc.ees[ee]) cc.ees[ee] = { total:0, effectues:0, couleur: couleursEE[ee] || [100,100,100] };
       cc.ees[ee].total++;
+      
       if (String(s.EFFECTUE).trim() === "1") {
         cc.effectues++;
         cc.m3Fait += m3p;
@@ -294,13 +303,17 @@ async function exporterRecapPDF() {
       if (!eeMap[ee]) eeMap[ee] = { total:0, effectues:0, m3Prevu:0, m3Calculé:0, m3Fait:0, chantiers:{} };
       const cc = eeMap[ee];
       cc.total++;
+      
       const m3p = parseFloat(s.m3_prevu) || 0;
-      const m3c = parseFloat(s.m3_calcule || s.m3_calculé) || 0;
+      const m3c = parseFloat(s.reel !== undefined ? s.reel : (s.m3_calcule !== undefined ? s.m3_calcule : s.m3_calculé)) || 0;
+      
       cc.m3Prevu += m3p;
       cc.m3Calculé += m3c;
+      
       const ch = s.chantier || "?";
       if (!cc.chantiers[ch]) cc.chantiers[ch] = { total:0, effectues:0 };
       cc.chantiers[ch].total++;
+      
       if (String(s.EFFECTUE).trim() === "1") {
         cc.effectues++;
         cc.m3Fait += m3p;
