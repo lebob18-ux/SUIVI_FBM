@@ -66,24 +66,55 @@ async function exporterRecapPDF() {
       let couleurBarre = pct === 100 ? vert : (pct >= 50 ? orange : couleurEE);
       const ecart = c.m3Reel - c.m3PrevuEffectue;
 
-      // 1. En-tête du bloc
-      doc.setFillColor(...couleurEE);
-      doc.roundedRect(x, y, colW, 6, 0.5, 0.5, "F");
-      doc.setTextColor(...blanc);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
-      doc.text("CH. " + nom, x + 1.5, y + 4);
+// 1. En-tête du bloc chantier
+doc.setFillColor(...couleurEE);
+doc.roundedRect(x, y, colW, 6, 0.5, 0.5, "F");
 
-      // 2. Dessin de la barre de progression
-      const barX = x + 1.5;
-      const barY = y + 7;
-      const barW = colW - 3;
-      // Fond de la barre (gris)
-      doc.setFillColor(...grisClair);
-      doc.rect(barX, barY, barW, 2, "F");
-      // Partie colorée (proportionnelle)
-      doc.setFillColor(...couleurBarre);
-      doc.rect(barX, barY, barW * (pct / 100), 2, "F");
+doc.setTextColor(...blanc);
+doc.setFont("helvetica", "bold");
+doc.setFontSize(6.5);
+
+// Nom du chantier à gauche
+doc.text("CH. " + nom, x + 1.5, y + 4);
+
+// Avancement à droite
+doc.text(
+  pct + "%",
+  x + colW - 1.5,
+  y + 4,
+  { align: "right" }
+);
+
+
+// 2. Barre d'avancement des fouilles
+const barX = x + 1.5;
+const barY = y + 7;
+const barW = colW - 3;
+const barH = 2.5;
+
+// Fond de la barre
+doc.setFillColor(...grisClair);
+doc.roundedRect(barX, barY, barW, barH, 0.5, 0.5, "F");
+
+// Partie colorée
+if (pct > 0) {
+  doc.setFillColor(...couleurBarre);
+  doc.roundedRect(
+    barX,
+    barY,
+    barW * (pct / 100),
+    barH,
+    0.5,
+    0.5,
+    "F"
+  );
+}
+
+// Pourcentage d'avancement
+doc.setFont("helvetica", "bold");
+doc.setFontSize(6);
+doc.setTextColor(...couleurBarre);
+
 
       // 3. Tableau des volumes (autoTable est idéal pour les colonnes propres)
       doc.autoTable({
