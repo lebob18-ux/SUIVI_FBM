@@ -380,28 +380,21 @@ async function exporterRecapPDF() {
       doc.text("Page " + p + " / " + totalPages, pageW - marge, pageH - 2, { align: "right" });
     }
 
-    // --- EXPORT SÉCURISÉ ---
+ // --- EXPORT SÉCURISÉ AMÉLIORÉ ---
     const nomFichier = "SUIVI_GC_" + new Date().toISOString().slice(0, 10) + ".pdf";
-    const pdfBlob = doc.output("blob");
-
-    if (navigator.share) {
+    
+    // Tentative de partage mobile, sinon téléchargement direct sur PC
+    if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
       try {
+        const pdfBlob = doc.output("blob");
         const file = new File([pdfBlob], nomFichier, { type: "application/pdf" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: "Suivi GC", text: "AINM" });
-        } else {
-          doc.save(nomFichier);
-        }
+        await navigator.share({ files: [file], title: "Suivi GC", text: "Export PDF" });
       } catch (e) {
+        // En cas d'annulation ou d'erreur sur mobile, on télécharge
         doc.save(nomFichier);
       }
     } else {
+      // Sur PC, on déclenche le téléchargement automatique
       doc.save(nomFichier);
     }
-
-  } catch (err) {
-    alert("Erreur : " + err.message);
-  } finally {
-    if (btnPdf) { btnPdf.disabled = false; btnPdf.innerHTML = "📄 Exporter PDF"; }
-  }
 }
