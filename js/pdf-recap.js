@@ -1,5 +1,5 @@
 /* ============================================================
-    EXPORT PDF SUIVI GC PCLE-MMM — 2 PAGES (CPT & CHANTIER)
+    EXPORT PDF SUIVI GC PCLE-MMM — 3 PAGES (CPT, CHANTIER, EE)
     ============================================================ */
 function genererDonut(effectues, total, couleur) {
   const s = 120;
@@ -72,16 +72,21 @@ async function exporterRecapPDF() {
       ? derniereDate.split('-').reverse().join('/') 
       : "Aucune date";
 
+    // Fonction pour dessiner l'en-tête global des pages
+    function dessinerEntete(titre) {
+      doc.setFillColor(...violet);
+      doc.rect(0, 0, pageW, 15, "F");
+      doc.setTextColor(...blanc);
+      doc.setFontSize(12); doc.setFont("helvetica", "bold");
+      doc.text(titre, pageW / 2, 8, { align: "center" });
+      doc.setFontSize(8); doc.setFont("helvetica", "normal");
+      doc.text("Dernier relevé : " + dateAffichee, pageW / 2, 13, { align: "center" });
+    }
+
     // ================================================================
     // PAGE 1 : SUIVI PAR CPT
     // ================================================================
-    doc.setFillColor(...violet);
-    doc.rect(0, 0, pageW, 12, "F");
-    doc.setTextColor(...blanc);
-    doc.setFontSize(11); doc.setFont("helvetica", "bold");
-    doc.text("SUIVI PAR CPT", pageW / 2, 7, { align: "center" });
-    doc.setFontSize(7); doc.setFont("helvetica", "normal");
-    doc.text("Dernier relevé : " + dateAffichee, pageW / 2, 11, { align: "center" });
+    dessinerEntete("SUIVI GC PCLE-MMM — PAR CPT");
 
     const cptMap = {};
     baseSupports.forEach(s => {
@@ -101,16 +106,16 @@ async function exporterRecapPDF() {
       }
     });
 
-    let cptY = 16;
+    let cptY = 20;
     const cptEntries = Object.entries(cptMap).sort((a, b) => a[0].localeCompare(b[0]));
     const couleurCPT = [124, 34, 112];
 
     cptEntries.forEach(([cptNom, cc]) => {
-      if (cptY + 35 > 280) { doc.addPage(); cptY = 8; }
+      if (cptY + 35 > 280) { doc.addPage(); cptY = 20; }
 
       const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
       const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurCPT;
-      const ecart = cc.m3PrevuEffectue - cc.m3Prevu; // Écart basé sur m3 fait vs m3 prévu total
+      const ecart = cc.m3PrevuEffectue - cc.m3Prevu;
 
       // Bande CPT
       doc.setFillColor(...couleurCPT.map(v => Math.min(255, v + 100)));
@@ -137,15 +142,17 @@ async function exporterRecapPDF() {
       doc.setTextColor(...coulEcart); doc.setFont("helvetica", "bold");
       doc.text(`Écart : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, cptY + 19);
 
-      // Mini-liste chantiers (forcée sur 2 colonnes dès le 1er chantier)
+      // Mini-liste chantiers (1 seule colonne si 1 seul chantier, sinon 2 colonnes)
       const chEntriesCPT = Object.entries(cc.chantiers);
       const listeX = statsX + 50;
       doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6);
       
+      const nbColsChantierCPT = chEntriesCPT.length === 1 ? 1 : 2;
+
       chEntriesCPT.slice(0, 8).forEach(([ch, cv], idx) => {
         const p = cv.total > 0 ? Math.round((cv.effectues/cv.total)*100) : 0;
-        const col = idx % 2; 
-        const row = Math.floor(idx / 2);
+        const col = idx % nbColsChantierCPT; 
+        const row = Math.floor(idx / nbColsChantierCPT);
         const cx2 = listeX + col * 35; 
         const cy2 = cptY + row * 5;
         
@@ -177,14 +184,7 @@ async function exporterRecapPDF() {
     // PAGE 2 : SUIVI PAR CHANTIER
     // ================================================================
     doc.addPage();
-
-    doc.setFillColor(...violet);
-    doc.rect(0, 0, pageW, 12, "F");
-    doc.setTextColor(...blanc);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(11);
-    doc.text("SUIVI PAR CHANTIER", pageW / 2, 7, { align: "center" });
-    doc.setFontSize(7); doc.setFont("helvetica", "normal");
-    doc.text("Dernier relevé : " + dateAffichee, pageW / 2, 11, { align: "center" });
+    dessinerEntete("SUIVI GC PCLE-MMM — PAR CHANTIER");
 
     const chantierMap = {};
     baseSupports.forEach(s => {
@@ -211,18 +211,18 @@ async function exporterRecapPDF() {
     const chGap    = 3;
     const colW3    = (pageW - marge * 2 - chGap * (nbCol3 - 1)) / nbCol3;
     const chBlockH = 30;
-    let chY        = 16;
+    let chY        = 20;
 
     chEntries.forEach(([chNom, cc], idx) => {
       const col = idx % nbCol3;
       
       if (col === 0 && idx > 0) chY += chBlockH + chGap;
-      if (chY + chBlockH > 280) { doc.addPage(); chY = 8; }
+      if (chY + chBlockH > 280) { doc.addPage(); chY = 20; }
 
       const x = marge + col * (colW3 + chGap);
       const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
       const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : violet;
-      const ecart = cc.m3PrevuEffectue - cc.m3Prevu; // Remplacement réel par fait
+      const ecart = cc.m3PrevuEffectue - cc.m3Prevu;
 
       doc.setFillColor(...violet);
       doc.roundedRect(x, chY, colW3, 5.5, 0.5, 0.5, "F");
@@ -244,7 +244,7 @@ async function exporterRecapPDF() {
       doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6);
       doc.text(`${cc.effectues}/${cc.total} massifs`, sX, sY);
       doc.text(`Prévu: ${cc.m3Prevu.toFixed(1)} m³`, sX, sY + 4.5);
-      doc.text(`Fait:  ${cc.m3PrevuEffectue.toFixed(1)} m³`, sX, sY + 8.5); // Affichage m3 fait
+      doc.text(`Fait:  ${cc.m3PrevuEffectue.toFixed(1)} m³`, sX, sY + 8.5);
       doc.setTextColor(...(ecart > 0 ? rouge : vert));
       doc.setFont("helvetica", "bold");
       doc.text(`Écart: ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)}`, sX, sY + 12.5);
@@ -269,6 +269,104 @@ async function exporterRecapPDF() {
         
         eeY += 6;
       });
+    });
+
+    // ================================================================
+    // PAGE 3 : SUIVI PAR EE (Entreprise Exécutante)
+    // ================================================================
+    doc.addPage();
+    dessinerEntete("SUIVI GC PCLE-MMM — PAR ENTREPRISE (EE)");
+
+    const eeMap = {};
+    baseSupports.forEach(s => {
+      const ee = (s.EE || "SANS ENTREPRISE").trim().toUpperCase();
+      if (!eeMap[ee]) eeMap[ee] = { total:0, effectues:0, m3Prevu:0, m3PrevuEffectue:0, chantiers:{} };
+      const cc = eeMap[ee];
+      cc.total++;
+      const m3p = parseFloat(s.m3_prevu) || 0;
+      cc.m3Prevu += m3p;
+      const ch = s.chantier || "?";
+      if (!cc.chantiers[ch]) cc.chantiers[ch] = { total:0, effectues:0 };
+      cc.chantiers[ch].total++;
+      if (String(s.EFFECTUE).trim() === "1") {
+        cc.effectues++;
+        cc.m3PrevuEffectue += m3p;
+        cc.chantiers[ch].effectues++;
+      }
+    });
+
+    let eeY = 20;
+    const eeEntries = Object.entries(eeMap).sort((a, b) => a[0].localeCompare(b[0]));
+
+    eeEntries.forEach(([eeNom, cc]) => {
+      if (eeY + 35 > 280) { doc.addPage(); eeY = 20; }
+
+      const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
+      const couleurEEActuelle = couleursEE[eeNom] || [30, 144, 255];
+      const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurEEActuelle;
+      const ecart = cc.m3PrevuEffectue - cc.m3Prevu;
+
+      // Bande EE
+      doc.setFillColor(...couleurEEActuelle.map(v => Math.min(255, v + 150)));
+      doc.rect(marge, eeY, pageW - marge*2, 6, "F");
+      doc.setFillColor(...couleurEEActuelle);
+      doc.rect(marge, eeY, 3, 6, "F");
+      doc.setTextColor(...couleurEEActuelle);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+      doc.text("EE : " + eeNom, marge + 5, eeY + 4.3);
+      eeY += 7;
+
+      // Donut (gauche)
+      const donutImg = genererDonut(cc.effectues, cc.total, coulBarre);
+      const donutMM = 20;
+      doc.addImage(donutImg, "JPEG", marge, eeY, donutMM, donutMM);
+
+      // Stats (droite du donut)
+      const statsX = marge + donutMM + 4;
+      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(7);
+      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, eeY + 4);
+      doc.text(`m³ prévu total : ${cc.m3Prevu.toFixed(1)}`, statsX, eeY + 9);
+      doc.text(`m³ fait : ${cc.m3PrevuEffectue.toFixed(1)}`, statsX, eeY + 14);
+      const coulEcart = ecart > 0 ? rouge : vert;
+      doc.setTextColor(...coulEcart); doc.setFont("helvetica", "bold");
+      doc.text(`Écart : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, eeY + 19);
+
+      // Mini-liste chantiers (1 seule colonne si 1 seul chantier, sinon 2 colonnes)
+      const chEntriesEE = Object.entries(cc.chantiers);
+      const listeX = statsX + 50;
+      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6);
+      
+      const nbColsChantierEE = chEntriesEE.length === 1 ? 1 : 2;
+
+      chEntriesEE.slice(0, 8).forEach(([ch, cv], idx) => {
+        const p = cv.total > 0 ? Math.round((cv.effectues/cv.total)*100) : 0;
+        const col = idx % nbColsChantierEE; 
+        const row = Math.floor(idx / nbColsChantierEE);
+        const cx2 = listeX + col * 35; 
+        const cy2 = eeY + row * 5;
+        
+        doc.setTextColor(80,80,80); 
+        doc.text(ch, cx2, cy2 + 3.5);
+        
+        // mini-barre
+        doc.setFillColor(...grisClair); 
+        doc.roundedRect(cx2, cy2 + 3.8, 20, 1.2, 0.2, 0.2, "F");
+        if (p > 0) { 
+          doc.setFillColor(...coulBarre); 
+          doc.roundedRect(cx2, cy2 + 3.8, 20*p/100, 1.2, 0.2, 0.2, "F"); 
+        }
+        doc.setTextColor(...coulBarre); 
+        doc.setFont("helvetica","bold"); 
+        doc.setFontSize(5.5);
+        doc.text(p+"%", cx2+21, cy2+4.5);
+      });
+
+      if (chEntriesEE.length > 8) {
+        doc.setTextColor(150,150,150); doc.setFontSize(5.5);
+        doc.text("+" + (chEntriesEE.length-8) + " autres", listeX, eeY + 22);
+      }
+
+      eeY += donutMM + 5;
     });
 
     // ================================================================
