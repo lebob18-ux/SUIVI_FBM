@@ -94,7 +94,7 @@ async function exporterRecapPDF() {
     // ================================================================
     // PAGE 1 : SUIVI PAR CPT
     // ================================================================
-    dessinerEntete("SUIVI GC PCLE-MMM — PAR CPT");
+    dessinerEntete("SUIVI GC PCLE-MMM — PAR COMPTE F");
 
     const cptMap = {};
     donneesActives.forEach(s => {
@@ -294,7 +294,7 @@ async function exporterRecapPDF() {
     // PAGE 3 : SUIVI PAR EE (Entreprise Exécutante)
     // ================================================================
     doc.addPage();
-    dessinerEntete("SUIVI GC PCLE-MMM — PAR ENTREPRISE (EE)");
+    dessinerEntete("SUIVI GC PCLE-MMM — PAR ENTREPRISE ");
 
     const eeMap = {};
     donneesActives.forEach(s => {
