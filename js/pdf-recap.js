@@ -99,11 +99,13 @@ async function exporterRecapPDF() {
     const cptMap = {};
     donneesActives.forEach(s => {
       const cpt = (s.CPT || "SANS CPT").trim();
-      if (!cptMap[cpt]) cptMap[cpt] = { total:0, effectues:0, m3Prevu:0, m3PrevuEffectue:0, chantiers:{} };
+      if (!cptMap[cpt]) cptMap[cpt] = { total:0, effectues:0, m3Prevu:0, m3Calculé:0, m3PrevuEffectue:0, chantiers:{} };
       const cc = cptMap[cpt];
       cc.total++;
       const m3p = parseFloat(s.m3_prevu) || 0;
+      const m3c = parseFloat(s.m3_calcule || s.m3_calculé) || 0;
       cc.m3Prevu += m3p;
+      cc.m3Calculé += m3c;
       const ch = s.chantier || "?";
       if (!cc.chantiers[ch]) cc.chantiers[ch] = { total:0, effectues:0 };
       cc.chantiers[ch].total++;
@@ -123,7 +125,7 @@ async function exporterRecapPDF() {
 
       const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
       const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurCPT;
-      const ecart = cc.m3PrevuEffectue - cc.m3Prevu;
+      const ecart = cc.m3Calculé - cc.m3Prevu;
 
       doc.setFillColor(...couleurCPT.map(v => Math.min(255, v + 100)));
       doc.rect(marge, cptY, pageW - marge*2, 6, "F");
@@ -140,12 +142,12 @@ async function exporterRecapPDF() {
 
       const statsX = marge + donutMM + 4;
       doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(7);
-      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, cptY + 4);
-      doc.text(`m³ prévu total : ${cc.m3Prevu.toFixed(1)}`, statsX, cptY + 9);
-      doc.text(`m³ fait : ${cc.m3PrevuEffectue.toFixed(1)}`, statsX, cptY + 14);
+      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, cptY + 3.5);
+      doc.text(`m³ prévu : ${cc.m3Prevu.toFixed(1)}`, statsX, cptY + 8);
+      doc.text(`m³ calculé : ${cc.m3Calculé.toFixed(1)}`, statsX, cptY + 12.5);
       const coulEcart = ecart > 0 ? rouge : vert;
       doc.setTextColor(...coulEcart); doc.setFont("helvetica", "bold");
-      doc.text(`Écart : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, cptY + 19);
+      doc.text(`Écart (Calc-Prév) : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, cptY + 17);
 
       const chEntriesCPT = Object.entries(cc.chantiers);
       const listeX = statsX + 50;
@@ -194,12 +196,14 @@ async function exporterRecapPDF() {
       const ch = s.chantier || "INCONNU";
       const ee = (s.EE || "?").trim().toUpperCase();
       if (!chantierMap[ch]) chantierMap[ch] = {
-        total:0, effectues:0, m3Prevu:0, m3PrevuEffectue:0, ees:{}
+        total:0, effectues:0, m3Prevu:0, m3Calculé:0, m3PrevuEffectue:0, ees:{}
       };
       const cc = chantierMap[ch];
       cc.total++;
       const m3p = parseFloat(s.m3_prevu) || 0;
+      const m3c = parseFloat(s.m3_calcule || s.m3_calculé) || 0;
       cc.m3Prevu += m3p;
+      cc.m3Calculé += m3c;
       if (!cc.ees[ee]) cc.ees[ee] = { total:0, effectues:0, couleur: couleursEE[ee] || [100,100,100] };
       cc.ees[ee].total++;
       if (String(s.EFFECTUE).trim() === "1") {
@@ -225,7 +229,7 @@ async function exporterRecapPDF() {
       const x = marge + col * (colW3 + chGap);
       const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
       const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : violet;
-      const ecart = cc.m3PrevuEffectue - cc.m3Prevu;
+      const ecart = cc.m3Calculé - cc.m3Prevu;
 
       doc.setFillColor(...violet);
       doc.roundedRect(x, chY, colW3, 5.5, 0.5, 0.5, "F");
@@ -243,14 +247,14 @@ async function exporterRecapPDF() {
       doc.addImage(donutImg, "JPEG", x + 1, chY + 6.5, donutSz, donutSz);
 
       const sX = x + donutSz + 3;
-      const sY = chY + 9;
-      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6);
+      const sY = chY + 8.5;
+      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(5.5);
       doc.text(`${cc.effectues}/${cc.total} massifs`, sX, sY);
-      doc.text(`Prévu: ${cc.m3Prevu.toFixed(1)} m³`, sX, sY + 4.5);
-      doc.text(`Fait:  ${cc.m3PrevuEffectue.toFixed(1)} m³`, sX, sY + 8.5);
+      doc.text(`Prévu: ${cc.m3Prevu.toFixed(1)}`, sX, sY + 3.5);
+      doc.text(`Calculé: ${cc.m3Calculé.toFixed(1)}`, sX, sY + 7);
       doc.setTextColor(...(ecart > 0 ? rouge : vert));
       doc.setFont("helvetica", "bold");
-      doc.text(`Écart: ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)}`, sX, sY + 12.5);
+      doc.text(`Écart: ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)}`, sX, sY + 10.5);
 
       const eeX = x + colW3 - 32;
       let eeY = chY + 8;
@@ -283,11 +287,13 @@ async function exporterRecapPDF() {
     const eeMap = {};
     donneesActives.forEach(s => {
       const ee = (s.EE || "SANS ENTREPRISE").trim().toUpperCase();
-      if (!eeMap[ee]) eeMap[ee] = { total:0, effectues:0, m3Prevu:0, m3PrevuEffectue:0, chantiers:{} };
+      if (!eeMap[ee]) eeMap[ee] = { total:0, effectues:0, m3Prevu:0, m3Calculé:0, m3PrevuEffectue:0, chantiers:{} };
       const cc = eeMap[ee];
       cc.total++;
       const m3p = parseFloat(s.m3_prevu) || 0;
+      const m3c = parseFloat(s.m3_calcule || s.m3_calculé) || 0;
       cc.m3Prevu += m3p;
+      cc.m3Calculé += m3c;
       const ch = s.chantier || "?";
       if (!cc.chantiers[ch]) cc.chantiers[ch] = { total:0, effectues:0 };
       cc.chantiers[ch].total++;
@@ -307,7 +313,7 @@ async function exporterRecapPDF() {
       const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
       const couleurEEActuelle = couleursEE[eeNom] || [30, 144, 255];
       const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurEEActuelle;
-      const ecart = cc.m3PrevuEffectue - cc.m3Prevu;
+      const ecart = cc.m3Calculé - cc.m3Prevu;
 
       doc.setFillColor(...couleurEEActuelle.map(v => Math.min(255, v + 150)));
       doc.rect(marge, eeY, pageW - marge*2, 6, "F");
@@ -324,12 +330,12 @@ async function exporterRecapPDF() {
 
       const statsX = marge + donutMM + 4;
       doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(7);
-      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, eeY + 4);
-      doc.text(`m³ prévu total : ${cc.m3Prevu.toFixed(1)}`, statsX, eeY + 9);
-      doc.text(`m³ fait : ${cc.m3PrevuEffectue.toFixed(1)}`, statsX, eeY + 14);
+      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, eeY + 3.5);
+      doc.text(`m³ prévu : ${cc.m3Prevu.toFixed(1)}`, statsX, eeY + 8);
+      doc.text(`m³ calculé : ${cc.m3Calculé.toFixed(1)}`, statsX, eeY + 12.5);
       const coulEcart = ecart > 0 ? rouge : vert;
       doc.setTextColor(...coulEcart); doc.setFont("helvetica", "bold");
-      doc.text(`Écart : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, eeY + 19);
+      doc.text(`Écart (Calc-Prév) : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, eeY + 17);
 
       const chEntriesEE = Object.entries(cc.chantiers);
       const listeX = statsX + 50;
@@ -380,21 +386,28 @@ async function exporterRecapPDF() {
       doc.text("Page " + p + " / " + totalPages, pageW - marge, pageH - 2, { align: "right" });
     }
 
- // --- EXPORT SÉCURISÉ AMÉLIORÉ ---
+    // --- EXPORT SÉCURISÉ ---
     const nomFichier = "SUIVI_GC_" + new Date().toISOString().slice(0, 10) + ".pdf";
     
-    // Tentative de partage mobile, sinon téléchargement direct sur PC
     if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
       try {
         const pdfBlob = doc.output("blob");
         const file = new File([pdfBlob], nomFichier, { type: "application/pdf" });
-        await navigator.share({ files: [file], title: "Suivi GC", text: "Export PDF" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: "Suivi GC", text: "AINM" });
+        } else {
+          doc.save(nomFichier);
+        }
       } catch (e) {
-        // En cas d'annulation ou d'erreur sur mobile, on télécharge
         doc.save(nomFichier);
       }
     } else {
-      // Sur PC, on déclenche le téléchargement automatique
       doc.save(nomFichier);
     }
+
+  } catch (err) {
+    alert("Erreur : " + err.message);
+  } finally {
+    if (btnPdf) { btnPdf.disabled = false; btnPdf.innerHTML = "📄 Exporter PDF"; }
+  }
 }
