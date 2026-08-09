@@ -1,5 +1,5 @@
 /* ============================================================
-    EXPORT PDF SUIVI GC PCLE-MMM — 3 PAGES (CPT, CHANTIER, EE)
+    EXPORT PDF SUIVI GC PCLE-MMM — 3 PAGES (CPT, CHANTIER, EE) bob
     ============================================================ */
 function genererDonut(effectues, total, couleur) {
   const s = 120;
