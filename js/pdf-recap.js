@@ -1,7 +1,39 @@
 /* ============================================================
    EXPORT PDF SUIVI GC PCLE-MMM — VERSION AVEC BARRE PROGRESSION
    ============================================================ */
+function genererDonut(effectues, total, couleur) {
+  const s = 120;
+  const canvas = document.createElement("canvas");
+  canvas.width = s; canvas.height = s;
+  const ctx = canvas.getContext("2d");
+  const cx = s/2, cy = s/2, rExt = s/2 - 4, rInt = rExt * 0.52;
+  const pct = total > 0 ? effectues / total : 0;
 
+  // Fond gris
+  ctx.beginPath(); ctx.arc(cx, cy, rExt, 0, 2*Math.PI);
+  ctx.fillStyle = "#e5e7eb"; ctx.fill();
+
+  // Arc coloré
+  if (pct > 0) {
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, rExt, -Math.PI/2, -Math.PI/2 + 2*Math.PI*pct);
+    ctx.closePath();
+    ctx.fillStyle = `rgb(${couleur[0]},${couleur[1]},${couleur[2]})`; ctx.fill();
+  }
+
+  // Trou central blanc
+  ctx.beginPath(); ctx.arc(cx, cy, rInt, 0, 2*Math.PI);
+  ctx.fillStyle = "white"; ctx.fill();
+
+  // Texte %
+  const pctCouleur = pct === 1 ? "#16a34a" : pct >= 0.5 ? "#f59e0b" : `rgb(${couleur[0]},${couleur[1]},${couleur[2]})`;
+  ctx.fillStyle = pctCouleur;
+  ctx.font = `bold ${Math.round(s*0.22)}px Arial`;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(Math.round(pct*100) + "%", cx, cy);
+
+  return canvas.toDataURL("image/jpeg", 0.9);
+}
 async function exporterRecapPDF() {
   // Désactive le bouton pendant la génération pour éviter les clics multiples
   const btnPdf = document.getElementById("btnRecapPdf");
@@ -183,7 +215,103 @@ doc.text("Dernier relevé : " + dateAffichee, pageW / 2, 13, { align: "center" }
         if (i === Object.keys(chantiersEE).length - 1) currentY = y + blockH + 10;
       });
     });
+     
+// ================================================================
+// PAGE 2 : SUIVI PAR CPT
+// ================================================================
+doc.addPage();
 
+// En-tête page 2
+doc.setFillColor(...violet);
+doc.rect(0, 0, pageW, 12, "F");
+doc.setTextColor(...blanc);
+doc.setFontSize(11); doc.setFont("helvetica", "bold");
+doc.text("SUIVI PAR CPT", pageW / 2, 7, { align: "center" });
+doc.setFontSize(7); doc.setFont("helvetica", "normal");
+doc.text("Dernier relevé : " + dateAffichee, pageW / 2, 11, { align: "center" });
+
+// Regroupement par CPT
+const cptMap = {};
+baseSupports.forEach(s => {
+  const cpt = (s.CPT || "SANS CPT").trim();
+  if (!cptMap[cpt]) cptMap[cpt] = { total:0, effectues:0, m3Prevu:0, m3Reel:0, chantiers:{} };
+  const cc = cptMap[cpt];
+  cc.total++;
+  const m3p = parseFloat(s.m3_prevu) || 0;
+  cc.m3Prevu += m3p;
+  const ch = s.chantier || "?";
+  if (!cc.chantiers[ch]) cc.chantiers[ch] = { total:0, effectues:0 };
+  cc.chantiers[ch].total++;
+  if (String(s.EFFECTUE).trim() === "1") {
+    cc.effectues++;
+    cc.m3Reel += parseFloat(s.m3_reel) || 0;
+    cc.chantiers[ch].effectues++;
+  }
+});
+
+let cptY = 16;
+const cptEntries = Object.entries(cptMap).sort((a, b) => a[0].localeCompare(b[0]));
+const couleurCPT = [124, 34, 112]; // violet AINM pour CPT
+
+cptEntries.forEach(([cptNom, cc]) => {
+  // Vérifier espace
+  if (cptY + 35 > 280) { doc.addPage(); cptY = 8; }
+
+  const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
+  const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurCPT;
+  const ecart = cc.m3Reel - cc.m3Prevu;
+
+  // Bande CPT
+  doc.setFillColor(...couleurCPT.map(v => Math.min(255, v + 100)));
+  doc.rect(marge, cptY, pageW - marge*2, 6, "F");
+  doc.setFillColor(...couleurCPT);
+  doc.rect(marge, cptY, 3, 6, "F");
+  doc.setTextColor(...couleurCPT);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+  doc.text("CPT : " + cptNom, marge + 5, cptY + 4.3);
+  cptY += 7;
+
+  // Donut (gauche)
+  const donutImg = genererDonut(cc.effectues, cc.total, coulBarre);
+  const donutMM = 20;
+  doc.addImage(donutImg, "JPEG", marge, cptY, donutMM, donutMM);
+
+  // Stats (droite du donut)
+  const statsX = marge + donutMM + 4;
+  doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(7);
+  doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, cptY + 4);
+  doc.text(`m³ prévu total : ${cc.m3Prevu.toFixed(1)}`, statsX, cptY + 9);
+  doc.text(`m³ réel : ${cc.m3Reel.toFixed(1)}`, statsX, cptY + 14);
+  const coulEcart = ecart > 0 ? rouge : vert;
+  doc.setTextColor(...coulEcart); doc.setFont("helvetica", "bold");
+  doc.text(`Écart : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, cptY + 19);
+
+  // Mini-liste chantiers (à droite)
+  const chEntries = Object.entries(cc.chantiers);
+  const listeX = statsX + 50;
+  doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6);
+  chEntries.slice(0, 8).forEach(([ch, cv], idx) => {
+    const p = cv.total > 0 ? Math.round((cv.effectues/cv.total)*100) : 0;
+    const col = idx % 2; const row = Math.floor(idx / 2);
+    const cx2 = listeX + col * 35; const cy2 = cptY + row * 5;
+    doc.setTextColor(80,80,80); doc.text(ch, cx2, cy2 + 3.5);
+    // mini-barre
+    doc.setFillColor(...grisClair); doc.roundedRect(cx2, cy2 + 3.8, 20, 1.2, 0.2, 0.2, "F");
+    if (p > 0) { doc.setFillColor(...coulBarre); doc.roundedRect(cx2, cy2 + 3.8, 20*p/100, 1.2, 0.2, 0.2, "F"); }
+    doc.setTextColor(...coulBarre); doc.setFont("helvetica","bold"); doc.setFontSize(5.5);
+    doc.text(p+"%", cx2+21, cy2+4.5);
+  });
+  if (chEntries.length > 8) {
+    doc.setTextColor(150,150,150); doc.setFontSize(5.5);
+    doc.text("+" + (chEntries.length-8) + " autres", listeX, cptY + 22);
+  }
+
+  cptY += donutMM + 5;
+});
+// ================================================================
+// FIN PAGE 2
+// ================================================================
+     
     // --- Exportation (Partage prioritaire) ---
     const nomFichier = "SUIVI_GC_" + new Date().toISOString().slice(0, 10) + ".pdf";
     const pdfBlob = doc.output("blob");
