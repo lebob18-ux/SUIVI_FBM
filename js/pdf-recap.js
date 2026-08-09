@@ -347,37 +347,39 @@ baseSupports.forEach(s => {
 });
 
 const chEntries = Object.entries(chantierMap).sort((a, b) => a[0].localeCompare(b[0]));
+const nbCol3   = 3;
+const chGap    = 3;
+const colW3    = (pageW - marge * 2 - chGap * (nbCol3 - 1)) / nbCol3;
 const chBlockH = 30;
-const chGap    = 4;
 let chY        = 16;
 
 chEntries.forEach(([chNom, cc], idx) => {
-  const col = idx % 2;
+  const col = idx % nbCol3;
   
   // Nouvelle ligne → vérifier l'espace
   if (col === 0 && idx > 0) chY += chBlockH + chGap;
   if (chY + chBlockH > 280) { doc.addPage(); chY = 8; }
 
-  const x = marge + col * (colW + gap);
+  const x = marge + col * (colW3 + chGap);
   const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
   const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : violet;
   const ecart = cc.m3Reel - cc.m3Prevu;
 
   // En-tête du bloc
   doc.setFillColor(...violet);
-  doc.roundedRect(x, chY, colW, 5.5, 0.5, 0.5, "F");
+  doc.roundedRect(x, chY, colW3, 5.5, 0.5, 0.5, "F");
   doc.setTextColor(...blanc);
   doc.setFont("helvetica", "bold"); doc.setFontSize(6.5);
   doc.text(chNom, x + 1.5, chY + 3.8);
-  doc.text(pct + "%", x + colW - 1.5, chY + 3.8, { align: "right" });
+  doc.text(pct + "%", x + colW3 - 1.5, chY + 3.8, { align: "right" });
 
   // Corps du bloc
   doc.setFillColor(250, 248, 250);
   doc.setDrawColor(220, 210, 220);
-  doc.roundedRect(x, chY + 5.5, colW, chBlockH - 5.5, 0.5, 0.5, "FD");
+  doc.roundedRect(x, chY + 5.5, colW3, chBlockH - 5.5, 0.5, 0.5, "FD");
 
   // Donut (16x16mm)
-  const donutSz = 16;
+  const donutSz = 13;
   const donutImg = genererDonut(cc.effectues, cc.total, coulBarre);
   doc.addImage(donutImg, "JPEG", x + 1, chY + 6.5, donutSz, donutSz);
 
@@ -393,7 +395,7 @@ chEntries.forEach(([chNom, cc], idx) => {
   doc.text(`Écart: ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)}`, sX, sY + 12.5);
 
   // Mini-barres EE (à droite)
-  const eeX = x + colW - 32;
+  const eeX = x + colW3 - 32;
   let eeY = chY + 8;
   Object.entries(cc.ees).forEach(([eeNom, ev]) => {
     const eeP = ev.total > 0 ? Math.round((ev.effectues / ev.total) * 100) : 0;
@@ -404,13 +406,13 @@ chEntries.forEach(([chNom, cc], idx) => {
 
     // Mini-barre (22mm)
     doc.setFillColor(...grisClair);
-    doc.roundedRect(eeX, eeY + 1, 22, 2, 0.3, 0.3, "F");
+    doc.roundedRect(eeX, eeY + 1, 18, 2, 0.3, 0.3, "F");
     if (eeP > 0) {
       doc.setFillColor(...eeCoul);
-      doc.roundedRect(eeX, eeY + 1, 22 * eeP / 100, 2, 0.3, 0.3, "F");
+      doc.roundedRect(eeX, eeY + 1, 18 * eeP / 100, 2, 0.3, 0.3, "F");
     }
     doc.setTextColor(...eeCoul); doc.setFont("helvetica", "bold"); doc.setFontSize(5);
-    doc.text(eeP + "%", eeX + 23, eeY + 2.5);
+    doc.text(eeP + "%", eeX + 19, eeY + 2.5);
     
     eeY += 6;
   });
