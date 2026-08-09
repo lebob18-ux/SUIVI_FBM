@@ -311,7 +311,124 @@ cptEntries.forEach(([cptNom, cc]) => {
 // ================================================================
 // FIN PAGE 2
 // ================================================================
-     
+ // ================================================================
+// PAGE 3 : SUIVI PAR CHANTIER (2 par ligne)
+// ================================================================
+doc.addPage();
+
+// En-tête
+doc.setFillColor(...violet);
+doc.rect(0, 0, pageW, 12, "F");
+doc.setTextColor(...blanc);
+doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+doc.text("SUIVI PAR CHANTIER", pageW / 2, 7, { align: "center" });
+doc.setFontSize(7); doc.setFont("helvetica", "normal");
+doc.text("Dernier relevé : " + dateAffichee, pageW / 2, 11, { align: "center" });
+
+// Regroupement par chantier (toutes EE confondues)
+const chantierMap = {};
+baseSupports.forEach(s => {
+  const ch = s.chantier || "INCONNU";
+  const ee = (s.EE || "?").trim().toUpperCase();
+  if (!chantierMap[ch]) chantierMap[ch] = {
+    total:0, effectues:0, m3Prevu:0, m3Reel:0, ees:{}
+  };
+  const cc = chantierMap[ch];
+  cc.total++;
+  const m3p = parseFloat(s.m3_prevu) || 0;
+  cc.m3Prevu += m3p;
+  if (!cc.ees[ee]) cc.ees[ee] = { total:0, effectues:0, couleur: couleursEE[ee] || [100,100,100] };
+  cc.ees[ee].total++;
+  if (String(s.EFFECTUE).trim() === "1") {
+    cc.effectues++;
+    cc.m3Reel += parseFloat(s.m3_reel) || 0;
+    cc.ees[ee].effectues++;
+  }
+});
+
+const chEntries = Object.entries(chantierMap).sort((a, b) => a[0].localeCompare(b[0]));
+const chBlockH = 30;
+const chGap    = 4;
+let chY        = 16;
+
+chEntries.forEach(([chNom, cc], idx) => {
+  const col = idx % 2;
+  
+  // Nouvelle ligne → vérifier l'espace
+  if (col === 0 && idx > 0) chY += chBlockH + chGap;
+  if (chY + chBlockH > 280) { doc.addPage(); chY = 8; }
+
+  const x = marge + col * (colW + gap);
+  const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
+  const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : violet;
+  const ecart = cc.m3Reel - cc.m3Prevu;
+
+  // En-tête du bloc
+  doc.setFillColor(...violet);
+  doc.roundedRect(x, chY, colW, 5.5, 0.5, 0.5, "F");
+  doc.setTextColor(...blanc);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(6.5);
+  doc.text(chNom, x + 1.5, chY + 3.8);
+  doc.text(pct + "%", x + colW - 1.5, chY + 3.8, { align: "right" });
+
+  // Corps du bloc
+  doc.setFillColor(250, 248, 250);
+  doc.setDrawColor(220, 210, 220);
+  doc.roundedRect(x, chY + 5.5, colW, chBlockH - 5.5, 0.5, 0.5, "FD");
+
+  // Donut (16x16mm)
+  const donutSz = 16;
+  const donutImg = genererDonut(cc.effectues, cc.total, coulBarre);
+  doc.addImage(donutImg, "JPEG", x + 1, chY + 6.5, donutSz, donutSz);
+
+  // Stats centre
+  const sX = x + donutSz + 3;
+  const sY = chY + 9;
+  doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6);
+  doc.text(`${cc.effectues}/${cc.total} massifs`, sX, sY);
+  doc.text(`Prévu: ${cc.m3Prevu.toFixed(1)} m³`, sX, sY + 4.5);
+  doc.text(`Réel:  ${cc.m3Reel.toFixed(1)} m³`, sX, sY + 8.5);
+  doc.setTextColor(...(ecart > 0 ? rouge : vert));
+  doc.setFont("helvetica", "bold");
+  doc.text(`Écart: ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)}`, sX, sY + 12.5);
+
+  // Mini-barres EE (à droite)
+  const eeX = x + colW - 32;
+  let eeY = chY + 8;
+  Object.entries(cc.ees).forEach(([eeNom, ev]) => {
+    const eeP = ev.total > 0 ? Math.round((ev.effectues / ev.total) * 100) : 0;
+    const eeCoul = ev.couleur || [100,100,100];
+    
+    doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(5.5);
+    doc.text(eeNom, eeX, eeY);
+
+    // Mini-barre (22mm)
+    doc.setFillColor(...grisClair);
+    doc.roundedRect(eeX, eeY + 1, 22, 2, 0.3, 0.3, "F");
+    if (eeP > 0) {
+      doc.setFillColor(...eeCoul);
+      doc.roundedRect(eeX, eeY + 1, 22 * eeP / 100, 2, 0.3, 0.3, "F");
+    }
+    doc.setTextColor(...eeCoul); doc.setFont("helvetica", "bold"); doc.setFontSize(5);
+    doc.text(eeP + "%", eeX + 23, eeY + 2.5);
+    
+    eeY += 6;
+  });
+});
+
+// Pied de page toutes pages
+const totalPages2 = doc.internal.getNumberOfPages();
+for (let p = 1; p <= totalPages2; p++) {
+  doc.setPage(p);
+  doc.setFillColor(240, 228, 238);
+  doc.rect(0, doc.internal.pageSize.getHeight() - 6, pageW, 6, "F");
+  doc.setTextColor(...violet); doc.setFontSize(6); doc.setFont("helvetica", "bold");
+  doc.text("AINM — SUIVI GC PCLE-MMM", marge, doc.internal.pageSize.getHeight() - 2);
+  doc.text("Page " + p + " / " + totalPages2, pageW - marge, doc.internal.pageSize.getHeight() - 2, { align: "right" });
+}
+// ================================================================
+// FIN PAGE 3
+// ================================================================    
     // --- Exportation (Partage prioritaire) ---
     const nomFichier = "SUIVI_GC_" + new Date().toISOString().slice(0, 10) + ".pdf";
     const pdfBlob = doc.output("blob");
