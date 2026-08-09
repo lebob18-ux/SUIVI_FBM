@@ -121,7 +121,7 @@ async function exporterRecapPDF() {
     const couleurCPT = [124, 34, 112];
 
     cptEntries.forEach(([cptNom, cc]) => {
-      if (cptY + 35 > 280) { doc.addPage(); cptY = 20; }
+      if (cptY + 40 > 280) { doc.addPage(); cptY = 20; }
 
       const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
       const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurCPT;
@@ -137,17 +137,19 @@ async function exporterRecapPDF() {
       cptY += 7;
 
       const donutImg = genererDonut(cc.effectues, cc.total, coulBarre);
-      const donutMM = 20;
+      const donutMM = 22;
       doc.addImage(donutImg, "JPEG", marge, cptY, donutMM, donutMM);
 
       const statsX = marge + donutMM + 4;
-      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(7);
-      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, cptY + 3.5);
-      doc.text(`m³ calculé : ${cc.m3Calculé.toFixed(1)}`, statsX, cptY + 8);
-      doc.text(`m³ fait : ${cc.m3Fait.toFixed(1)}`, statsX, cptY + 12.5);
+      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6.5);
+      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, cptY + 3);
+      doc.text(`m³ prévu : ${cc.m3Prevu.toFixed(1)}`, statsX, cptY + 7);
+      doc.text(`m³ calculé : ${cc.m3Calculé.toFixed(1)}`, statsX, cptY + 11);
+      doc.text(`m³ fait : ${cc.m3Fait.toFixed(1)}`, statsX, cptY + 15);
+      
       const coulEcart = ecart > 0 ? rouge : vert;
       doc.setTextColor(...coulEcart); doc.setFont("helvetica", "bold");
-      doc.text(`Écart (Calc-Fait) : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, cptY + 17);
+      doc.text(`Écart (Calc-Fait) : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, cptY + 19);
 
       const chEntriesCPT = Object.entries(cc.chantiers);
       const listeX = statsX + 50;
@@ -182,7 +184,7 @@ async function exporterRecapPDF() {
         doc.text("+" + (chEntriesCPT.length-8) + " autres", listeX, cptY + 22);
       }
 
-      cptY += donutMM + 5;
+      cptY += donutMM + 3;
     });
 
     // ================================================================
@@ -217,7 +219,7 @@ async function exporterRecapPDF() {
     const nbCol3   = 3;
     const chGap    = 3;
     const colW3    = (pageW - marge * 2 - chGap * (nbCol3 - 1)) / nbCol3;
-    const chBlockH = 30;
+    const chBlockH = 33;
     let chY        = 20;
 
     chEntries.forEach(([chNom, cc], idx) => {
@@ -244,37 +246,39 @@ async function exporterRecapPDF() {
 
       const donutSz = 13;
       const donutImg = genererDonut(cc.effectues, cc.total, coulBarre);
-      doc.addImage(donutImg, "JPEG", x + 1, chY + 6.5, donutSz, donutSz);
+      doc.addImage(donutImg, "JPEG", x + 1, chY + 7, donutSz, donutSz);
 
-      const sX = x + donutSz + 3;
-      const sY = chY + 8.5;
-      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(5.5);
+      const sX = x + donutSz + 2;
+      const sY = chY + 7.5;
+      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(5);
       doc.text(`${cc.effectues}/${cc.total} massifs`, sX, sY);
-      doc.text(`Calculé: ${cc.m3Calculé.toFixed(1)}`, sX, sY + 3.5);
-      doc.text(`Fait: ${cc.m3Fait.toFixed(1)}`, sX, sY + 7);
+      doc.text(`Prév: ${cc.m3Prevu.toFixed(1)}`, sX, sY + 3);
+      doc.text(`Calc: ${cc.m3Calculé.toFixed(1)}`, sX, sY + 6);
+      doc.text(`Fait: ${cc.m3Fait.toFixed(1)}`, sX, sY + 9);
+      
       doc.setTextColor(...(ecart > 0 ? rouge : vert));
       doc.setFont("helvetica", "bold");
-      doc.text(`Écart: ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)}`, sX, sY + 10.5);
+      doc.text(`Écart: ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)}`, sX, sY + 12);
 
-      const eeX = x + colW3 - 32;
+      const eeX = x + colW3 - 30;
       let eeY = chY + 8;
       Object.entries(cc.ees).forEach(([eeNom, ev]) => {
         const eeP = ev.total > 0 ? Math.round((ev.effectues / ev.total) * 100) : 0;
         const eeCoul = ev.couleur || [100,100,100];
         
-        doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(5.5);
+        doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(5);
         doc.text(eeNom, eeX, eeY);
 
         doc.setFillColor(...grisClair);
-        doc.roundedRect(eeX, eeY + 1, 18, 2, 0.3, 0.3, "F");
+        doc.roundedRect(eeX, eeY + 1, 16, 2, 0.3, 0.3, "F");
         if (eeP > 0) {
           doc.setFillColor(...eeCoul);
-          doc.roundedRect(eeX, eeY + 1, 18 * eeP / 100, 2, 0.3, 0.3, "F");
+          doc.roundedRect(eeX, eeY + 1, 16 * eeP / 100, 2, 0.3, 0.3, "F");
         }
-        doc.setTextColor(...eeCoul); doc.setFont("helvetica", "bold"); doc.setFontSize(5);
-        doc.text(eeP + "%", eeX + 19, eeY + 2.5);
+        doc.setTextColor(...eeCoul); doc.setFont("helvetica", "bold"); doc.setFontSize(4.5);
+        doc.text(eeP + "%", eeX + 17, eeY + 2.5);
         
-        eeY += 6;
+        eeY += 5.5;
       });
     });
 
@@ -308,7 +312,7 @@ async function exporterRecapPDF() {
     const eeEntries = Object.entries(eeMap).sort((a, b) => a[0].localeCompare(b[0]));
 
     eeEntries.forEach(([eeNom, cc]) => {
-      if (eeY + 35 > 280) { doc.addPage(); eeY = 20; }
+      if (eeY + 40 > 280) { doc.addPage(); eeY = 20; }
 
       const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
       const couleurEEActuelle = couleursEE[eeNom] || [30, 144, 255];
@@ -325,17 +329,19 @@ async function exporterRecapPDF() {
       eeY += 7;
 
       const donutImg = genererDonut(cc.effectues, cc.total, coulBarre);
-      const donutMM = 20;
+      const donutMM = 22;
       doc.addImage(donutImg, "JPEG", marge, eeY, donutMM, donutMM);
 
       const statsX = marge + donutMM + 4;
-      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(7);
-      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, eeY + 3.5);
-      doc.text(`m³ calculé : ${cc.m3Calculé.toFixed(1)}`, statsX, eeY + 8);
-      doc.text(`m³ fait : ${cc.m3Fait.toFixed(1)}`, statsX, eeY + 12.5);
+      doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6.5);
+      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, eeY + 3);
+      doc.text(`m³ prévu : ${cc.m3Prevu.toFixed(1)}`, statsX, eeY + 7);
+      doc.text(`m³ calculé : ${cc.m3Calculé.toFixed(1)}`, statsX, eeY + 11);
+      doc.text(`m³ fait : ${cc.m3Fait.toFixed(1)}`, statsX, eeY + 15);
+      
       const coulEcart = ecart > 0 ? rouge : vert;
       doc.setTextColor(...coulEcart); doc.setFont("helvetica", "bold");
-      doc.text(`Écart (Calc-Fait) : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, eeY + 17);
+      doc.text(`Écart (Calc-Fait) : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, eeY + 19);
 
       const chEntriesEE = Object.entries(cc.chantiers);
       const listeX = statsX + 50;
@@ -370,7 +376,7 @@ async function exporterRecapPDF() {
         doc.text("+" + (chEntriesEE.length-8) + " autres", listeX, eeY + 22);
       }
 
-      eeY += donutMM + 5;
+      eeY += donutMM + 3;
     });
 
     // ================================================================
