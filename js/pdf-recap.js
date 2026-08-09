@@ -104,7 +104,7 @@ async function exporterRecapPDF() {
       cc.total++;
       
       const m3p = parseFloat(s.m3_prevu) || 0;
-      const m3c = parseFloat(s.reel !== undefined ? s.reel : (s.m3_calcule !== undefined ? s.m3_calcule : s.m3_calculé)) || 0;
+      const m3c = parseFloat(s.m3_reel !== undefined ? s.m3_reel : (s.m3_calcule !== undefined ? s.m3_calcule : s.m3_calculé)) || 0;
       
       cc.m3Prevu += m3p;
       cc.m3Calculé += m3c;
