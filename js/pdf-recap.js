@@ -59,6 +59,7 @@ async function exporterRecapPDF() {
     };
 
     const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
     const marge = 8;
 
     // --- Récupération de la date la plus récente (MAX) ---
@@ -72,7 +73,7 @@ async function exporterRecapPDF() {
       ? derniereDate.split('-').reverse().join('/') 
       : "Aucune date";
 
-    // Fonction pour dessiner l'en-tête global des pages
+    // Fonction pour dessiner l'en-tête global et le logo des pages
     function dessinerEntete(titre) {
       doc.setFillColor(...violet);
       doc.rect(0, 0, pageW, 15, "F");
@@ -272,7 +273,7 @@ async function exporterRecapPDF() {
     });
 
     // ================================================================
-    // PAGE 3 : SUIVI PAR EE (Entreprise Exécutante)
+    // PAGE 3 : SUIVI PAR EE (Entreprise Exécutante) - Identique CPT mais trié par EE
     // ================================================================
     doc.addPage();
     dessinerEntete("SUIVI GC PCLE-MMM — PAR ENTREPRISE (EE)");
@@ -376,18 +377,27 @@ async function exporterRecapPDF() {
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
       doc.setFillColor(240, 228, 238);
-      doc.rect(0, doc.internal.pageSize.getHeight() - 6, pageW, 6, "F");
+      doc.rect(0, pageH - 6, pageW, 6, "F");
       doc.setTextColor(...violet); doc.setFontSize(6); doc.setFont("helvetica", "bold");
-      doc.text("AINM — SUIVI GC PCLE-MMM", marge, doc.internal.pageSize.getHeight() - 2);
-      doc.text("Page " + p + " / " + totalPages, pageW - marge, doc.internal.pageSize.getHeight() - 2, { align: "right" });
+      doc.text("AINM — SUIVI GC PCLE-MMM", marge, pageH - 2);
+      doc.text("Page " + p + " / " + totalPages, pageW - marge, pageH - 2, { align: "right" });
     }
 
+    // --- EXPORT SÉCURISÉ (MOBILE & PC) ---
     const nomFichier = "SUIVI_GC_" + new Date().toISOString().slice(0, 10) + ".pdf";
     const pdfBlob = doc.output("blob");
-    const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
 
-    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-      await navigator.share({ files: [pdfFile], title: "Suivi GC", text: "AINM" });
+    if (navigator.share) {
+      try {
+        const file = new File([pdfBlob], nomFichier, { type: "application/pdf" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: "Suivi GC", text: "AINM" });
+        } else {
+          doc.save(nomFichier);
+        }
+      } catch (e) {
+        doc.save(nomFichier);
+      }
     } else {
       doc.save(nomFichier);
     }
