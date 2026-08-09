@@ -205,4 +205,5 @@ const baseSupports = [
 { chantier: "VARENNES", support: "TEST", I: 3, AF: 0.7, B: 1.1, H: 1.6, AR: 40, Enc: 200, ECH: "BOB", BLIND: "NON", CARO: "NON", TYPE: "1Pn", F: "0", P: 0, SUP: "0", ID: "204", EFFECTUE: "0", m3_prevu: 1.232, m3_reel: 7.2, EE: "BOB", date: "0", CPT: "F64617" },
 { chantier: "AMILLY", support: "TEST", I: 3, AF: 0.7, B: 1.1, H: 1.6, AR: 40, Enc: 200, ECH: "BOB", BLIND: "NON", CARO: "NON", TYPE: "1Pn", F: "0", P: 0, SUP: "0", ID: "205", EFFECTUE: "0", m3_prevu: 1.232, m3_reel: 7.2, EE: "TSO", date: "0", CPT: "F63599" },
 { chantier: "FONTENAY", support: "TEST", I: 3, AF: 0.7, B: 1.1, H: 1.6, AR: 40, Enc: 200, ECH: "BOB", BLIND: "NON", CARO: "NON", TYPE: "1Pn", F: "0", P: 0, SUP: "0", ID: "206", EFFECTUE: "0", m3_prevu: 1.232, m3_reel: 7.2, EE: "TSO", date: "0", CPT: "F63599" },
+{ chantier: "AVON", support: "TEST", I: 3, AF: 0.7, B: 1.1, H: 1.6, AR: 40, Enc: 200, ECH: "BOB", BLIND: "NON", CARO: "NON", TYPE: "1Pn", F: "0", P: 0, SUP: "0", ID: "206", EFFECTUE: "0", m3_prevu: 1.232, m3_reel: 7.2, EE: "TSO", date: "0", CPT: "F64712" },
 ];
