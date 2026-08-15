@@ -6,14 +6,16 @@
 <title>Outil_FBM_2</title>
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f1117">
+<meta name="theme-color" content="#7C2270">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FBM">
 </head>
 <body>
 
 
 <div id="tabs" class="tabs">
     <button id="tabFBM" class="tab active" onclick="ouvrirOnglet('fbm')">
-        📋 SUIVIE GC AINM
+        📋 SUIVIE GC AINM BOB
     </button>
 
 <button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">⚙️ Administration</button>
@@ -411,13 +413,7 @@
     </div>
   </div>
 </div>
-
-
-
-
-
-
-<script src="app.js"></script>	
+	
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -440,5 +436,10 @@
 <script src="js/ainm.js"></script>	
 <!-- CDN jsQR (fallback) -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+	<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js");
+  }
+</script>
 </body>
 </html>
