@@ -1,6 +1,7 @@
 // Configuration Supabase
 const SUPABASE_URL = "https://thbqkeugjvsxbryfnzuo.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_2-Ij-nrTPeK6rB-kSD-QTg_b42zNakq";
+
 // Initialisation du client Supabase
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -11,7 +12,7 @@ let baseSupports = [];
 async function chargerSupportsDepuisSupabase() {
     try {
         const { data, error } = await supabaseClient
-            .from('supports_fbm')
+            .from('blindage') // <--- C'est ici qu'on met le nom de ta table !
             .select('*');
 
         if (error) throw error;
