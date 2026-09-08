@@ -72,7 +72,6 @@
     <span class="section-arrow" id="arrow-sec-implantation">▾</span>
   </div>
 
-<!-- APRÈS -->
 <div class="section-content" id="sec-implantation">
   <table class="cotes-table">
     <thead>
@@ -113,7 +112,7 @@
     <span>📐 Cotes Fouille (A / B / H)</span>
     <span class="section-arrow" id="arrow-sec-fouille">▾</span>
   </div>
-<!-- APRÈS -->
+
 <div class="section-content" id="sec-fouille">
   <table class="cotes-table">
     <thead>
@@ -140,13 +139,14 @@
     </tbody>
   </table>
 </div>
+</div>
+
 <div class="section">
   <div class="section-title" onclick="toggleSection('sec-references')">
     <span>🔗 Références (FRUIT / Position longitudial)</span>
     <span class="section-arrow" id="arrow-sec-references">▾</span>
   </div>
 
-<!-- APRÈS -->
 <div class="section-content" id="sec-references">
   <table class="cotes-table">
     <thead>
@@ -181,10 +181,9 @@
     </tbody>
   </table>
 </div>
-	
 </div>
 
-<div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #ffeba2; width: 95% !important; flex-direction: column; gap: 8px;"> 
+<div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #ffeba2; width: 95% !important; flex-direction: column; gap: 8px;">  
   <div class="row" style="display: flex; justify-content: space-between; width: 100%;">
     <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">A (cm)</label><input type="number" id="A_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
     <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">B (cm)</label><input type="number" id="B_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
@@ -207,8 +206,7 @@
     <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote B:↔ <span id="calc_S4" style="font-weight:bold;">0.00</span></div>
   </div> 
 </div> 
- 
- 
+  
 <div id="bloc_saisie_blindage" style="display: none; background: #e0f2fe; padding: 6px 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #93c5fd; width: 95% !important; flex-direction: column; gap: 4px;">  
   <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; gap: 6px;">
     <label style="color: #0369a1; font-weight: bold; font-size: 0.8em; white-space: nowrap; flex: 1;">Bord blindage bord rail (m)</label>
@@ -226,13 +224,9 @@
   </div>
   <div class="field"><label>NiT-->Hbis</label><input type="number" id="NIT" readonly></div>  
 </div>
-  
-  
-  
-  
+
   <div id="alerte_blindage_bloc" style="margin-top: 2px; font-size: 0.85em; font-weight: bold; text-align: left;"></div>
 </div>
-
 
 <div class="result" style="margin-top: 10px; padding: 8px; border: 1px dashed #bbb; border-radius: 8px; background: #fafafa;">
   <div style="display: flex; justify-content: space-between; margin-bottom: 4px; flex-wrap: wrap; gap: 5px;">
@@ -264,7 +258,7 @@
     <span id="Hmax_display"></span>	
   </div>   
 </div>  
-<!-- Section bl-béton -->
+
 <div class="section collapsed">
   <div class="section-title" onclick="toggleSection('sec-bl-beton')">
     <span>🧾 BL-BÉTON</span>
@@ -287,14 +281,7 @@
     <div id="bl-liste"></div>
   </div>
 </div>
-<!-- Section bl-béton -->
 
-
-	
-
-
-
-<!-- Section Signature -->
 <div class="section collapsed">
   <div class="section-title" onclick="toggleSection('sec-signature')">
     <span>👤 Rédacteur</span>
@@ -322,7 +309,6 @@
   </div>
 </div>
 
-
 <div id="divExtensionModal" class="custom-modal">
   <div class="custom-modal-content" style="background: white; padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
     <p style="font-weight: bold; font-size:1em; margin-bottom: 15px; color: #333;">Configuration de la Cote A</p>
@@ -344,7 +330,7 @@
 
 <div id="divEchantillonModal" class="custom-modal">
   <div class="custom-modal-content" style="background: white; padding: 15px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
-    <p style="font-weight: bold; font-size:1em; margin-bottom: 12px; color: #333;">Sélectionner le Profilé (Échantillon)</p>   
+    <p style="font-weight: bold; font-size:1em; margin-bottom: 12px; color: #333;">Sélectionner le Profilé (Échantillon)</p>    
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px;">
 		
       <button onclick="validerEchantillonPopup('180', '171', '180')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEA180</button>
@@ -360,36 +346,31 @@
       <button onclick="validerEchantillonPopup('300', '300', '300')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEB300</button>
       <button onclick="validerEchantillonPopup('320', '320', '320')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEB320</button>
 
-
-
-
       <button onclick="validerEchantillonPopup('280', '710', '270')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHEA280</button>
       <button onclick="validerEchantillonPopup('320', '610', '310')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHEA320</button>
 		
       <button onclick="validerEchantillonPopup('280', '710', '280')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHEB280</button>
       <button onclick="validerEchantillonPopup('320', '610', '320')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHEB320</button>
 
-
-
-
-
-
-		
       <button onclick="validerEchantillonPopup('Epingle', '0', '0')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">Epingle</button>	
 	</div>    
-    <button onclick="validerEchantillonPopup('manuel', '0', 'Autre...')" style="background:#f5f3ff; color:#6d28d9; width:100%; padding: 10px 0; margin: 0 0 10px 0; font-weight: bold;">Autre...</button>   
+    <button onclick="validerEchantillonPopup('manuel', '0', 'Autre...')" style="background:#f5f3ff; color:#6d28d9; width:100%; padding: 10px 0; margin: 0 0 10px 0; font-weight: bold;">Autre...</button>    
     <button onclick="document.getElementById('divEchantillonModal').style.display='none';" style="background: #fee2e2; color: #dc2626; width:100%; margin:0; font-size: 0.8em; padding: 6px;">❌ Annuler</button>
   </div>
 </div>
+
+<!-- MODALE IDENTITÉ MISE À JOUR (Prénom + Nom + Email) -->
 <div id="divIdentiteModal" class="custom-modal">
   <div class="custom-modal-content" style="background: white; padding: 18px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
     <p style="font-weight: bold; font-size:1em; margin-bottom: 6px; color: #333;">👋 Bienvenue</p>
-    <p style="font-size: 0.8em; color: #666; margin-bottom: 14px;">Renseigne ton nom et ton email une seule fois, ils seront réutilisés automatiquement à chaque ouverture.</p>
+    <p style="font-size: 0.8em; color: #666; margin-bottom: 14px;">Renseigne ton prénom, ton nom et ton email une seule fois.</p>
+    <input type="text" id="identitePrenomInput" placeholder="Prénom du rédacteur" style="width:100%; margin-bottom:8px; padding:8px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
     <input type="text" id="identiteNomInput" placeholder="Nom du rédacteur" style="width:100%; margin-bottom:8px; padding:8px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
     <input type="email" id="identiteEmailInput" placeholder="Email du rédacteur" style="width:100%; margin-bottom:12px; padding:8px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;">
     <button onclick="validerIdentitePopup()" style="background:#7C2270; color:white; width:100%; padding: 10px 0; margin: 0; font-weight: bold;">✅ Valider</button>
   </div>
 </div>
+
 <div id="divRJModal" class="custom-modal">
   <div class="custom-modal-content" style="background: white; padding: 18px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
     <p style="font-weight: bold; font-size:1em; margin-bottom: 6px; color: #333;">🌙 Nuit de travail</p>
@@ -402,6 +383,7 @@
 </div> 
 </div> <!-- Fin de la box -->
 </div> <!-- Fin de fbmPage -->
+
 <!-- Page Administration -->
 <div id="adminPage" style="display:none;">
   <div class="box">
@@ -432,13 +414,13 @@
 <script src="js/pdf-recap.js"></script>
 <script src="js/autosave.js"></script>
 <script src="js/chantiers-supports.js"></script>
-	<script src="js/recap.js"></script>
-    <script src="js/ui-events.js"></script>
+<script src="js/recap.js"></script>
+<script src="js/ui-events.js"></script>
 <script src="js/identite.js"></script>
 <script src="js/ainm.js"></script>	
 <!-- CDN jsQR (fallback) -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-	<script>
+<script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js");
   }
