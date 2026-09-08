@@ -12,22 +12,22 @@ let baseSupports = [];
 async function chargerSupportsDepuisSupabase() {
     try {
         const { data, error } = await supabaseClient
-            .from('blindage') // <--- C'est ici qu'on met le nom de ta table !
+            .from('blindage')
             .select('*');
 
         if (error) throw error;
 
-        // On assigne les données reçues à baseSupports
+        console.log("Données brutes reçues de Supabase :", data); // <--- Ajoute ça
+
         baseSupports = data;
         console.log(`${baseSupports.length} supports chargés depuis Supabase.`);
 
-        // Si ton application possède une fonction globale pour rafraîchir l'affichage, tu peux l'appeler ici
         if (typeof rafraichirInterface === 'function') {
             rafraichirInterface();
         }
 
     } catch (error) {
-        console.error("Erreur lors du chargement des supports depuis Supabase :", error.message);
+        console.error("Erreur détaillée Supabase :", error.message);
     }
 }
 
