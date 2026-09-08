@@ -1,6 +1,5 @@
 /* ============================================================
-   IDENTITÉ RÉDACTEUR (prénom, nom + email) — popup au 1er lancement,
-   sauvegardée durablement, vérification d'accès sur Supabase
+   IDENTITÉ RÉDACTEUR & GESTION DES ACCÈS SUPABASE (table app_bob)
    ============================================================ */
 
 const CLE_IDENTITE = "fbm_identite_redacteur";
@@ -28,22 +27,39 @@ function appliquerIdentite(identite) {
 }
 
 /**
- * 🟢 Interroge Supabase pour vérifier si l'email a l'accès dans 'app_bob'
+ * 🟢 Interroge Supabase pour vérifier l'accès FBM et le statut Admin
  */
 async function verifierAccesSupabase(email) {
-  if (!email) return false;
+  if (!email) return { acces: false, admin: false };
   try {
     const { data, error } = await supabaseClient
       .from('app_bob')
-      .select('*')
+      .select('fbm, admin')
       .eq('email', email.trim().toLowerCase())
       .maybeSingle();
 
     if (error) throw error;
-    return !!data; // Retourne true si l'email existe dans la table, false sinon
+    
+    // Si aucune ligne trouvée ou si l'accès 'fbm' n'est pas actif
+    if (!data || data.fbm !== true) {
+      return { acces: false, admin: false };
+    }
+
+    // Retourne l'accès validé et l'état admin (vrai ou faux)
+    return { acces: true, admin: data.admin === true };
   } catch (err) {
     console.error("Erreur vérification accès Supabase :", err.message);
-    return false;
+    return { acces: false, admin: false };
+  }
+}
+
+/**
+ * Gère l'affichage de l'onglet Admin selon les droits
+ */
+function gererAffichageAdmin(estAdmin) {
+  const tabAdmin = document.getElementById("tabAdmin");
+  if (tabAdmin) {
+    tabAdmin.style.display = estAdmin ? "inline-block" : "none";
   }
 }
 
@@ -57,9 +73,9 @@ async function validerIdentitePopup() {
     return;
   }
 
-  // Vérification de l'accès sur Supabase avant d'enregistrer
-  const aAcces = await verifierAccesSupabase(email);
-  if (!aAcces) {
+  // 1. Vérification de l'accès sur Supabase
+  const resultat = await verifierAccesSupabase(email);
+  if (!resultat.acces) {
     alert("❌ Accès refusé : Cet email n'est pas autorisé sur cette application.");
     return;
   }
@@ -72,9 +88,9 @@ async function validerIdentitePopup() {
   }
 
   appliquerIdentite(identite);
-  document.getElementById("divIdentiteModal").style.display = "none";
+  gererAffichageAdmin(resultat.admin);
   
-  // Rechargement propre pour appliquer les droits
+  document.getElementById("divIdentiteModal").style.display = "none";
   window.location.reload();
 }
 
@@ -83,18 +99,18 @@ async function initIdentite() {
 
   if (identite && identite.email) {
     // Vérification de sécurité à chaque lancement
-    const aAcces = await verifierAccesSupabase(identite.email);
+    const resultat = await verifierAccesSupabase(identite.email);
 
-    if (aAcces) {
+    if (resultat.acces) {
       appliquerIdentite(identite);
+      gererAffichageAdmin(resultat.admin);
     } else {
-      // Si l'accès a été révoqué entre-temps
       localStorage.removeItem(CLE_IDENTITE);
       alert("⚠️ Vos droits d'accès ont changé ou ont été révoqués.");
       document.getElementById("divIdentiteModal").style.display = "flex";
     }
   } else {
-    // Premier lancement : affichage de la modale
+    // 1er lancement : Affichage de la modale
     document.getElementById("divIdentiteModal").style.display = "flex";
   }
 }
