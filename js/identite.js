@@ -1,6 +1,6 @@
 /* ============================================================
-   IDENTITÉ RÉDACTEUR (nom + email) — popup au 1er lancement,
-   sauvegardée durablement sur l'appareil, remplie automatiquement
+   IDENTITÉ RÉDACTEUR (prénom, nom + email) — popup au 1er lancement,
+   sauvegardée durablement, vérification d'accès sur Supabase
    ============================================================ */
 
 const CLE_IDENTITE = "fbm_identite_redacteur";
@@ -14,25 +14,57 @@ function chargerIdentite() {
   }
 }
 
-// AVANT
 function appliquerIdentite(identite) {
   const champNom = document.getElementById("nomRedacteur");
   const champEmail = document.getElementById("emailRedacteur");
-  if (champNom && identite.nom) champNom.value = identite.nom;
-  if (champEmail && identite.email) champEmail.value = identite.email;
+  
+  if (champNom && identite.nom) {
+    const prenomNom = `${identite.prenom || ""} ${identite.nom}`.trim();
+    champNom.value = prenomNom.toUpperCase();
+  }
+  if (champEmail && identite.email) {
+    champEmail.value = identite.email;
+  }
 }
 
-function validerIdentitePopup() {
-const nom = document.getElementById("identiteNomInput").value.trim().toUpperCase();
-const email = document.getElementById("identiteEmailInput").value.trim().toLowerCase();
+/**
+ * 🟢 Interroge Supabase pour vérifier si l'email a l'accès dans 'app_bob'
+ */
+async function verifierAccesSupabase(email) {
+  if (!email) return false;
+  try {
+    const { data, error } = await supabaseClient
+      .from('app_bob')
+      .select('*')
+      .eq('email', email.trim().toLowerCase())
+      .maybeSingle();
 
-  if (nom === "") {
-    alert("⚠️ Le nom est obligatoire.");
-    document.getElementById("identiteNomInput").focus();
+    if (error) throw error;
+    return !!data; // Retourne true si l'email existe dans la table, false sinon
+  } catch (err) {
+    console.error("Erreur vérification accès Supabase :", err.message);
+    return false;
+  }
+}
+
+async function validerIdentitePopup() {
+  const prenom = document.getElementById("identitePrenomInput").value.trim();
+  const nom = document.getElementById("identiteNomInput").value.trim().toUpperCase();
+  const email = document.getElementById("identiteEmailInput").value.trim().toLowerCase();
+
+  if (nom === "" || email === "") {
+    alert("⚠️ Le nom et l'email sont obligatoires.");
     return;
   }
 
-  const identite = { nom: nom, email: email };
+  // Vérification de l'accès sur Supabase avant d'enregistrer
+  const aAcces = await verifierAccesSupabase(email);
+  if (!aAcces) {
+    alert("❌ Accès refusé : Cet email n'est pas autorisé sur cette application.");
+    return;
+  }
+
+  const identite = { prenom: prenom, nom: nom, email: email };
   try {
     localStorage.setItem(CLE_IDENTITE, JSON.stringify(identite));
   } catch (e) {
@@ -41,56 +73,30 @@ const email = document.getElementById("identiteEmailInput").value.trim().toLower
 
   appliquerIdentite(identite);
   document.getElementById("divIdentiteModal").style.display = "none";
+  
+  // Rechargement propre pour appliquer les droits
+  window.location.reload();
 }
 
-function initIdentite() {
-
+async function initIdentite() {
   const identite = chargerIdentite();
 
-  if (identite) {
+  if (identite && identite.email) {
+    // Vérification de sécurité à chaque lancement
+    const aAcces = await verifierAccesSupabase(identite.email);
 
-    appliquerIdentite(identite);
-
-    afficherOngletAdmin();
-
-    if (identite.email === "robert.lavignon@reseau.sncf.fr") {
-
-      ouvrirOnglet("admin");
-
+    if (aAcces) {
+      appliquerIdentite(identite);
     } else {
-
-      ouvrirOnglet("fbm");
-
+      // Si l'accès a été révoqué entre-temps
+      localStorage.removeItem(CLE_IDENTITE);
+      alert("⚠️ Vos droits d'accès ont changé ou ont été révoqués.");
+      document.getElementById("divIdentiteModal").style.display = "flex";
     }
-
   } else {
-
+    // Premier lancement : affichage de la modale
     document.getElementById("divIdentiteModal").style.display = "flex";
-
   }
 }
-
-
-function afficherOngletAdmin() {
-    const identite = chargerIdentite();
-    if (!identite) return;
-
-    const onglet = document.getElementById("tabAdmin");
-
-    if (!onglet) return;
-
-    if (identite.email === "robert.lavignon@reseau.sncf.fr") {
-        onglet.style.display = "inline-block";
-    } else {
-        onglet.style.display = "none";
-    }
-}
-
-
-
-
-
-
-
 
 window.addEventListener("load", initIdentite);
