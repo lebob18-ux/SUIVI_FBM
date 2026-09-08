@@ -35,7 +35,8 @@ async function exporterPDF() {
     document.getElementById("selectSupport").focus();
     return;
   }
-
+// 🟢 Appel de notre fonction dédiée à la mise à jour Supabase
+  await synchroniserSupportActuel();
   const btnPdf = document.getElementById("btnExportPdf");
   const btnOriginalHTML = btnPdf.innerHTML;
   btnPdf.innerHTML = "⏳...";
