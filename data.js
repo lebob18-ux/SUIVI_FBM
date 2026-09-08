@@ -17,10 +17,35 @@ async function chargerSupportsDepuisSupabase() {
 
         if (error) throw error;
 
-        baseSupports = data;
-        console.log(`${baseSupports.length} supports chargés depuis Supabase.`);
+        // 🟢 Mapping complet : on traduit les colonnes de Supabase vers les clés de ton appli
+        baseSupports = data.map(row => ({
+            id: row.id,
+            chantier: row.chantier,
+            support: row.support,
+            I: row.i,
+            AF: row.af,
+            B: row.b,
+            H: row.h,
+            AR: row.arasement,
+            Enc: row.encaissement,
+            ECH: row.echantillon,
+            BLIND: row.blind,
+            CARO: row.caro,
+            TYPE: row.type,
+            F: row.f,
+            P: row.p,
+            SUP: row.sup,
+            EFFECTUE: row.effectue,
+            m3_prevu: row.vol_theorique,
+            m3_reel: row.vol_reel,
+            EE: row.ee,
+            date: row.date_exec,
+            CPT: row.n_rj
+        }));
 
-        // 🟢 C'est ici qu'on déclenche l'affichage des chantiers
+        console.log(`${baseSupports.length} supports chargés et mappés depuis Supabase.`);
+
+        // On lance l'initialisation des chantiers
         if (typeof initChantiers === 'function') {
             initChantiers();
         }
