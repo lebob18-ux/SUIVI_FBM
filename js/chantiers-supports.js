@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const chkBlindage = document.getElementById("blindageCheck");
     const chkHorsP1 = document.getElementById("check_hors_p1");
 
-    // Éléments des 3 étapes
     const checkFouille = document.getElementById("check_fouille");
     const checkBeton = document.getElementById("check_beton");
     const checkMatage = document.getElementById("check_matage");
@@ -37,12 +36,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const estHorsP1 = chkHorsP1 ? chkHorsP1.checked : false;
 
         if (!estBlindage && !estHorsP1) {
-            // Ni blindage ni hors P1 : on force les 3 en true et on désactive
             if (checkFouille) { checkFouille.checked = true; checkFouille.disabled = true; }
             if (checkBeton) { checkBeton.checked = true; checkBeton.disabled = true; }
             if (checkMatage) { checkMatage.checked = true; checkMatage.disabled = true; }
         } else {
-            // Si blindage ou hors P1 est actif : on redonne la main pour récupérer/gérer les valeurs
             if (checkFouille) checkFouille.disabled = false;
             if (checkBeton) checkBeton.disabled = false;
             if (checkMatage) checkMatage.disabled = false;
@@ -64,7 +61,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Appel initial au chargement
     refreshBlocs();
     verifierEtatEtapes();
 });
@@ -79,7 +75,6 @@ window.addEventListener('load', function() {
     }
 });
 
-// Sélection automatique au focus sur tous les inputs numériques
 document.addEventListener("focusin", function(e) {
   if (e.target.tagName === "INPUT" && e.target.type === "number" && !e.target.readOnly) {
     setTimeout(() => e.target.select(), 30);
@@ -97,8 +92,6 @@ async function chargerSupport() {
     const dataBase = baseSupports.find(s => s.support === supportNom);
     if (!dataBase) return;
 
-
-// 1. Récupération des données fraîches depuis Supabase (avec maybeSingle pour éviter l'erreur 400 si la ligne n'existe pas)
     let dataSupabase = {};
     try {
         const { data, error } = await supabaseClient
@@ -106,7 +99,7 @@ async function chargerSupport() {
             .select('hors_p1, etape_fouille, etape_beton, etape_matage, blindage, carotte, statut_blindage')
             .eq('chantier', nomChantier)
             .eq('support', supportNom)
-            .maybeSingle(); // <--- Remplacé .single() par .maybeSingle()
+            .maybeSingle();
         
         if (!error && data) {
             dataSupabase = data;
@@ -115,11 +108,16 @@ async function chargerSupport() {
         console.warn("Impossible de récupérer les états spécifiques depuis Supabase, utilisation des valeurs par défaut.");
     }
 
-    // Fonction utilitaire pour afficher 0 au lieu de vide
     const valOuVide = (val) => (val !== undefined && val !== null && val !== "") ? val : "";
 
-    // 🟢 Fonction utilitaire universelle pour convertir n'importe quel format en booléen JS
-    const parseBooleen = (val) => {
+    // Convertisseur spécifique pour les booléens Supabase (hors_p1, etape_*)
+    const parseBooleenStricte = (val) => {
+        if (val === true || val === 1 || val === "1" || val === "true") return true;
+        return false;
+    };
+
+    // Convertisseur texte pour blindage / carotte
+    const estVraiTexte = (val) => {
         if (val === true || val === 1 || val === "1") return true;
         if (typeof val === "string") {
             const v = val.trim().toLowerCase();
@@ -128,7 +126,7 @@ async function chargerSupport() {
         return false;
     };
 
-    // 2. Remplissage des champs de saisie (inputs)
+    // Remplissage des inputs
     document.getElementById("valF").value = valOuVide(dataBase.F);
     document.getElementById("valSUP").value = valOuVide(dataBase.SUP);
     document.getElementById("I").value = valOuVide(dataBase.I);
@@ -138,7 +136,6 @@ async function chargerSupport() {
     document.getElementById("AR").value = valOuVide(dataBase.AR);
     document.getElementById("Enc").value = valOuVide(dataBase.Enc);
 
-    // 3. Remplissage des références (spans grisés)
     document.getElementById("F_ref").innerText = valOuVide(dataBase.F);
     document.getElementById("SUP_ref").innerText = valOuVide(dataBase.SUP);
     document.getElementById("I_ref").innerText = valOuVide(dataBase.I);
@@ -149,7 +146,6 @@ async function chargerSupport() {
     document.getElementById("Enc_ref").innerText = valOuVide(dataBase.Enc);
     document.getElementById("ECH_ref").innerText = valOuVide(dataBase.ECH);
 
-    // 4. Gestion de P (Valeur absolue pour l'affichage)
     const valP = (dataBase.P !== undefined && dataBase.P !== null) ? parseFloat(dataBase.P) : 0;
     const valeurAbsolueP = Math.abs(valP);
 
@@ -171,43 +167,41 @@ async function chargerSupport() {
         blocS.style.display = "none";
     }
 
-    // 5. Échantillonnage, cases à cocher et statut blindage
     if (typeof appliquerEchantillon === "function") {
         appliquerEchantillon(dataBase.ECH);
     }
     
-    document.getElementById("blindageCheck").checked = (dataSupabase.blindage !== undefined) ? parseBooleen(dataSupabase.blindage) : (dataBase.BLIND === "OUI");
+    // blindage = text dans Supabase
+    document.getElementById("blindageCheck").checked = (dataSupabase.blindage !== undefined && dataSupabase.blindage !== null) ? estVraiTexte(dataSupabase.blindage) : (dataBase.BLIND === "OUI");
     document.getElementById("carotte").checked = (dataBase.CARO === "OUI");
     document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
 
-    // 🟢 Récupération ultra-robuste de Hors P1
+    // hors_p1 = bool dans Supabase
     const chkHorsP1 = document.getElementById("check_hors_p1");
     if (chkHorsP1) {
-        const valHorsP1 = dataSupabase.hors_p1 !== undefined ? dataSupabase.hors_p1 : dataBase.hors_p1;
-        chkHorsP1.checked = parseBooleen(valHorsP1);
+        const valHorsP1 = dataSupabase.hors_p1 !== undefined && dataSupabase.hors_p1 !== null ? dataSupabase.hors_p1 : dataBase.hors_p1;
+        chkHorsP1.checked = parseBooleenStricte(valHorsP1);
     }
 
-    // 🟢 Récupération ultra-robuste des 3 étapes
+    // etape_* = bool dans Supabase
     const checkFouille = document.getElementById("check_fouille");
     const checkBeton = document.getElementById("check_beton");
     const checkMatage = document.getElementById("check_matage");
 
-    const valFouille = dataSupabase.etape_fouille !== undefined ? dataSupabase.etape_fouille : dataBase.etape_fouille;
-    const valBeton = dataSupabase.etape_beton !== undefined ? dataSupabase.etape_beton : dataBase.etape_beton;
-    const valMatage = dataSupabase.etape_matage !== undefined ? dataSupabase.etape_matage : dataBase.etape_matage;
+    const valFouille = dataSupabase.etape_fouille;
+    const valBeton = dataSupabase.etape_beton;
+    const valMatage = dataSupabase.etape_matage;
 
-    if (checkFouille) checkFouille.checked = (valFouille !== undefined && valFouille !== null) ? parseBooleen(valFouille) : true;
-    if (checkBeton) checkBeton.checked = (valBeton !== undefined && valBeton !== null) ? parseBooleen(valBeton) : true;
-    if (checkMatage) checkMatage.checked = (valMatage !== undefined && valMatage !== null) ? parseBooleen(valMatage) : true;
+    if (checkFouille) checkFouille.checked = (valFouille !== undefined && valFouille !== null) ? parseBooleenStricte(valFouille) : true;
+    if (checkBeton) checkBeton.checked = (valBeton !== undefined && valBeton !== null) ? parseBooleenStricte(valBeton) : true;
+    if (checkMatage) checkMatage.checked = (valMatage !== undefined && valMatage !== null) ? parseBooleenStricte(valMatage) : true;
 
-    // Gestion des boutons radio "statut_blindage"
     const statutActif = dataSupabase.statut_blindage || dataBase.statut_blindage;
     const radiosStatut = document.querySelectorAll('input[name="statut_blindage"]');
     radiosStatut.forEach(radio => {
         radio.checked = (statutActif && radio.value === statutActif);
     });
 
-    // 6. Mise à jour finale et application des règles d'état des étapes
     if (typeof refreshBlocs === "function") refreshBlocs();
     
     const evtChange = new Event('change');
@@ -219,69 +213,41 @@ async function chargerSupport() {
 }
 
 const aliasEchantillon = {
-"HE180A":"HEA180",
-"HEA180":"HEA180",
-"HE200A":"HEA200",
-"HEA200":"HEA200",
-"HE220A":"HEA220",
-"HEA220":"HEA220",
-"HE240A":"HEA240",
-"HEA240":"HEA240",
-"HE300A":"HEA300",
-"HEA300":"HEA300",
-"HE320A":"HEA320",
-"HEA320":"HEA320",
-"HE220B":"HEB220",
-"HEB220":"HEB220",
-"HE240B":"HEB240",
-"HEB240":"HEB240",
-"HE260B":"HEB260",
-"HEB260":"HEB260",
-"HE300B":"HEB300",
-"HEB300":"HEB300",
-"HE320B":"HEB320",
-"HEB320":"HEB320",
-"JHE280A":"JHEA280",
-"JHEA280":"JHEA280",
-"JHE320A":"JHEA320",
-"JHEA320":"JHEA320",
-"JHE280B":"JHEB280",
-"JHEB280":"JHEB280",
-"JHE320B":"JHEB320",
-"JHEB320":"JHEB320",
+"HE180A":"HEA180","HEA180":"HEA180","HE200A":"HEA200","HEA200":"HEA200",
+"HE220A":"HEA220","HEA220":"HEA220","HE240A":"HEA240","HEA240":"HEA240",
+"HE300A":"HEA300","HEA300":"HEA300","HE320A":"HEA320","HEA320":"HEA320",
+"HE220B":"HEB220","HEB220":"HEB220","HE240B":"HEB240","HEB240":"HEB240",
+"HE260B":"HEB260","HEB260":"HEB260","HE300B":"HEB300","HEB300":"HEB300",
+"HE320B":"HEB320","HEB320":"HEB320","JHE280A":"JHEA280","JHEA280":"JHEA280",
+"JHE320A":"JHEA320","JHEA320":"JHEA320","JHE280B":"JHEB280","JHEB280":"JHEB280",
+"JHE320B":"JHEB320","JHEB320":"JHEB320"
 };
 
 const profilsEchantillon = {
-"HEA180":    { valeur: "180",    largeur: "171", nom: "HEA180"   },
-"HEA200":    { valeur: "200",    largeur: "190", nom: "HEA200"   },
-"HEA220":    { valeur: "220",    largeur: "210", nom: "HEA220"   },
-"HEA240":    { valeur: "240",    largeur: "230", nom: "HEA240"   },
-"HEA300":    { valeur: "300",    largeur: "290", nom: "HEA300"   },
-"HEA320":    { valeur: "300",    largeur: "310", nom: "HEA320"   },    
-
-"HEB220":    { valeur: "220",    largeur: "220", nom: "HEB220"   },
-"HEB240":    { valeur: "240",    largeur: "240", nom: "HEB240"   },
-"HEB260":    { valeur: "260",    largeur: "260", nom: "HEB260"   },
-"HEB300":    { valeur: "300",    largeur: "300", nom: "HEB300"   },
-"HEB320":    { valeur: "300",    largeur: "320", nom: "HEB320"   }, 
-
-"JHEA280": { valeur: "280",    largeur: "820", nom: "JHEA280"  },
-"JHEA320": { valeur: "300",    largeur: "860", nom: "JHEA320"  },
-"JHEB280": { valeur: "280",    largeur: "830", nom: "JHEB280"  },
-"JHEB320": { valeur: "300",    largeur: "870", nom: "JHEB320"  },
-  
-  "Epingle":{ valeur: "Epingle", largeur: "0",    nom: "Epingle" }
+"HEA180": { valeur: "180", largeur: "171", nom: "HEA180" },
+"HEA200": { valeur: "200", largeur: "190", nom: "HEA200" },
+"HEA220": { valeur: "220", largeur: "210", nom: "HEA220" },
+"HEA240": { valeur: "240", largeur: "230", nom: "HEA240" },
+"HEA300": { valeur: "300", largeur: "290", nom: "HEA300" },
+"HEA320": { valeur: "300", largeur: "310", nom: "HEA320" },    
+"HEB220": { valeur: "220", largeur: "220", nom: "HEB220" },
+"HEB240": { valeur: "240", largeur: "240", nom: "HEB240" },
+"HEB260": { valeur: "260", largeur: "260", nom: "HEB260" },
+"HEB300": { valeur: "300", largeur: "300", nom: "HEB300" },
+"HEB320": { valeur: "300", largeur: "320", nom: "HEB320" }, 
+"JHEA280": { valeur: "280", largeur: "820", nom: "JHEA280" },
+"JHEA320": { valeur: "300", largeur: "860", nom: "JHEA320" },
+"JHEB280": { valeur: "280", largeur: "830", nom: "JHEB280" },
+"JHEB320": { valeur: "300", largeur: "870", nom: "JHEB320" },
+"Epingle": { valeur: "Epingle", largeur: "0", nom: "Epingle" }
 };
 
 function appliquerEchantillon(ech) {
   if (ech === undefined || ech === null || ech === "") return;
-
   let cle = String(ech).trim();
-
   if (typeof aliasEchantillon !== "undefined" && aliasEchantillon[cle]) {
     cle = aliasEchantillon[cle];
   }
-
   const profil = profilsEchantillon[cle];
   if (profil) {
     validerEchantillonPopup(profil.valeur, profil.largeur, profil.nom);
@@ -294,9 +260,6 @@ function appliquerEchantillon(ech) {
 }
 
 function gérerVisibilitéP() {
-    const blocN = document.getElementById("bloc-N");
-    const blocS = document.getElementById("bloc-S");
-    const inputActif = (blocN.style.display !== "none") ? document.getElementById("valP_N") : document.getElementById("valP_S");
     calculer();
 }
 
@@ -310,7 +273,6 @@ function initChantiers() {
       chantiersMap[s.chantier] = { total: 0, effectues: 0 };
     }
     chantiersMap[s.chantier].total++;
-    
     const valEff = s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : "");
     if (valEff === 1 || String(valEff).trim() === "1") {
       chantiersMap[s.chantier].effectues++;
@@ -322,10 +284,7 @@ function initChantiers() {
 
   chantiersUniques.forEach(c => {
     const data = chantiersMap[c];
-
-    if (data && data.total > 0 && data.effectues === data.total) {
-      return; 
-    }
+    if (data && data.total > 0 && data.effectues === data.total) return; 
 
     const opt = document.createElement("option");
     opt.value = c;
@@ -365,8 +324,6 @@ function resetSaisieAvantSupport() {
   document.getElementById("display_nom").innerText = "-";
   document.getElementById("display_larg").innerText = "0";
   document.getElementById("display_prof").innerText = "0";
-  largeurEchantillon = 0;
-  profondeurEchantillon = 0;
 
   document.getElementById("blindageCheck").checked = false;
   document.getElementById("carotte").checked = false;
@@ -384,7 +341,6 @@ function resetSaisieAvantSupport() {
   document.querySelectorAll('input[name="statut_blindage"]').forEach(radio => radio.checked = false);
 
   if (window.refreshBlocs) window.refreshBlocs();
-
   calculer();
 }
 
@@ -393,7 +349,6 @@ function filtrerSupports() {
     const supportSelect = document.getElementById("selectSupport");
 
     resetSaisieAvantSupport();
-
     supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
 
     const filtres = baseSupports.filter(s => {
@@ -402,9 +357,7 @@ function filtrerSupports() {
         return valEff !== 1 && String(valEff).trim() !== "1";
     });
     
-    filtres.sort((a, b) => {
-        return String(a.support).localeCompare(String(b.support), 'fr', { numeric: true, sensitivity: 'base' });
-    });
+    filtres.sort((a, b) => String(a.support).localeCompare(String(b.support), 'fr', { numeric: true, sensitivity: 'base' }));
 
     filtres.forEach(s => {
         let opt = document.createElement("option");
@@ -448,10 +401,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 else if (id === "blindageCheck") nomChampSupabase = "blindage";
                 else nomChampSupabase = id.replace("check_", "etape_");
 
-                const valeurCochee = this.checked;
+                // Format adapté : true/false (booléen pur) pour hors_p1 et les étapes, "true"/"false" (texte) pour blindage
+                let valeurCochee;
+                if (id === "blindageCheck") {
+                    valeurCochee = this.checked ? "true" : "false"; // text
+                } else {
+                    valeurCochee = this.checked ? true : false; // bool
+                }
 
                 try {
-                    // 1. On vérifie si la ligne existe déjà pour ce chantier et ce support
                     const { data: existants, error: errSelect } = await supabaseClient
                         .from('blindage')
                         .select('support')
@@ -465,7 +423,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     let error;
                     if (existants && existants.length > 0) {
-                        // 2a. La ligne existe -> UPDATE classique
                         const resUpdate = await supabaseClient
                             .from('blindage')
                             .update({ [nomChampSupabase]: valeurCochee })
@@ -473,7 +430,6 @@ document.addEventListener("DOMContentLoaded", function () {
                             .eq('support', supportNom);
                         error = resUpdate.error;
                     } else {
-                        // 2b. La ligne n'existe pas -> INSERT initial
                         const resInsert = await supabaseClient
                             .from('blindage')
                             .insert({
@@ -496,4 +452,3 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
-// FIN DU FICHIER - NE RIEN SUPPRIMER APRES CETTE LIGNE
