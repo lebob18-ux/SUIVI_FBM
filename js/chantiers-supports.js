@@ -98,18 +98,15 @@ async function chargerSupport() {
     try {
         const { data, error } = await supabaseClient
             .from('blindage')
-            .select('hors_p1, etape_fouille, etape_beton, etape_matage, blind, carotte, statut')
+            .select('hors_p1, etape_fouille, etape_beton, etape_matage, blind, caro, statut')
             .eq('chantier', nomChantier)
             .eq('support', supportNom)
-            .limit(1); // Utilisation d'un tableau limité à 1 pour éviter l'erreur 400 Bad Request
+            .limit(1);
         
         if (error) {
             console.error("❌ Erreur SQL Supabase:", error.message);
         } else if (data && data.length > 0) {
-            console.log("✅ Données trouvées dans Supabase:", data[0]);
             dataSupabase = data[0];
-        } else {
-            console.warn("⚠️ Aucune ligne existante dans Supabase pour ce support.");
         }
     } catch (err) {
         console.warn("❌ Erreur réseau Supabase:", err);
@@ -173,7 +170,7 @@ async function chargerSupport() {
     
     document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
 
-    // Application Blindage et Carotte
+    // Application Blindage et Carotte (lié à la colonne 'caro' de Supabase)
     const chkBlindage = document.getElementById("blindageCheck");
     if (chkBlindage) {
         chkBlindage.checked = (dataSupabase.blind !== undefined && dataSupabase.blind !== null) ? estVraiTexte(dataSupabase.blind) : (dataBase.BLIND === "OUI");
@@ -181,7 +178,7 @@ async function chargerSupport() {
 
     const chkCarotte = document.getElementById("carotte");
     if (chkCarotte) {
-        chkCarotte.checked = (dataSupabase.carotte !== undefined && dataSupabase.carotte !== null) ? estVraiTexte(dataSupabase.carotte) : (dataBase.CARO === "OUI");
+        chkCarotte.checked = (dataSupabase.caro !== undefined && dataSupabase.caro !== null) ? estVraiTexte(dataSupabase.caro) : (dataBase.CARO === "OUI");
     }
 
     // Application Hors P1
