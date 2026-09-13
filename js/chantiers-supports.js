@@ -169,20 +169,25 @@ async function chargerSupport() {
     document.getElementById("carotte").checked = (dataBase.CARO === "OUI");
     document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
 
-    // 🟢 Récupération correcte de Hors P1 depuis Supabase
+    // 🟢 Récupération ultra-robuste de Hors P1 (depuis Supabase en priorité, sinon base locale)
     const chkHorsP1 = document.getElementById("check_hors_p1");
     if (chkHorsP1) {
-        chkHorsP1.checked = dataSupabase.hors_p1 === true;
+        const valHorsP1 = dataSupabase.hors_p1 !== undefined ? dataSupabase.hors_p1 : dataBase.hors_p1;
+        chkHorsP1.checked = (valHorsP1 === true || valHorsP1 === "true" || valHorsP1 === 1 || valHorsP1 === "OUI");
     }
 
-    // 🟢 Récupération des 3 étapes depuis Supabase
+    // 🟢 Récupération ultra-robuste des 3 étapes depuis Supabase / base locale
     const checkFouille = document.getElementById("check_fouille");
     const checkBeton = document.getElementById("check_beton");
     const checkMatage = document.getElementById("check_matage");
 
-    if (checkFouille) checkFouille.checked = dataSupabase.etape_fouille !== undefined ? dataSupabase.etape_fouille : true;
-    if (checkBeton) checkBeton.checked = dataSupabase.etape_beton !== undefined ? dataSupabase.etape_beton : true;
-    if (checkMatage) checkMatage.checked = dataSupabase.etape_matage !== undefined ? dataSupabase.etape_matage : true;
+    const valFouille = dataSupabase.etape_fouille !== undefined ? dataSupabase.etape_fouille : dataBase.etape_fouille;
+    const valBeton = dataSupabase.etape_beton !== undefined ? dataSupabase.etape_beton : dataBase.etape_beton;
+    const valMatage = dataSupabase.etape_matage !== undefined ? dataSupabase.etape_matage : dataBase.etape_matage;
+
+    if (checkFouille) checkFouille.checked = (valFouille === true || valFouille === "true" || valFouille === 1);
+    if (checkBeton) checkBeton.checked = (valBeton === true || valBeton === "true" || valBeton === 1);
+    if (checkMatage) checkMatage.checked = (valMatage === true || valMatage === "true" || valMatage === 1);
 
     // Gestion des boutons radio "statut_blindage"
     const statutActif = dataSupabase.statut_blindage || dataBase.statut_blindage;
@@ -355,25 +360,15 @@ function resetSaisieAvantSupport() {
   document.getElementById("blindageCheck").checked = false;
   document.getElementById("carotte").checked = false;
 
-// 🟢 Récupération ultra-robuste de Hors P1 (depuis Supabase ou la base locale)
-    const chkHorsP1 = document.getElementById("check_hors_p1");
-    if (chkHorsP1) {
-        const valHorsP1 = dataSupabase.hors_p1 !== undefined ? dataSupabase.hors_p1 : dataBase.hors_p1;
-        chkHorsP1.checked = (valHorsP1 === true || valHorsP1 === "true" || valHorsP1 === 1 || valHorsP1 === "OUI");
-    }
+  const chkHorsP1 = document.getElementById("check_hors_p1");
+  if (chkHorsP1) chkHorsP1.checked = false;
 
-    // 🟢 Récupération ultra-robuste des 3 étapes
-    const checkFouille = document.getElementById("check_fouille");
-    const checkBeton = document.getElementById("check_beton");
-    const checkMatage = document.getElementById("check_matage");
-
-    const valFouille = dataSupabase.etape_fouille !== undefined ? dataSupabase.etape_fouille : dataBase.etape_fouille;
-    const valBeton = dataSupabase.etape_beton !== undefined ? dataSupabase.etape_beton : dataBase.etape_beton;
-    const valMatage = dataSupabase.etape_matage !== undefined ? dataSupabase.etape_matage : dataBase.etape_matage;
-
-    if (checkFouille) checkFouille.checked = (valFouille === true || valFouille === "true" || valFouille === 1);
-    if (checkBeton) checkBeton.checked = (valBeton === true || valBeton === "true" || valBeton === 1);
-    if (checkMatage) checkMatage.checked = (valMatage === true || valMatage === "true" || valMatage === 1);
+  const checkFouille = document.getElementById("check_fouille");
+  const checkBeton = document.getElementById("check_beton");
+  const checkMatage = document.getElementById("check_matage");
+  if (checkFouille) { checkFouille.checked = true; checkFouille.disabled = true; }
+  if (checkBeton) { checkBeton.checked = true; checkBeton.disabled = true; }
+  if (checkMatage) { checkMatage.checked = true; checkMatage.disabled = true; }
 
   document.querySelectorAll('input[name="statut_blindage"]').forEach(radio => radio.checked = false);
 
