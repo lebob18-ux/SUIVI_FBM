@@ -87,179 +87,189 @@
   </div>
 </div> 
 
-<div class="section">
-  <div class="section-title" onclick="toggleSection('sec-implantation')">
+<!-- Chapitre 1 : Implantation / Échantillon / Arasement / Encastrement -->
+<details class="chapitre-implantation mb-2" open>
+  <summary class="fw-bold py-2 px-3 bg-light border rounded" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
     <span>📍 Imp/Echantillon/Arasement/Encastrement</span>
-    <span class="section-arrow" id="arrow-sec-implantation">▾</span>
+    <span class="section-arrow">▾</span>
+  </summary>
+  <div class="p-3 border border-top-0 rounded-bottom">
+    <table class="cotes-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Imp</th>
+          <th>Éch</th>
+          <th>Arase</th>
+          <th>Encast</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cotes-label">Saisie</td>
+          <td><input type="number" id="I" step="any" oninput="calculer()" onkeydown="passerAEchantillon(event)"></td>
+          <td>
+            <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
+            <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="cm" style="display: none; margin-top: 4px; width: 100%;">
+          </td>
+          <td><input type="number" id="AR" oninput="calculer()"></td>
+          <td><input type="number" id="Enc" onblur="calculer()"></td>
+        </tr>
+        <tr>
+          <td class="cotes-label">Réf.</td>
+          <td><span class="ref" id="I_ref"></span></td>
+          <td><span class="ref" id="ECH_ref"></span></td>
+          <td><span class="ref" id="AR_ref"></span></td>
+          <td><span class="ref" id="Enc_ref"></span></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
-
-<div class="section-content" id="sec-implantation">
-  <table class="cotes-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>Imp</th>
-        <th>Éch</th>
-        <th>Arase</th>
-        <th>Encast</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="cotes-label">Saisie</td>
-        <td><input type="number" id="I" step="any" oninput="calculer()" onkeydown="passerAEchantillon(event)"></td>
-        <td>
-          <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
-          <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="cm" style="display: none; margin-top: 4px; width: 100%;">
-        </td>
-        <td><input type="number" id="AR" oninput="calculer()"></td>
-        <td><input type="number" id="Enc" onblur="calculer()"></td>
-      </tr>
-      <tr>
-        <td class="cotes-label">Réf.</td>
-        <td><span class="ref" id="I_ref"></span></td>
-        <td><span class="ref" id="ECH_ref"></span></td>
-        <td><span class="ref" id="AR_ref"></span></td>
-        <td><span class="ref" id="Enc_ref"></span></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+</details>
 	
-</div>
-  
-<div class="section">
-  <div class="section-title" onclick="toggleSection('sec-fouille')">
+<!-- Chapitre 2 : Cotes Fouille (A / B / H) -->
+<details class="chapitre-fouille mb-2" open>
+  <summary class="fw-bold py-2 px-3 bg-light border rounded" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
     <span>📐 Cotes Fouille (A / B / H)</span>
-    <span class="section-arrow" id="arrow-sec-fouille">▾</span>
+    <span class="section-arrow">▾</span>
+  </summary>
+  <div class="p-3 border border-top-0 rounded-bottom">
+    <table class="cotes-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>A</th>
+          <th>B</th>
+          <th>H</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cotes-label">Saisie</td>
+          <td><input type="number" id="AF" step="any" readonly onclick="gererChangementA()" style="font-weight: bold; cursor: pointer;"></td>
+          <td><input type="number" id="B_Fouille" step="any" oninput="calculer()"></td>
+          <td><input type="number" id="H_Fouille" step="any" oninput="calculer()"></td>
+        </tr>
+        <tr>
+          <td class="cotes-label">Réf.</td>
+          <td><span class="ref" id="AF_ref"></span></td>
+          <td><span class="ref" id="B_ref"></span></td>
+          <td><span class="ref" id="H_ref"></span></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
+</details>
 
-<div class="section-content" id="sec-fouille">
-  <table class="cotes-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>A</th>
-        <th>B</th>
-        <th>H</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="cotes-label">Saisie</td>
-        <td><input type="number" id="AF" step="any" readonly onclick="gererChangementA()" style="font-weight: bold; cursor: pointer;"></td>
-        <td><input type="number" id="B_Fouille" step="any" oninput="calculer()"></td>
-        <td><input type="number" id="H_Fouille" step="any" oninput="calculer()"></td>
-      </tr>
-      <tr>
-        <td class="cotes-label">Réf.</td>
-        <td><span class="ref" id="AF_ref"></span></td>
-        <td><span class="ref" id="B_ref"></span></td>
-        <td><span class="ref" id="H_ref"></span></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-</div>
-
-<div class="section">
-  <div class="section-title" onclick="toggleSection('sec-references')">
-    <span>🔗 Références (FRUIT / Position longitudial)</span>
-    <span class="section-arrow" id="arrow-sec-references">▾</span>
+<!-- Chapitre 3 : Références (FRUIT / Position longitudinale) -->
+<details class="chapitre-references mb-2" open>
+  <summary class="fw-bold py-2 px-3 bg-light border rounded" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+    <span>🔗 Références (FRUIT / Position longitudinale)</span>
+    <span class="section-arrow">▾</span>
+  </summary>
+  <div class="p-3 border border-top-0 rounded-bottom">
+    <table class="cotes-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>F</th>
+          <th>Support (P)</th>
+          <th>Imp. depuis (P)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cotes-label">Saisie</td>
+          <td><input type="number" id="valF" oninput="calculer()"></td>
+          <td><input type="text" id="valSUP" oninput="calculer()" disabled></td>
+          <td rowspan="2" style="vertical-align: middle;">
+            <div id="bloc-N" style="display: none;">
+              <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
+              <span class="ref" id="P_ref_N"></span>
+            </div>
+            <div id="bloc-S" style="display: none;">
+              <input type="text" id="valP_S" oninput="gérerVisibilitéP()">
+              <span class="ref" id="P_ref_S"></span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="cotes-label">Réf.</td>
+          <td><span class="ref" id="F_ref"></span></td>
+          <td><span class="ref" id="SUP_ref"></span></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
+</details>
 
-<div class="section-content" id="sec-references">
-  <table class="cotes-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th>F</th>
-        <th>Support (P)</th>
-        <th>Imp. depuis (P)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="cotes-label">Saisie</td>
-        <td><input type="number" id="valF" oninput="calculer()"></td>
-        <td><input type="text" id="valSUP" oninput="calculer()" disabled></td>
-        <td rowspan="2" style="vertical-align: middle;">
-          <div id="bloc-N" style="display: none;">
-            <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
-            <span class="ref" id="P_ref_N"></span>
+<!-- Chapitre 4 : Blindage -->
+<details class="chapitre-blindage mb-2" open>
+  <summary class="fw-bold py-2 px-3 bg-light border rounded" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+    <span>🛡️ Blindage & Carottage</span>
+    <span class="section-arrow">▾</span>
+  </summary>
+  <div class="p-3 border border-top-0 rounded-bottom">
+    <!-- Bloc Blindage -->
+    <div id="bloc_saisie_blindage" style="display: flex; background: #e0f2fe; padding: 6px 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #93c5fd; width: 100% !important; flex-direction: column; gap: 4px; box-sizing: border-box;">  
+      <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; gap: 6px;">
+        <label style="color: #0369a1; font-weight: bold; font-size: 0.8em; white-space: nowrap; flex: 1;">Bord blindage bord rail (m)</label>
+        <input type="number" id="dist_blindage" step="any" style="width: 75px !important; padding: 4px; border-radius: 4px; border: 1px solid #ccc; text-align: center;" onclick="this.select()" oninput="calculer()">
+      </div>
+
+      <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; gap: 6px; margin-top: 4px;">
+        <label style="color: #0369a1; font-weight: bold; font-size: 0.8em; white-space: nowrap; flex: 1;">BLINDAGE</label>
+        <div style="display: flex; gap: 8px; align-items: center; flex: 1; justify-content: flex-end;">
+          <label style="font-size: 0.75em; color: #0369a1; font-weight: normal; display: flex; align-items: center; gap: 3px; cursor: pointer; margin: 0; width: 85px;">
+            <input type="radio" name="statut_blindage" value="Conforme" onchange="calculer()"> Conforme
+          </label>
+          <label style="font-size: 0.75em; color: #dc2626; font-weight: normal; display: flex; align-items: center; gap: 3px; cursor: pointer; margin: 0; width: 85px;">
+            <input type="radio" name="statut_blindage" value="Non conforme" onchange="calculer()"> Non conf.
+          </label>
+        </div>
+      </div>
+      
+      <div id="bloc_traverse_nit" class="row" style="display: none;">  
+        <div class="field"><label>Traverse</label><input type="number" id="LT" value="40" oninput="calculer()"></div>  
+        <div class="field">
+          <label>Sol-->Massif</label>
+          <div style="display:flex; gap:5px;">
+            <button type="button" onclick="toggleSignSOL()">±</button>
+            <input type="number" id="SOL" step="any" value="0" oninput="calculer()" style="flex:1;">
           </div>
-          <div id="bloc-S" style="display: none;">
-            <input type="text" id="valP_S" oninput="gérerVisibilitéP()">
-            <span class="ref" id="P_ref_S"></span>
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td class="cotes-label">Réf.</td>
-        <td><span class="ref" id="F_ref"></span></td>
-        <td><span class="ref" id="SUP_ref"></span></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-</div>
+        </div>
+        <div class="field"><label>NiT-->Hbis</label><input type="number" id="NIT" readonly></div>  
+      </div>
 
-<div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #ffeba2; width: 95% !important; flex-direction: column; gap: 8px;">  
-  <div class="row" style="display: flex; justify-content: space-between; width: 100%;">
-    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">A (cm)</label><input type="number" id="A_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
-    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">B (cm)</label><input type="number" id="B_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
-    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Encastrement</label><input type="number" id="H_carotte" readonly style="background: #e9ecef; cursor: not-allowed;"></div>
-  </div>
-  <div class="row" style="display: flex; justify-content: start; gap: 15px; width: 100%;">
-    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Plus petit e1(cm)</label><input type="number" id="E1_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();"></div>
-    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Plus petit e2(cm)</label><input type="number" id="E2_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();"></div>
-    <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">P (cm)</label><input type="number" id="P_carotte" readonly style="background: #e9ecef; cursor: not-allowed;"></div>
-  </div>
-  <div id="info_echantillon_bloc" style="margin: 10px 0; padding: 8px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; text-align: center; font-size: 0.85em;">
-    <span style="color: #666;">Profilé : </span><span id="display_nom" style="font-weight:bold; color:#000;">-</span> | 
-    <span style="color: #666;">Larg : </span><span id="display_larg" style="font-weight:bold; color:#d97706;">0</span> mm | 
-    <span style="color: #666;">Prof : </span><span id="display_prof" style="font-weight:bold; color:#d97706;">0</span> mm
-  </div>
-  <div id="calculs_carotte_grid" style="display: none; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; font-size: 0.8em;">
-    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e1 Cote A:↕ <span id="calc_S1" style="font-weight:bold;">0.00</span></div>
-    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e1 Cote B:↔ <span id="calc_S2" style="font-weight:bold;">0.00</span></div>
-    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote A:↕ <span id="calc_S3" style="font-weight:bold;">0.00</span></div>
-    <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote B:↔ <span id="calc_S4" style="font-weight:bold;">0.00</span></div>
-  </div> 
-</div> 
-  
-<div id="bloc_saisie_blindage" style="display: none; background: #e0f2fe; padding: 6px 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #93c5fd; width: 95% !important; flex-direction: column; gap: 4px;">  
-  <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; gap: 6px;">
-    <label style="color: #0369a1; font-weight: bold; font-size: 0.8em; white-space: nowrap; flex: 1;">Bord blindage bord rail (m)</label>
-    <input type="number" id="dist_blindage" step="any" style="width: 75px !important; padding: 4px; border-radius: 4px; border: 1px solid #ccc; text-align: center;" onclick="this.select()" oninput="calculer()">
-  </div>
+      <div id="alerte_blindage_bloc" style="margin-top: 2px; font-size: 0.85em; font-weight: bold; text-align: left;"></div>
+    </div>
 
-<div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; gap: 6px; margin-top: 4px;">
-    <label style="color: #0369a1; font-weight: bold; font-size: 0.8em; white-space: nowrap; flex: 1;">BLINDAGE</label>
-    <div style="display: flex; gap: 8px; align-items: center; flex: 1; justify-content: flex-end;">
-      <label style="font-size: 0.75em; color: #0369a1; font-weight: normal; display: flex; align-items: center; gap: 3px; cursor: pointer; margin: 0; width: 85px;">
-        <input type="radio" name="statut_blindage" value="Conforme" onchange="calculer()"> Conforme
-      </label>
-      <label style="font-size: 0.75em; color: #dc2626; font-weight: normal; display: flex; align-items: center; gap: 3px; cursor: pointer; margin: 0; width: 85px;">
-        <input type="radio" name="statut_blindage" value="Non conforme" onchange="calculer()"> Non conf.
-      </label>
+    <!-- Bloc Carotte -->
+    <div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 8px; border: 1px solid #ffeba2; width: 100% !important; flex-direction: column; gap: 8px; box-sizing: border-box;">  
+      <div class="row" style="display: flex; justify-content: space-between; width: 100%;">
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">A (cm)</label><input type="number" id="A_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">B (cm)</label><input type="number" id="B_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Encastrement</label><input type="number" id="H_carotte" readonly style="background: #e9ecef; cursor: not-allowed;"></div>
+      </div>
+      <div class="row" style="display: flex; justify-content: start; gap: 15px; width: 100%;">
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Plus petit e1(cm)</label><input type="number" id="E1_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();"></div>
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Plus petit e2(cm)</label><input type="number" id="E2_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();"></div>
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">P (cm)</label><input type="number" id="P_carotte" readonly style="background: #e9ecef; cursor: not-allowed;"></div>
+      </div>
+      <div id="info_echantillon_bloc" style="margin: 10px 0; padding: 8px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; text-align: center; font-size: 0.85em;">
+        <span style="color: #666;">Profilé : </span><span id="display_nom" style="font-weight:bold; color:#000;">-</span> |  
+        <span style="color: #666;">Larg : </span><span id="display_larg" style="font-weight:bold; color:#d97706;">0</span> mm |  
+        <span style="color: #666;">Prof : </span><span id="display_prof" style="font-weight:bold; color:#d97706;">0</span> mm
+      </div>
+      <div id="calculs_carotte_grid" style="display: none; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; font-size: 0.8em;">
+        <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e1 Cote A:↕ <span id="calc_S1" style="font-weight:bold;">0.00</span></div>
+        <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e1 Cote B:↔ <span id="calc_S2" style="font-weight:bold;">0.00</span></div>
+        <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote A:↕ <span id="calc_S3" style="font-weight:bold;">0.00</span></div>
+        <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote B:↔ <span id="calc_S4" style="font-weight:bold;">0.00</span></div>
+      </div>  
     </div>
   </div>
-  
-  <div id="bloc_traverse_nit" class="row" style="display: none;">  
-  <div class="field"><label>Traverse</label><input type="number" id="LT" value="40" oninput="calculer()"></div>  
-  <div class="field">
-    <label>Sol-->Massif</label>
-    <div style="display:flex; gap:5px;">
-      <button type="button" onclick="toggleSignSOL()">±</button>
-      <input type="number" id="SOL" step="any" value="0" oninput="calculer()" style="flex:1;">
-    </div>
-  </div>
-  <div class="field"><label>NiT-->Hbis</label><input type="number" id="NIT" readonly></div>  
-</div>
-
-  <div id="alerte_blindage_bloc" style="margin-top: 2px; font-size: 0.85em; font-weight: bold; text-align: left;"></div>
-</div>
+</details>
 
 <div class="result" style="margin-top: 10px; padding: 8px; border: 1px dashed #bbb; border-radius: 8px; background: #fafafa;">
   <div style="display: flex; justify-content: space-between; margin-bottom: 4px; flex-wrap: wrap; gap: 5px;">
@@ -268,6 +278,7 @@
     <span id="display_vol_carotte" style="display: none;">🧱 Béton Net sans 🥕: <span id="vol_carotte" style="color: #d97706; font-weight: bold;">0.00 m³</span></span>
   </div>
 </div>
+
 <div class="section collapsed">
   <div class="section-title" onclick="toggleSection('sec-bl-beton')">
     <span>🧾 BL-BÉTON</span>
@@ -290,6 +301,8 @@
     <div id="bl-liste"></div>
   </div>
 </div>
+
+<!-- Bloc d'alertes en bas -->
 <div class="section collapsed" id="sec-alertes-wrap">
   <div class="section-title" onclick="toggleSection('sec-alertes')">
     <span>🚨 Alertes</span>
@@ -313,17 +326,18 @@
   </div>   
 </div>  
 
-
-
-<div class="section collapsed">
-  <div class="section-title" onclick="toggleSection('sec-signature')">
-    <span>👤 Rédacteur</span>
-    <span class="section-arrow" id="arrow-sec-signature">▾</span>
-  </div>
-  <div class="section-content" id="sec-signature">
-    <div class="result" style="margin-top: 0;">
-      <input type="text" id="nomRedacteur" placeholder="Nom du rédacteur" oninput="this.value = this.value.toUpperCase();" style="width:100%; margin-bottom:6px; text-transform: uppercase;">
-      <input type="email" id="emailRedacteur" placeholder="Email du rédacteur" oninput="this.value = this.value.toLowerCase();" style="width:100%; margin-bottom:0;">
+<!-- Bloc rédacteur masqué pour l'écran mais disponible pour l'export PDF -->
+<div id="bloc-redacteur" style="display: none;">
+  <div class="section collapsed">
+    <div class="section-title" onclick="toggleSection('sec-signature')">
+      <span>👤 Rédacteur</span>
+      <span class="section-arrow" id="arrow-sec-signature">▾</span>
+    </div>
+    <div class="section-content" id="sec-signature">
+      <div class="result" style="margin-top: 0;">
+        <input type="text" id="nomRedacteur" placeholder="Nom du rédacteur" oninput="this.value = this.value.toUpperCase();" style="width:100%; margin-bottom:6px; text-transform: uppercase;">
+        <input type="email" id="emailRedacteur" placeholder="Email du rédacteur" oninput="this.value = this.value.toLowerCase();" style="width:100%; margin-bottom:0;">
+      </div>
     </div>
   </div>
 </div>
