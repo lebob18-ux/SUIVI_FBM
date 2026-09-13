@@ -87,13 +87,13 @@
   </div>
 </div> 
 
-<!-- Chapitre 1 : Implantation / Échantillon / Arasement / Encastrement -->
-<details class="chapitre-implantation mb-2" open>
-  <summary class="fw-bold py-2 px-3 bg-light border rounded" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+<!-- Chapitre 1 : Implantation / Échantillon / Arasement / Encastrement (Fermé) -->
+<div class="section collapsed mb-2">
+  <div class="section-title" onclick="toggleSection('sec-implantation')">
     <span>📍 Imp/Echantillon/Arasement/Encastrement</span>
-    <span class="section-arrow">▾</span>
-  </summary>
-  <div class="p-3 border border-top-0 rounded-bottom">
+    <span class="section-arrow" id="arrow-sec-implantation">▾</span>
+  </div>
+  <div class="section-content" id="sec-implantation">
     <table class="cotes-table">
       <thead>
         <tr>
@@ -125,15 +125,15 @@
       </tbody>
     </table>
   </div>
-</details>
+</div>
 	
-<!-- Chapitre 2 : Cotes Fouille (A / B / H) -->
-<details class="chapitre-fouille mb-2" open>
-  <summary class="fw-bold py-2 px-3 bg-light border rounded" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+<!-- Chapitre 2 : Cotes Fouille (A / B / H) (Fermé) -->
+<div class="section collapsed mb-2">
+  <div class="section-title" onclick="toggleSection('sec-fouille')">
     <span>📐 Cotes Fouille (A / B / H)</span>
-    <span class="section-arrow">▾</span>
-  </summary>
-  <div class="p-3 border border-top-0 rounded-bottom">
+    <span class="section-arrow" id="arrow-sec-fouille">▾</span>
+  </div>
+  <div class="section-content" id="sec-fouille">
     <table class="cotes-table">
       <thead>
         <tr>
@@ -159,15 +159,15 @@
       </tbody>
     </table>
   </div>
-</details>
+</div>
 
-<!-- Chapitre 3 : Références (FRUIT / Position longitudinale) -->
-<details class="chapitre-references mb-2" open>
-  <summary class="fw-bold py-2 px-3 bg-light border rounded" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+<!-- Chapitre 3 : Références (FRUIT / Position longitudinale) (Fermé) -->
+<div class="section collapsed mb-2">
+  <div class="section-title" onclick="toggleSection('sec-references')">
     <span>🔗 Références (FRUIT / Position longitudinale)</span>
-    <span class="section-arrow">▾</span>
-  </summary>
-  <div class="p-3 border border-top-0 rounded-bottom">
+    <span class="section-arrow" id="arrow-sec-references">▾</span>
+  </div>
+  <div class="section-content" id="sec-references">
     <table class="cotes-table">
       <thead>
         <tr>
@@ -201,15 +201,15 @@
       </tbody>
     </table>
   </div>
-</details>
+</div>
 
-<!-- Chapitre 4 : Blindage -->
-<details class="chapitre-blindage mb-2" open>
-  <summary class="fw-bold py-2 px-3 bg-light border rounded" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+<!-- Chapitre 4 : Blindage & Carottage (Fermé) -->
+<div class="section collapsed mb-2">
+  <div class="section-title" onclick="toggleSection('sec-blindage')">
     <span>🛡️ Blindage & Carottage</span>
-    <span class="section-arrow">▾</span>
-  </summary>
-  <div class="p-3 border border-top-0 rounded-bottom">
+    <span class="section-arrow" id="arrow-sec-blindage">▾</span>
+  </div>
+  <div class="section-content" id="sec-blindage">
     <!-- Bloc Blindage -->
     <div id="bloc_saisie_blindage" style="display: flex; background: #e0f2fe; padding: 6px 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #93c5fd; width: 100% !important; flex-direction: column; gap: 4px; box-sizing: border-box;">  
       <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; gap: 6px;">
@@ -269,7 +269,7 @@
       </div>  
     </div>
   </div>
-</details>
+</div>
 
 <div class="result" style="margin-top: 10px; padding: 8px; border: 1px dashed #bbb; border-radius: 8px; background: #fafafa;">
   <div style="display: flex; justify-content: space-between; margin-bottom: 4px; flex-wrap: wrap; gap: 5px;">
@@ -279,7 +279,8 @@
   </div>
 </div>
 
-<div class="section collapsed">
+<!-- BL-BÉTON (Fermé) -->
+<div class="section collapsed mb-2">
   <div class="section-title" onclick="toggleSection('sec-bl-beton')">
     <span>🧾 BL-BÉTON</span>
     <span class="section-arrow" id="arrow-sec-bl-beton">▾</span>
@@ -302,14 +303,14 @@
   </div>
 </div>
 
-<!-- Bloc d'alertes en bas -->
-<div class="section collapsed" id="sec-alertes-wrap">
+<!-- Bloc d'alertes en bas (Fermé) -->
+<div class="section collapsed mb-2" id="sec-alertes-wrap">
   <div class="section-title" onclick="toggleSection('sec-alertes')">
     <span>🚨 Alertes</span>
     <span class="section-arrow" id="arrow-sec-alertes">▾</span>
   </div>
   <div class="section-content" id="sec-alertes">
-    <div class="result">  
+    <div class="result" style="margin:0;">  
       <div id="tbf"></div>  
       <div id="ltv" style="margin-top:4px; font-weight:bold; color:teal;"></div>
       <div id="I_LTV" style="margin-top:4px; font-weight:bold;"></div>  
