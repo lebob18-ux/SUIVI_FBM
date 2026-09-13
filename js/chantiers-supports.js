@@ -16,7 +16,7 @@ function resetChamps() {
     if (typeof calculer === "function") calculer();
 }
 
-/* --- 2. INITIALISATION --- */
+/* --- 2. INITIALISATION DES ÉCOUTEURS D'INTERFACE --- */
 document.addEventListener("DOMContentLoaded", function () {
     const chkCarotte = document.getElementById("carotte");
     const chkBlindage = document.getElementById("blindageCheck");
@@ -61,6 +61,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    window.refreshBlocs = refreshBlocs;
+    window.verifierEtatEtapes = verifierEtatEtapes;
+
     refreshBlocs();
     verifierEtatEtapes();
 });
@@ -81,7 +84,7 @@ document.addEventListener("focusin", function(e) {
   }
 });
 
-/* --- 4. GESTION SUPPORTS & ECHANTILLONS --- */
+/* --- 4. GESTION SUPPORTS & ECHANTILLONS (SYNCHRO DESCENDANTE) --- */
 
 async function chargerSupport() {
     const selectSupport = document.getElementById("selectSupport");
@@ -105,12 +108,11 @@ async function chargerSupport() {
             dataSupabase = data;
         }
     } catch (err) {
-        console.warn("Impossible de récupérer les états spécifiques depuis Supabase, utilisation des valeurs par défaut.");
+        console.warn("Erreur récupération Supabase:", err);
     }
 
     const valOuVide = (val) => (val !== undefined && val !== null && val !== "") ? val : "";
 
-    // Analyse unifiée des formats texte ("OUI", "true", "1", etc.)
     const estVraiTexte = (val) => {
         if (val === true || val === 1 || val === "1") return true;
         if (typeof val === "string") {
@@ -120,7 +122,7 @@ async function chargerSupport() {
         return false;
     };
 
-    // Remplissage des inputs
+    // Remplissage des inputs standards
     document.getElementById("valF").value = valOuVide(dataBase.F);
     document.getElementById("valSUP").value = valOuVide(dataBase.SUP);
     document.getElementById("I").value = valOuVide(dataBase.I);
@@ -165,7 +167,9 @@ async function chargerSupport() {
         appliquerEchantillon(dataBase.ECH);
     }
     
-    // Restauration des états depuis Supabase (format texte)
+    document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
+
+    // 1. Application Blindage et Carotte
     const chkBlindage = document.getElementById("blindageCheck");
     if (chkBlindage) {
         chkBlindage.checked = (dataSupabase.blind !== undefined && dataSupabase.blind !== null) ? estVraiTexte(dataSupabase.blind) : (dataBase.BLIND === "OUI");
@@ -176,13 +180,17 @@ async function chargerSupport() {
         chkCarotte.checked = (dataSupabase.carotte !== undefined && dataSupabase.carotte !== null) ? estVraiTexte(dataSupabase.carotte) : (dataBase.CARO === "OUI");
     }
 
-    document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
-
+    // 2. Application Hors P1
     const chkHorsP1 = document.getElementById("check_hors_p1");
     if (chkHorsP1) {
         chkHorsP1.checked = (dataSupabase.hors_p1 !== undefined && dataSupabase.hors_p1 !== null) ? estVraiTexte(dataSupabase.hors_p1) : false;
     }
 
+    // 3. Actualisation des blocs et déverrouillage des étapes AVANT de leur affecter leur valeur
+    if (typeof window.refreshBlocs === "function") window.refreshBlocs();
+    if (typeof window.verifierEtatEtapes === "function") window.verifierEtatEtapes();
+
+    // 4. Application des Étapes (Fouille, Béton, Matage) après déverrouillage
     const checkFouille = document.getElementById("check_fouille");
     const checkBeton = document.getElementById("check_beton");
     const checkMatage = document.getElementById("check_matage");
@@ -197,17 +205,12 @@ async function chargerSupport() {
         checkMatage.checked = (dataSupabase.etape_matage !== undefined && dataSupabase.etape_matage !== null) ? estVraiTexte(dataSupabase.etape_matage) : true;
     }
 
+    // 5. Statut
     const statutActif = dataSupabase.statut || dataBase.statut_blindage;
     const radiosStatut = document.querySelectorAll('input[name="statut_blindage"]');
     radiosStatut.forEach(radio => {
         radio.checked = (statutActif && radio.value === statutActif);
     });
-
-    if (typeof refreshBlocs === "function") refreshBlocs();
-    
-    // Déclenchement pour propager la logique d'interface
-    if (chkHorsP1) chkHorsP1.dispatchEvent(new Event('change'));
-    if (chkBlindage) chkBlindage.dispatchEvent(new Event('change'));
 
     if (typeof restaurerLocal === "function") restaurerLocal();
     if (typeof rechargerBLsSupport === "function") rechargerBLsSupport();
@@ -259,10 +262,6 @@ function appliquerEchantillon(ech) {
     document.getElementById("display_prof").innerText = cle;
     calculer();
   }
-}
-
-function gérerVisibilitéP() {
-    calculer();
 }
 
 function initChantiers() {
@@ -382,7 +381,7 @@ function gererSaisieEchantillon() {
   calculer();
 }
 
-/* --- 5. SYNCHRONISATION DESCENDANTE (INTERFACE -> SUPABASE) --- */
+/* --- 5. SYNCHRONISATION MONTANTE (INTERFACE -> SUPABASE) --- */
 document.addEventListener("DOMContentLoaded", function () {
     const champsACocher = ["check_hors_p1", "check_fouille", "check_beton", "check_matage", "blindageCheck", "carotte"];
 
@@ -404,7 +403,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 else if (id === "carotte") nomChampSupabase = "carotte";
                 else nomChampSupabase = id.replace("check_", "etape_");
 
-                // Envoi systématique d'une chaîne texte "OUI" ou "NON" pour TOUS ces champs
                 const valeurCochee = this.checked ? "OUI" : "NON";
 
                 try {
@@ -415,7 +413,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         .eq('support', supportNom);
 
                     if (errSelect) {
-                        console.error("Erreur lors de la vérification :", errSelect.message);
+                        console.error("Erreur vérification :", errSelect.message);
                         return;
                     }
 
