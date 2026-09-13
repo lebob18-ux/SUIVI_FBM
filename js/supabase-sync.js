@@ -93,9 +93,9 @@ async function synchroniserSupportActuel() {
     console.log(`✅ Support ${numSupportInput} (${nomChantier}) synchronisé avec succès dans Supabase.`);
     return true;
 
-  } catch (err) {
-    console.error("❌ Erreur lors de la synchronisation Supabase :", err.message);
-    alert("⚠️ Avertissement : Les données réelles n'ont pas pu être enregistrées dans Supabase, mais le PDF va quand même se générer.");
+} catch (err) {
+    console.error("❌ Erreur lors de la synchronisation Supabase :", err);
+    alert("⚠️ Erreur Supabase : " + (err.message || JSON.stringify(err)));
     return false;
   }
 }
