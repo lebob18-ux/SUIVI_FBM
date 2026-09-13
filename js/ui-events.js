@@ -20,6 +20,7 @@ function resetChamps() {
 document.addEventListener("DOMContentLoaded", function () {
     const chkCarotte = document.getElementById("carotte");
     const chkBlindage = document.getElementById("blindageCheck");
+    const chkHorsP1 = document.getElementById("check_hors_p1");
 
     // Éléments des 3 étapes
     const checkFouille = document.getElementById("check_fouille");
@@ -31,14 +32,17 @@ document.addEventListener("DOMContentLoaded", function () {
         if (document.getElementById("bloc_saisie_blindage")) document.getElementById("bloc_saisie_blindage").style.display = chkBlindage?.checked ? "flex" : "none";
     }
 
-    function verifierBlindageEtapes() {
-        if (chkBlindage && !chkBlindage.checked) {
-            // Si blindage est décoché, on force les 3 en true et on désactive
+    function verifierEtatEtapes() {
+        const estBlindage = chkBlindage ? chkBlindage.checked : false;
+        const estHorsP1 = chkHorsP1 ? chkHorsP1.checked : false;
+
+        if (!estBlindage && !estHorsP1) {
+            // Ni blindage ni hors P1 : on force les 3 en true et on désactive
             if (checkFouille) { checkFouille.checked = true; checkFouille.disabled = true; }
             if (checkBeton) { checkBeton.checked = true; checkBeton.disabled = true; }
             if (checkMatage) { checkMatage.checked = true; checkMatage.disabled = true; }
         } else {
-            // Si blindage est coché, on redonne la main
+            // Si blindage ou hors P1 est actif : on redonne la main pour récupérer les valeurs
             if (checkFouille) checkFouille.disabled = false;
             if (checkBeton) checkBeton.disabled = false;
             if (checkMatage) checkMatage.disabled = false;
@@ -50,13 +54,19 @@ document.addEventListener("DOMContentLoaded", function () {
     if (chkBlindage) {
         chkBlindage.addEventListener("change", function() {
             refreshBlocs();
-            verifierBlindageEtapes();
+            verifierEtatEtapes();
+        });
+    }
+
+    if (chkHorsP1) {
+        chkHorsP1.addEventListener("change", function() {
+            verifierEtatEtapes();
         });
     }
 
     // Appel initial au chargement
     refreshBlocs();
-    verifierBlindageEtapes();
+    verifierEtatEtapes();
 });
 
 /* --- 3. CHARGEMENT INITIAL --- */
