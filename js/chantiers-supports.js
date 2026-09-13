@@ -96,7 +96,7 @@ async function chargerSupport() {
     try {
         const { data, error } = await supabaseClient
             .from('blindage')
-            .select('hors_p1, etape_fouille, etape_beton, etape_matage, blindage, carotte, statut_blindage')
+            .select('hors_p1, etape_fouille, etape_beton, etape_matage, blind, carotte, statut')
             .eq('chantier', nomChantier)
             .eq('support', supportNom)
             .maybeSingle();
@@ -110,13 +110,11 @@ async function chargerSupport() {
 
     const valOuVide = (val) => (val !== undefined && val !== null && val !== "") ? val : "";
 
-    // Convertisseur spécifique pour les booléens Supabase (hors_p1, etape_*)
     const parseBooleenStricte = (val) => {
         if (val === true || val === 1 || val === "1" || val === "true") return true;
         return false;
     };
 
-    // Convertisseur texte pour blindage / carotte
     const estVraiTexte = (val) => {
         if (val === true || val === 1 || val === "1") return true;
         if (typeof val === "string") {
@@ -126,7 +124,6 @@ async function chargerSupport() {
         return false;
     };
 
-    // Remplissage des inputs
     document.getElementById("valF").value = valOuVide(dataBase.F);
     document.getElementById("valSUP").value = valOuVide(dataBase.SUP);
     document.getElementById("I").value = valOuVide(dataBase.I);
@@ -171,19 +168,17 @@ async function chargerSupport() {
         appliquerEchantillon(dataBase.ECH);
     }
     
-    // blindage = text dans Supabase
-    document.getElementById("blindageCheck").checked = (dataSupabase.blindage !== undefined && dataSupabase.blindage !== null) ? estVraiTexte(dataSupabase.blindage) : (dataBase.BLIND === "OUI");
+    // Utilisation de la colonne 'blind' (format text)
+    document.getElementById("blindageCheck").checked = (dataSupabase.blind !== undefined && dataSupabase.blind !== null) ? estVraiTexte(dataSupabase.blind) : (dataBase.BLIND === "OUI");
     document.getElementById("carotte").checked = (dataBase.CARO === "OUI");
     document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
 
-    // hors_p1 = bool dans Supabase
     const chkHorsP1 = document.getElementById("check_hors_p1");
     if (chkHorsP1) {
         const valHorsP1 = dataSupabase.hors_p1 !== undefined && dataSupabase.hors_p1 !== null ? dataSupabase.hors_p1 : dataBase.hors_p1;
         chkHorsP1.checked = parseBooleenStricte(valHorsP1);
     }
 
-    // etape_* = bool dans Supabase
     const checkFouille = document.getElementById("check_fouille");
     const checkBeton = document.getElementById("check_beton");
     const checkMatage = document.getElementById("check_matage");
@@ -196,7 +191,7 @@ async function chargerSupport() {
     if (checkBeton) checkBeton.checked = (valBeton !== undefined && valBeton !== null) ? parseBooleenStricte(valBeton) : true;
     if (checkMatage) checkMatage.checked = (valMatage !== undefined && valMatage !== null) ? parseBooleenStricte(valMatage) : true;
 
-    const statutActif = dataSupabase.statut_blindage || dataBase.statut_blindage;
+    const statutActif = dataSupabase.statut || dataBase.statut_blindage;
     const radiosStatut = document.querySelectorAll('input[name="statut_blindage"]');
     radiosStatut.forEach(radio => {
         radio.checked = (statutActif && radio.value === statutActif);
@@ -216,7 +211,7 @@ const aliasEchantillon = {
 "HE180A":"HEA180","HEA180":"HEA180","HE200A":"HEA200","HEA200":"HEA200",
 "HE220A":"HEA220","HEA220":"HEA220","HE240A":"HEA240","HEA240":"HEA240",
 "HE300A":"HEA300","HEA300":"HEA300","HE320A":"HEA320","HEA320":"HEA320",
-"HE220B":"HEB220","HEB220":"HEB220","HE240B":"HEB240","HEB240":"HEB240",
+"HE220B":"HEB220","HEB220":"HEB220","HE240B":"HEB240","HEB240":"HEA240",
 "HE260B":"HEB260","HEB260":"HEB260","HE300B":"HEB300","HEB300":"HEB300",
 "HE320B":"HEB320","HEB320":"HEB320","JHE280A":"JHEA280","JHEA280":"JHEA280",
 "JHE320A":"JHEA320","JHEA320":"JHEA320","JHE280B":"JHEB280","JHEB280":"JHEB280",
@@ -398,15 +393,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 
                 let nomChampSupabase = "";
                 if (id === "check_hors_p1") nomChampSupabase = "hors_p1";
-                else if (id === "blindageCheck") nomChampSupabase = "blindage";
+                else if (id === "blindageCheck") nomChampSupabase = "blind"; // Colonne 'blind' en texte
                 else nomChampSupabase = id.replace("check_", "etape_");
 
-                // Format adapté : true/false (booléen pur) pour hors_p1 et les étapes, "true"/"false" (texte) pour blindage
+                // Texte ("OUI"/"NON") pour blind, booléen (true/false) pour les autres
                 let valeurCochee;
                 if (id === "blindageCheck") {
-                    valeurCochee = this.checked ? "true" : "false"; // text
+                    valeurCochee = this.checked ? "OUI" : "NON";
                 } else {
-                    valeurCochee = this.checked ? true : false; // bool
+                    valeurCochee = this.checked ? true : false;
                 }
 
                 try {
