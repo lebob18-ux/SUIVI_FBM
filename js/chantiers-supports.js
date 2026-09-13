@@ -88,15 +88,17 @@ document.addEventListener("focusin", function(e) {
 
 async function chargerSupport() {
     const selectSupport = document.getElementById("selectSupport");
-    const supportNom = selectSupport.value;
+    const supportNom = selectSupport ? selectSupport.value.trim() : "";
     const chantierSelect = document.getElementById("selectChantier");
-    const nomChantier = chantierSelect ? chantierSelect.value : "";
+    const nomChantier = chantierSelect ? chantierSelect.value.trim() : "";
 
-    const dataBase = baseSupports.find(s => s.support === supportNom);
+    const dataBase = baseSupports.find(s => String(s.support).trim() === supportNom);
     if (!dataBase) return;
 
     let dataSupabase = {};
     try {
+        console.log(`🔍 Recherche Supabase pour Chantier: "${nomChantier}" | Support: "${supportNom}"`);
+        
         const { data, error } = await supabaseClient
             .from('blindage')
             .select('hors_p1, etape_fouille, etape_beton, etape_matage, blind, carotte, statut')
@@ -104,11 +106,16 @@ async function chargerSupport() {
             .eq('support', supportNom)
             .maybeSingle();
         
-        if (!error && data) {
+        if (error) {
+            console.error("❌ Erreur SQL Supabase:", error.message);
+        } else if (data) {
+            console.log("✅ Données trouvées dans Supabase:", data);
             dataSupabase = data;
+        } else {
+            console.warn("⚠️ Aucune ligne existante dans Supabase pour ce support. Utilisation des valeurs par défaut.");
         }
     } catch (err) {
-        console.warn("Erreur récupération Supabase:", err);
+        console.warn("❌ Erreur réseau Supabase:", err);
     }
 
     const valOuVide = (val) => (val !== undefined && val !== null && val !== "") ? val : "";
@@ -169,7 +176,7 @@ async function chargerSupport() {
     
     document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
 
-    // 1. Application Blindage et Carotte
+    // Application Blindage et Carotte
     const chkBlindage = document.getElementById("blindageCheck");
     if (chkBlindage) {
         chkBlindage.checked = (dataSupabase.blind !== undefined && dataSupabase.blind !== null) ? estVraiTexte(dataSupabase.blind) : (dataBase.BLIND === "OUI");
@@ -180,17 +187,17 @@ async function chargerSupport() {
         chkCarotte.checked = (dataSupabase.carotte !== undefined && dataSupabase.carotte !== null) ? estVraiTexte(dataSupabase.carotte) : (dataBase.CARO === "OUI");
     }
 
-    // 2. Application Hors P1
+    // Application Hors P1
     const chkHorsP1 = document.getElementById("check_hors_p1");
     if (chkHorsP1) {
         chkHorsP1.checked = (dataSupabase.hors_p1 !== undefined && dataSupabase.hors_p1 !== null) ? estVraiTexte(dataSupabase.hors_p1) : false;
     }
 
-    // 3. Actualisation des blocs et déverrouillage des étapes AVANT de leur affecter leur valeur
+    // Actualisation des blocs et déverrouillage des étapes
     if (typeof window.refreshBlocs === "function") window.refreshBlocs();
     if (typeof window.verifierEtatEtapes === "function") window.verifierEtatEtapes();
 
-    // 4. Application des Étapes (Fouille, Béton, Matage) après déverrouillage
+    // Application des Étapes (Fouille, Béton, Matage)
     const checkFouille = document.getElementById("check_fouille");
     const checkBeton = document.getElementById("check_beton");
     const checkMatage = document.getElementById("check_matage");
@@ -205,7 +212,7 @@ async function chargerSupport() {
         checkMatage.checked = (dataSupabase.etape_matage !== undefined && dataSupabase.etape_matage !== null) ? estVraiTexte(dataSupabase.etape_matage) : true;
     }
 
-    // 5. Statut
+    // Statut
     const statutActif = dataSupabase.statut || dataBase.statut_blindage;
     const radiosStatut = document.querySelectorAll('input[name="statut_blindage"]');
     radiosStatut.forEach(radio => {
