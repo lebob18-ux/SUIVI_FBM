@@ -97,7 +97,8 @@ async function chargerSupport() {
     const dataBase = baseSupports.find(s => s.support === supportNom);
     if (!dataBase) return;
 
-    // 1. Récupération des données fraîches depuis Supabase
+
+// 1. Récupération des données fraîches depuis Supabase (avec maybeSingle pour éviter l'erreur 400 si la ligne n'existe pas)
     let dataSupabase = {};
     try {
         const { data, error } = await supabaseClient
@@ -105,7 +106,7 @@ async function chargerSupport() {
             .select('hors_p1, etape_fouille, etape_beton, etape_matage, blindage, carotte, statut_blindage')
             .eq('chantier', nomChantier)
             .eq('support', supportNom)
-            .single();
+            .maybeSingle(); // <--- Remplacé .single() par .maybeSingle()
         
         if (!error && data) {
             dataSupabase = data;
