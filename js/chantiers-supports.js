@@ -261,6 +261,11 @@ function filtrerSupports() {
         return valEff !== 1 && String(valEff).trim() !== "1";
     });
     
+    // 🟢 AJOUT DU TRI CROISSANT (avec prise en compte des chiffres et lettres)
+    filtres.sort((a, b) => {
+        return String(a.support).localeCompare(String(b.support), 'fr', { numeric: true, sensitivity: 'base' });
+    });
+
     filtres.forEach(s => {
         let opt = document.createElement("option");
         opt.value = s.support;
