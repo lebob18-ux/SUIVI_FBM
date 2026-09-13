@@ -85,6 +85,7 @@ document.addEventListener("focusin", function(e) {
 });
 
 /* --- 4. GESTION SUPPORTS & ECHANTILLONS (SYNCHRO DESCENDANTE) --- */
+
 async function chargerSupport() {
     const selectSupport = document.getElementById("selectSupport");
     const supportNom = selectSupport ? selectSupport.value.trim() : "";
@@ -98,7 +99,7 @@ async function chargerSupport() {
     try {
         const { data, error } = await supabaseClient
             .from('blindage')
-            .select('hors_p1, etape_fouille, etape_beton, etape_matage, blind, caro, statut')
+            .select('hors_p1, etape_fouille, etape_beton, etape_matage, blind, caro')
             .eq('chantier', nomChantier)
             .eq('support', supportNom)
             .limit(1);
@@ -106,7 +107,10 @@ async function chargerSupport() {
         if (error) {
             console.error("❌ Erreur SQL Supabase:", error.message);
         } else if (data && data.length > 0) {
+            console.log("✅ Données trouvées dans Supabase :", data[0]);
             dataSupabase = data[0];
+        } else {
+            console.warn("⚠️ Aucune ligne enregistrée pour ce support dans Supabase.");
         }
     } catch (err) {
         console.warn("❌ Erreur réseau Supabase:", err);
@@ -170,7 +174,7 @@ async function chargerSupport() {
     
     document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
 
-    // Application Blindage et Carotte (lié à la colonne 'caro' de Supabase)
+    // Application Blindage (colonne 'blind') et Carotte (colonne 'caro')
     const chkBlindage = document.getElementById("blindageCheck");
     if (chkBlindage) {
         chkBlindage.checked = (dataSupabase.blind !== undefined && dataSupabase.blind !== null) ? estVraiTexte(dataSupabase.blind) : (dataBase.BLIND === "OUI");
@@ -207,7 +211,7 @@ async function chargerSupport() {
     }
 
     // Statut
-    const statutActif = dataSupabase.statut || dataBase.statut_blindage;
+    const statutActif = dataBase.statut_blindage;
     const radiosStatut = document.querySelectorAll('input[name="statut_blindage"]');
     radiosStatut.forEach(radio => {
         radio.checked = (statutActif && radio.value === statutActif);
@@ -217,7 +221,6 @@ async function chargerSupport() {
     if (typeof rechargerBLsSupport === "function") rechargerBLsSupport();
     calculer();
 }
-/* --- 4. GESTION SUPPORTS & ECHANTILLONS (SYNCHRO DESCENDANTE) --- */
 
 const aliasEchantillon = {
 "HE180A":"HEA180","HEA180":"HEA180","HE200A":"HEA200","HEA200":"HEA200",
@@ -396,13 +399,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 
                 if (!selectSupport || !selectSupport.value || !chantierSelect || !chantierSelect.value) return;
 
-                const supportNom = selectSupport.value;
-                const nomChantier = chantierSelect.value;
+                const supportNom = selectSupport.value.trim();
+                const nomChantier = chantierSelect.value.trim();
                 
                 let nomChampSupabase = "";
                 if (id === "check_hors_p1") nomChampSupabase = "hors_p1";
                 else if (id === "blindageCheck") nomChampSupabase = "blind";
-                else if (id === "carotte") nomChampSupabase = "carotte";
+                else if (id === "carotte") nomChampSupabase = "caro";
                 else nomChampSupabase = id.replace("check_", "etape_");
 
                 const valeurCochee = this.checked ? "OUI" : "NON";
