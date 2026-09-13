@@ -50,7 +50,7 @@ function chargerSupport() {
         blocS.style.display = "none";
     }
 
-    // 4. Échantillonnage et cases à cocher
+    // 4. Échantillonnage, cases à cocher et statut blindage
     if (typeof appliquerEchantillon === "function") {
         appliquerEchantillon(data.ECH);
     }
@@ -58,6 +58,12 @@ function chargerSupport() {
     document.getElementById("blindageCheck").checked = (data.BLIND === "OUI");
     document.getElementById("carotte").checked = (data.CARO === "OUI");
     document.getElementById("display_type").innerText = data.TYPE ? "🧊 " + data.TYPE : "";
+
+    // 🟢 Gestion de la sélection des boutons radio "statut_blindage"
+    const radiosStatut = document.querySelectorAll('input[name="statut_blindage"]');
+    radiosStatut.forEach(radio => {
+        radio.checked = (data.statut_blindage && radio.value === data.statut_blindage);
+    });
 
     // 5. Mise à jour finale
     if (typeof refreshBlocs === "function") refreshBlocs();
@@ -107,23 +113,23 @@ const aliasEchantillon = {
 const profilsEchantillon = {
 
 
-"HEA180":    { valeur: "180",     largeur: "171", nom: "HEA180"   },
-"HEA200":    { valeur: "200",     largeur: "190", nom: "HEA200"   },
-"HEA220":    { valeur: "220",     largeur: "210", nom: "HEA220"   },
-"HEA240":    { valeur: "240",     largeur: "230", nom: "HEA240"   },
-"HEA300":    { valeur: "300",     largeur: "290", nom: "HEA300"   },
-"HEA320":    { valeur: "300",     largeur: "310", nom: "HEA320"   },    
+"HEA180":    { valeur: "180",    largeur: "171", nom: "HEA180"   },
+"HEA200":    { valeur: "200",    largeur: "190", nom: "HEA200"   },
+"HEA220":    { valeur: "220",    largeur: "210", nom: "HEA220"   },
+"HEA240":    { valeur: "240",    largeur: "230", nom: "HEA240"   },
+"HEA300":    { valeur: "300",    largeur: "290", nom: "HEA300"   },
+"HEA320":    { valeur: "300",    largeur: "310", nom: "HEA320"   },    
 
-"HEB220":    { valeur: "220",     largeur: "220", nom: "HEB220"   },
-"HEB240":    { valeur: "240",     largeur: "240", nom: "HEB240"   },
-"HEB260":    { valeur: "260",     largeur: "260", nom: "HEB260"   },
-"HEB300":    { valeur: "300",     largeur: "300", nom: "HEB300"   },
-"HEB320":    { valeur: "300",     largeur: "320", nom: "HEB320"   }, 
+"HEB220":    { valeur: "220",    largeur: "220", nom: "HEB220"   },
+"HEB240":    { valeur: "240",    largeur: "240", nom: "HEB240"   },
+"HEB260":    { valeur: "260",    largeur: "260", nom: "HEB260"   },
+"HEB300":    { valeur: "300",    largeur: "300", nom: "HEB300"   },
+"HEB320":    { valeur: "300",    largeur: "320", nom: "HEB320"   }, 
 
-"JHEA280": { valeur: "280",     largeur: "820", nom: "JHEA280"  },
-"JHEA320": { valeur: "300",     largeur: "860", nom: "JHEA320"  },
-"JHEB280": { valeur: "280",     largeur: "830", nom: "JHEB280"  },
-"JHEB320": { valeur: "300",     largeur: "870", nom: "JHEB320"  },
+"JHEA280": { valeur: "280",    largeur: "820", nom: "JHEA280"  },
+"JHEA320": { valeur: "300",    largeur: "860", nom: "JHEA320"  },
+"JHEB280": { valeur: "280",    largeur: "830", nom: "JHEB280"  },
+"JHEB320": { valeur: "300",    largeur: "870", nom: "JHEB320"  },
   
   "Epingle":{ valeur: "Epingle", largeur: "0",   nom: "Epingle" }
 };
@@ -241,6 +247,10 @@ function resetSaisieAvantSupport() {
 
   document.getElementById("blindageCheck").checked = false;
   document.getElementById("carotte").checked = false;
+
+  // 🟢 Décocher les boutons radio du statut blindage lors du reset
+  document.querySelectorAll('input[name="statut_blindage"]').forEach(radio => radio.checked = false);
+
   if (window.refreshBlocs) window.refreshBlocs();
 
   calculer();
