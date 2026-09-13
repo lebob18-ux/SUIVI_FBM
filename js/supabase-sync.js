@@ -54,6 +54,12 @@ async function synchroniserSupportActuel() {
     const terreReel = document.getElementById("nb_big_bag_terre")?.value;
     const mignonetteReel = document.getElementById("nb_big_bag_mignonette")?.value;
 
+    // 🟢 5 quater. Récupération des états Hors P1 et des 3 étapes
+    const horsP1Val = document.getElementById("check_hors_p1")?.checked || false;
+    const etapeFouilleVal = document.getElementById("check_fouille")?.checked || false;
+    const etapeBetonVal = document.getElementById("check_beton")?.checked || false;
+    const etapeMatageVal = document.getElementById("check_matage")?.checked || false;
+
     // 6. Requête de mise à jour vers Supabase
     const { error } = await supabaseClient
       .from('blindage')
@@ -69,10 +75,14 @@ async function synchroniserSupportActuel() {
         p_reel: pSaisi ? parseFloat(pSaisi) : null,
         sup_reel: supReel ? parseFloat(supReel) : null,
         m3_reel: volReelNum,
-        terre: terreReel !== "" ? parseInt(terreReel, 10) : 0,          // 🟢 Ajout Big-Bag terre
-        mignonette: mignonetteReel !== "" ? parseInt(mignonetteReel, 10) : 0, // 🟢 Ajout Big-Bag mignonette
-        statut_blindage: statutBlindageVal, 
-        effectue: 1, 
+        terre: terreReel !== "" ? parseInt(terreReel, 10) : 0,         
+        mignonette: mignonetteReel !== "" ? parseInt(mignonetteReel, 10) : 0, 
+        statut_blindage: statutBlindageVal,
+        hors_p1: horsP1Val,                    // 🟢 Ajout Hors P1
+        etape_fouille: etapeFouilleVal,        // 🟢 Ajout Étape Fouille
+        etape_beton: etapeBetonVal,            // 🟢 Ajout Étape Béton
+        etape_matage: etapeMatageVal,          // 🟢 Ajout Étape Matage
+        effectue: 1,  
         date_exec: dateJour 
       })
       .eq('chantier', nomChantier)
