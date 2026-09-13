@@ -115,6 +115,7 @@ async function chargerSupport() {
         return false;
     };
 
+    // Analyse du champ texte 'blind' de Supabase (ex: "OUI", "true", "1", etc.)
     const estVraiTexte = (val) => {
         if (val === true || val === 1 || val === "1") return true;
         if (typeof val === "string") {
@@ -124,6 +125,7 @@ async function chargerSupport() {
         return false;
     };
 
+    // Remplissage des inputs standards
     document.getElementById("valF").value = valOuVide(dataBase.F);
     document.getElementById("valSUP").value = valOuVide(dataBase.SUP);
     document.getElementById("I").value = valOuVide(dataBase.I);
@@ -168,39 +170,52 @@ async function chargerSupport() {
         appliquerEchantillon(dataBase.ECH);
     }
     
-    // Utilisation de la colonne 'blind' (format text)
-    document.getElementById("blindageCheck").checked = (dataSupabase.blind !== undefined && dataSupabase.blind !== null) ? estVraiTexte(dataSupabase.blind) : (dataBase.BLIND === "OUI");
-    document.getElementById("carotte").checked = (dataBase.CARO === "OUI");
+    // --- RESTAURATION DES CASES À COCHER DEPUIS SUPABASE ---
+
+    // 1. Blindage (colonne texte 'blind')
+    const chkBlindage = document.getElementById("blindageCheck");
+    if (chkBlindage) {
+        const valBlind = dataSupabase.blind !== undefined && dataSupabase.blind !== null ? dataSupabase.blind : dataBase.BLIND;
+        chkBlindage.checked = estVraiTexte(valBlind);
+    }
+
+    // 2. Carotte
+    const chkCarotte = document.getElementById("carotte");
+    if (chkCarotte) {
+        chkCarotte.checked = (dataSupabase.carotte !== undefined && dataSupabase.carotte !== null) ? parseBooleenStricte(dataSupabase.carotte) : (dataBase.CARO === "OUI");
+    }
+
     document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
 
+    // 3. Hors P1 (colonne booléenne 'hors_p1')
     const chkHorsP1 = document.getElementById("check_hors_p1");
     if (chkHorsP1) {
         const valHorsP1 = dataSupabase.hors_p1 !== undefined && dataSupabase.hors_p1 !== null ? dataSupabase.hors_p1 : dataBase.hors_p1;
         chkHorsP1.checked = parseBooleenStricte(valHorsP1);
     }
 
+    // 4. Étapes (fouille, béton, matage)
     const checkFouille = document.getElementById("check_fouille");
     const checkBeton = document.getElementById("check_beton");
     const checkMatage = document.getElementById("check_matage");
 
-    const valFouille = dataSupabase.etape_fouille;
-    const valBeton = dataSupabase.etape_beton;
-    const valMatage = dataSupabase.etape_matage;
+    if (checkFouille) checkFouille.checked = dataSupabase.etape_fouille !== undefined ? parseBooleenStricte(dataSupabase.etape_fouille) : true;
+    if (checkBeton) checkBeton.checked = dataSupabase.etape_beton !== undefined ? parseBooleenStricte(dataSupabase.etape_beton) : true;
+    if (checkMatage) checkMatage.checked = dataSupabase.etape_matage !== undefined ? parseBooleenStricte(dataSupabase.etape_matage) : true;
 
-    if (checkFouille) checkFouille.checked = (valFouille !== undefined && valFouille !== null) ? parseBooleenStricte(valFouille) : true;
-    if (checkBeton) checkBeton.checked = (valBeton !== undefined && valBeton !== null) ? parseBooleenStricte(valBeton) : true;
-    if (checkMatage) checkMatage.checked = (valMatage !== undefined && valMatage !== null) ? parseBooleenStricte(valMatage) : true;
-
+    // 5. Statut
     const statutActif = dataSupabase.statut || dataBase.statut_blindage;
     const radiosStatut = document.querySelectorAll('input[name="statut_blindage"]');
     radiosStatut.forEach(radio => {
         radio.checked = (statutActif && radio.value === statutActif);
     });
 
+    // Forçage de l'actualisation dynamique de l'interface (affichage des blocs et règles d'activation)
     if (typeof refreshBlocs === "function") refreshBlocs();
     
-    const evtChange = new Event('change');
-    if (chkHorsP1) chkHorsP1.dispatchEvent(evtChange);
+    // Déclenchement des événements pour propager les états aux écouteurs d'événements
+    if (chkBlindage) chkBlindage.dispatchEvent(new Event('change'));
+    if (chkHorsP1) chkHorsP1.dispatchEvent(new Event('change'));
 
     if (typeof restaurerLocal === "function") restaurerLocal();
     if (typeof rechargerBLsSupport === "function") rechargerBLsSupport();
