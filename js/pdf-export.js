@@ -35,6 +35,15 @@ async function exporterPDF() {
     document.getElementById("selectSupport").focus();
     return;
   }
+  // 🟢 Vérification qu'au moins une des 3 étapes est cochée
+  const fChecked = document.getElementById("check_fouille")?.checked;
+  const bChecked = document.getElementById("check_beton")?.checked;
+  const mChecked = document.getElementById("check_matage")?.checked;
+
+  if (!fChecked && !bChecked && !mChecked) {
+    alert("⚠️ Export impossible :\nVous devez cocher au moins une étape (Fouille, Béton ou Matage) avant d'exporter.");
+    return;
+  }
 // 🟢 Appel de notre fonction dédiée à la mise à jour Supabase
   await synchroniserSupportActuel();
   const btnPdf = document.getElementById("btnExportPdf");
