@@ -46,6 +46,10 @@ async function synchroniserSupportActuel() {
     const fReel = document.getElementById("valF")?.value;
     const supReel = document.getElementById("valSUP")?.value;
 
+    // 🟢 5 bis. Récupération du statut blindage (boutons radio)
+    const radioStatutSelectionne = document.querySelector('input[name="statut_blindage"]:checked');
+    const statutBlindageVal = radioStatutSelectionne ? radioStatutSelectionne.value : null;
+
     // 6. Requête de mise à jour vers Supabase
     const { error } = await supabaseClient
       .from('blindage')
@@ -61,6 +65,7 @@ async function synchroniserSupportActuel() {
         p_reel: pSaisi ? parseFloat(pSaisi) : null,
         sup_reel: supReel ? parseFloat(supReel) : null,
         m3_reel: volReelNum,
+        statut_blindage: statutBlindageVal, // 🟢 Enregistrement de "Conforme", "Non conforme" ou null
         effectue: 1, // Marqué comme effectué lors de la génération/synchro
         date_exec: dateJour // Date de réalisation
       })
