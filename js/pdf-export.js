@@ -286,22 +286,31 @@ y = doc.lastAutoTable.finalY + 5;
       y = doc.lastAutoTable.finalY + 5;
     }
 
-    // ---------- Section 4 (option) : blindage ----------
+// ---------- Section 4 (option) : blindage ----------
     if (verifBlindage) {
       titreSection("BLINDAGE", [3, 105, 161]);
+
+      // 🟢 Récupération du statut blindage (boutons radio)
+      const radioStatutSelectionne = document.querySelector('input[name="statut_blindage"]:checked');
+      const statutBlindageVal = radioStatutSelectionne ? radioStatutSelectionne.value : "-";
+
       const rowsBlindage = [
         ["Bord blindage - bord rail", val("dist_blindage") + " m"],
         ["Traverse (LT)", val("LT") + " cm"],
         ["Sol -> Massif", val("SOL") + " m"],
         ["NiT -> Hbis", val("NIT") + " m"],
+        ["Statut conformite", statutBlindageVal], // 🟢 Ajout de la ligne dans le tableau
       ];
+      
       doc.autoTable({
         startY: y,
         margin: { left: marge, right: marge, bottom: footerReserve },
         body: rowsBlindage,
         theme: 'grid',
         styles: { fontSize: 8, cellPadding: 1.8 },
-        columnStyles: { 1: { fontStyle: 'bold', halign: 'right' } },
+        columnStyles: { 
+          1: { fontStyle: 'bold', halign: 'right' } 
+        },
       });
       y = doc.lastAutoTable.finalY + 3;
 
