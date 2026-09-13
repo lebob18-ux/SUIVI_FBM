@@ -1,3 +1,93 @@
+/* --- 1. FONCTIONS GLOBALES --- */
+
+function verifierAdmin() {
+    const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur"));
+    if (!identite) return;
+    const admins = ["robert.lavignon@reseau.sncf.fr"];
+    const tabAdmin = document.getElementById("tabAdmin");
+    if (tabAdmin) tabAdmin.style.display = admins.includes(identite.email) ? "block" : "none";
+}
+
+function resetChamps() {
+    document.getElementById("valF").value = "";
+    document.getElementById("valP").value = "";
+    document.getElementById("valSUP").value = "";
+    if (typeof majAffichageSensP === "function") majAffichageSensP("APRES");
+    if (typeof calculer === "function") calculer();
+}
+
+/* --- 2. INITIALISATION --- */
+document.addEventListener("DOMContentLoaded", function () {
+    const chkCarotte = document.getElementById("carotte");
+    const chkBlindage = document.getElementById("blindageCheck");
+    const chkHorsP1 = document.getElementById("check_hors_p1");
+
+    // Éléments des 3 étapes
+    const checkFouille = document.getElementById("check_fouille");
+    const checkBeton = document.getElementById("check_beton");
+    const checkMatage = document.getElementById("check_matage");
+
+    function refreshBlocs() {
+        if (document.getElementById("bloc_saisie_carotte")) document.getElementById("bloc_saisie_carotte").style.display = chkCarotte?.checked ? "flex" : "none";
+        if (document.getElementById("bloc_saisie_blindage")) document.getElementById("bloc_saisie_blindage").style.display = chkBlindage?.checked ? "flex" : "none";
+    }
+
+    function verifierEtatEtapes() {
+        const estBlindage = chkBlindage ? chkBlindage.checked : false;
+        const estHorsP1 = chkHorsP1 ? chkHorsP1.checked : false;
+
+        if (!estBlindage && !estHorsP1) {
+            // Ni blindage ni hors P1 : on force les 3 en true et on désactive
+            if (checkFouille) { checkFouille.checked = true; checkFouille.disabled = true; }
+            if (checkBeton) { checkBeton.checked = true; checkBeton.disabled = true; }
+            if (checkMatage) { checkMatage.checked = true; checkMatage.disabled = true; }
+        } else {
+            // Si blindage ou hors P1 est actif : on redonne la main pour récupérer/gérer les valeurs
+            if (checkFouille) checkFouille.disabled = false;
+            if (checkBeton) checkBeton.disabled = false;
+            if (checkMatage) checkMatage.disabled = false;
+        }
+    }
+
+    if (chkCarotte) chkCarotte.addEventListener("change", refreshBlocs);
+    
+    if (chkBlindage) {
+        chkBlindage.addEventListener("change", function() {
+            refreshBlocs();
+            verifierEtatEtapes();
+        });
+    }
+
+    if (chkHorsP1) {
+        chkHorsP1.addEventListener("change", function() {
+            verifierEtatEtapes();
+        });
+    }
+
+    // Appel initial au chargement
+    refreshBlocs();
+    verifierEtatEtapes();
+});
+
+/* --- 3. CHARGEMENT INITIAL --- */
+window.addEventListener('load', function() {
+    verifierAdmin();
+    const selectChantier = document.getElementById("selectChantier");
+    if (selectChantier && selectChantier.options.length > 1) {
+        selectChantier.selectedIndex = 1;
+        selectChantier.dispatchEvent(new Event('change'));
+    }
+});
+
+// Sélection automatique au focus sur tous les inputs numériques
+document.addEventListener("focusin", function(e) {
+  if (e.target.tagName === "INPUT" && e.target.type === "number" && !e.target.readOnly) {
+    setTimeout(() => e.target.select(), 30);
+  }
+});
+
+/* --- 4. GESTION SUPPORTS & ECHANTILLONS --- */
+
 function chargerSupport() {
     const selectSupport = document.getElementById("selectSupport");
     const data = baseSupports.find(s => s.support === selectSupport.value);
@@ -55,9 +145,24 @@ function chargerSupport() {
         appliquerEchantillon(data.ECH);
     }
     
-    document.getElementById("blindageCheck").checked = (data.BLIND === "OUI");
+    document.getElementById("blindageCheck").checked = (data.BLIND === "OUI" || data.blindage === true);
     document.getElementById("carotte").checked = (data.CARO === "OUI");
     document.getElementById("display_type").innerText = data.TYPE ? "🧊 " + data.TYPE : "";
+
+    // Gestion de Hors P1
+    const chkHorsP1 = document.getElementById("check_hors_p1");
+    if (chkHorsP1) {
+        chkHorsP1.checked = (data.hors_p1 === true || data.hors_p1 === "OUI" || data.hors_p1 === 1);
+    }
+
+    // Gestion des 3 étapes (Fouille, Béton, Matage) récupérées depuis Supabase
+    const checkFouille = document.getElementById("check_fouille");
+    const checkBeton = document.getElementById("check_beton");
+    const checkMatage = document.getElementById("check_matage");
+
+    if (checkFouille) checkFouille.checked = (data.etape_fouille !== undefined && data.etape_fouille !== null) ? data.etape_fouille : true;
+    if (checkBeton) checkBeton.checked = (data.etape_beton !== undefined && data.etape_beton !== null) ? data.etape_beton : true;
+    if (checkMatage) checkMatage.checked = (data.etape_matage !== undefined && data.etape_matage !== null) ? data.etape_matage : true;
 
     // 🟢 Gestion de la sélection des boutons radio "statut_blindage"
     const radiosStatut = document.querySelectorAll('input[name="statut_blindage"]');
@@ -65,13 +170,17 @@ function chargerSupport() {
         radio.checked = (data.statut_blindage && radio.value === data.statut_blindage);
     });
 
-    // 5. Mise à jour finale
+    // 5. Mise à jour finale et application des règles d'état des étapes
     if (typeof refreshBlocs === "function") refreshBlocs();
+    
+    // Appel pour vérifier l'état/verrouillage des 3 étapes selon blindage/hors_p1
+    const evtChange = new Event('change');
+    if (chkHorsP1) chkHorsP1.dispatchEvent(evtChange);
+
     if (typeof restaurerLocal === "function") restaurerLocal();
     if (typeof rechargerBLsSupport === "function") rechargerBLsSupport();
     calculer();
 }
-
 
 const aliasEchantillon = {
 "HE180A":"HEA180",
@@ -106,13 +215,7 @@ const aliasEchantillon = {
 "JHEB320":"JHEB320",
 };
 
-
-
-
-/* Correspondance ECH (base support) <-> profils du popup Echantillon */
 const profilsEchantillon = {
-
-
 "HEA180":    { valeur: "180",    largeur: "171", nom: "HEA180"   },
 "HEA200":    { valeur: "200",    largeur: "190", nom: "HEA200"   },
 "HEA220":    { valeur: "220",    largeur: "210", nom: "HEA220"   },
@@ -131,7 +234,7 @@ const profilsEchantillon = {
 "JHEB280": { valeur: "280",    largeur: "830", nom: "JHEB280"  },
 "JHEB320": { valeur: "300",    largeur: "870", nom: "JHEB320"  },
   
-  "Epingle":{ valeur: "Epingle", largeur: "0",   nom: "Epingle" }
+  "Epingle":{ valeur: "Epingle", largeur: "0",    nom: "Epingle" }
 };
 
 function appliquerEchantillon(ech) {
@@ -139,17 +242,14 @@ function appliquerEchantillon(ech) {
 
   let cle = String(ech).trim();
 
-  // Résolution des aliases (variantes de nommage)
   if (typeof aliasEchantillon !== "undefined" && aliasEchantillon[cle]) {
     cle = aliasEchantillon[cle];
   }
 
   const profil = profilsEchantillon[cle];
   if (profil) {
-    // Profil reconnu (ex: 240 -> HE240) : on réutilise la logique du popup
     validerEchantillonPopup(profil.valeur, profil.largeur, profil.nom);
   } else {
-    // Valeur non reconnue -> on la place en saisie manuelle
     validerEchantillonPopup("manuel", "0", "Autre...");
     document.getElementById("E").value = cle;
     document.getElementById("display_prof").innerText = cle;
@@ -164,7 +264,6 @@ function gérerVisibilitéP() {
     calculer();
 }
 
-
 function initChantiers() {
   const select = document.getElementById("selectChantier");
   if (!select) return;
@@ -176,7 +275,6 @@ function initChantiers() {
     }
     chantiersMap[s.chantier].total++;
     
-    // 🛠️ Version robuste : gère le nombre 1, le texte "1", et la casse
     const valEff = s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : "");
     if (valEff === 1 || String(valEff).trim() === "1") {
       chantiersMap[s.chantier].effectues++;
@@ -200,17 +298,7 @@ function initChantiers() {
   });
 }
 
-
-
-
-
-
-
-
-
 function resetSaisieAvantSupport() {
-
-  // Champs numériques remplis par un support
   document.getElementById("I").value = "";
   document.getElementById("AR").value = "";
   document.getElementById("Enc").value = "";
@@ -227,7 +315,6 @@ function resetSaisieAvantSupport() {
   document.getElementById("Enc_ref").innerText = "";
   document.getElementById("ECH_ref").innerText = "";
 
-  // Echantillon
   let selectE = document.getElementById("E_select");
   let inputE = document.getElementById("E");
   if (selectE) {
@@ -248,7 +335,16 @@ function resetSaisieAvantSupport() {
   document.getElementById("blindageCheck").checked = false;
   document.getElementById("carotte").checked = false;
 
-  // 🟢 Décocher les boutons radio du statut blindage lors du reset
+  const chkHorsP1 = document.getElementById("check_hors_p1");
+  if (chkHorsP1) chkHorsP1.checked = false;
+
+  const checkFouille = document.getElementById("check_fouille");
+  const checkBeton = document.getElementById("check_beton");
+  const checkMatage = document.getElementById("check_matage");
+  if (checkFouille) { checkFouille.checked = true; checkFouille.disabled = true; }
+  if (checkBeton) { checkBeton.checked = true; checkBeton.disabled = true; }
+  if (checkMatage) { checkMatage.checked = true; checkMatage.disabled = true; }
+
   document.querySelectorAll('input[name="statut_blindage"]').forEach(radio => radio.checked = false);
 
   if (window.refreshBlocs) window.refreshBlocs();
@@ -264,14 +360,12 @@ function filtrerSupports() {
 
     supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
 
-    // 🛠️ On filtre proprement en acceptant le nombre 1 ou la chaîne "1" (ainsi que les minuscules)
     const filtres = baseSupports.filter(s => {
         if (s.chantier !== chantier) return false;
         const valEff = s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : "");
         return valEff !== 1 && String(valEff).trim() !== "1";
     });
     
-    // 🟢 AJOUT DU TRI CROISSANT (avec prise en compte des chiffres et lettres)
     filtres.sort((a, b) => {
         return String(a.support).localeCompare(String(b.support), 'fr', { numeric: true, sensitivity: 'base' });
     });
@@ -284,8 +378,6 @@ function filtrerSupports() {
     });
 }
 
-
-/* Gestion saisie échantillon */
 function gererSaisieEchantillon() {
   let selectE = document.getElementById("E_select");
   let inputE = document.getElementById("E");
@@ -298,6 +390,4 @@ function gererSaisieEchantillon() {
   }
   calculer();
 }
-/* ==========================================
-   GESTION AFFICHAGE CAROTTE / BLINDAGE
-   ========================================== */
+// FIN DU FICHIER - NE RIEN SUPPRIMER APRES CETTE LIGNE
