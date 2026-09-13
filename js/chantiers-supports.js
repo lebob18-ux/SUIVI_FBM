@@ -88,38 +88,58 @@ document.addEventListener("focusin", function(e) {
 
 /* --- 4. GESTION SUPPORTS & ECHANTILLONS --- */
 
-function chargerSupport() {
+async function chargerSupport() {
     const selectSupport = document.getElementById("selectSupport");
-    const data = baseSupports.find(s => s.support === selectSupport.value);
+    const supportNom = selectSupport.value;
+    const chantierSelect = document.getElementById("selectChantier");
+    const nomChantier = chantierSelect ? chantierSelect.value : "";
 
-    if (!data) return;
+    const dataBase = baseSupports.find(s => s.support === supportNom);
+    if (!dataBase) return;
+
+    // 1. Récupération des données fraîches depuis Supabase (pour avoir hors_p1 et les étapes à jour)
+    let dataSupabase = {};
+    try {
+        const { data, error } = await supabaseClient
+            .from('blindage')
+            .select('hors_p1, etape_fouille, etape_beton, etape_matage, blindage, carotte, statut_blindage')
+            .eq('chantier', nomChantier)
+            .eq('support', supportNom)
+            .single();
+        
+        if (!error && data) {
+            dataSupabase = data;
+        }
+    } catch (err) {
+        console.warn("Impossible de récupérer les états spécifiques depuis Supabase, utilisation des valeurs par défaut.");
+    }
 
     // Fonction utilitaire pour afficher 0 au lieu de vide
     const valOuVide = (val) => (val !== undefined && val !== null && val !== "") ? val : "";
 
-    // 1. Remplissage des champs de saisie (inputs)
-    document.getElementById("valF").value = valOuVide(data.F);
-    document.getElementById("valSUP").value = valOuVide(data.SUP);
-    document.getElementById("I").value = valOuVide(data.I);
-    document.getElementById("AF").value = valOuVide(data.AF);
-    document.getElementById("B_Fouille").value = valOuVide(data.B);
-    document.getElementById("H_Fouille").value = valOuVide(data.H);
-    document.getElementById("AR").value = valOuVide(data.AR);
-    document.getElementById("Enc").value = valOuVide(data.Enc);
+    // 2. Remplissage des champs de saisie (inputs)
+    document.getElementById("valF").value = valOuVide(dataBase.F);
+    document.getElementById("valSUP").value = valOuVide(dataBase.SUP);
+    document.getElementById("I").value = valOuVide(dataBase.I);
+    document.getElementById("AF").value = valOuVide(dataBase.AF);
+    document.getElementById("B_Fouille").value = valOuVide(dataBase.B);
+    document.getElementById("H_Fouille").value = valOuVide(dataBase.H);
+    document.getElementById("AR").value = valOuVide(dataBase.AR);
+    document.getElementById("Enc").value = valOuVide(dataBase.Enc);
 
-    // 2. Remplissage des références (spans grisés)
-    document.getElementById("F_ref").innerText = valOuVide(data.F);
-    document.getElementById("SUP_ref").innerText = valOuVide(data.SUP);
-    document.getElementById("I_ref").innerText = valOuVide(data.I);
-    document.getElementById("AF_ref").innerText = valOuVide(data.AF);
-    document.getElementById("B_ref").innerText = valOuVide(data.B);
-    document.getElementById("H_ref").innerText = valOuVide(data.H);
-    document.getElementById("AR_ref").innerText = valOuVide(data.AR);
-    document.getElementById("Enc_ref").innerText = valOuVide(data.Enc);
-    document.getElementById("ECH_ref").innerText = valOuVide(data.ECH);
+    // 3. Remplissage des références (spans grisés)
+    document.getElementById("F_ref").innerText = valOuVide(dataBase.F);
+    document.getElementById("SUP_ref").innerText = valOuVide(dataBase.SUP);
+    document.getElementById("I_ref").innerText = valOuVide(dataBase.I);
+    document.getElementById("AF_ref").innerText = valOuVide(dataBase.AF);
+    document.getElementById("B_ref").innerText = valOuVide(dataBase.B);
+    document.getElementById("H_ref").innerText = valOuVide(dataBase.H);
+    document.getElementById("AR_ref").innerText = valOuVide(dataBase.AR);
+    document.getElementById("Enc_ref").innerText = valOuVide(dataBase.Enc);
+    document.getElementById("ECH_ref").innerText = valOuVide(dataBase.ECH);
 
-    // 3. Gestion de P (Valeur absolue pour l'affichage)
-    const valP = (data.P !== undefined && data.P !== null) ? parseFloat(data.P) : 0;
+    // 4. Gestion de P (Valeur absolue pour l'affichage)
+    const valP = (dataBase.P !== undefined && dataBase.P !== null) ? parseFloat(dataBase.P) : 0;
     const valeurAbsolueP = Math.abs(valP);
 
     document.getElementById("P_ref_N").innerText = valeurAbsolueP;
@@ -140,40 +160,40 @@ function chargerSupport() {
         blocS.style.display = "none";
     }
 
-    // 4. Échantillonnage, cases à cocher et statut blindage
+    // 5. Échantillonnage, cases à cocher et statut blindage
     if (typeof appliquerEchantillon === "function") {
-        appliquerEchantillon(data.ECH);
+        appliquerEchantillon(dataBase.ECH);
     }
     
-    document.getElementById("blindageCheck").checked = (data.BLIND === "OUI" || data.blindage === true);
-    document.getElementById("carotte").checked = (data.CARO === "OUI");
-    document.getElementById("display_type").innerText = data.TYPE ? "🧊 " + data.TYPE : "";
+    document.getElementById("blindageCheck").checked = (dataSupabase.blindage === true || dataBase.BLIND === "OUI");
+    document.getElementById("carotte").checked = (dataBase.CARO === "OUI");
+    document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
 
-    // Gestion de Hors P1
+    // 🟢 Récupération correcte de Hors P1 depuis Supabase
     const chkHorsP1 = document.getElementById("check_hors_p1");
     if (chkHorsP1) {
-        chkHorsP1.checked = (data.hors_p1 === true || data.hors_p1 === "OUI" || data.hors_p1 === 1);
+        chkHorsP1.checked = dataSupabase.hors_p1 === true;
     }
 
-    // Gestion des 3 étapes (Fouille, Béton, Matage) récupérées depuis Supabase
+    // 🟢 Récupération des 3 étapes depuis Supabase
     const checkFouille = document.getElementById("check_fouille");
     const checkBeton = document.getElementById("check_beton");
     const checkMatage = document.getElementById("check_matage");
 
-    if (checkFouille) checkFouille.checked = (data.etape_fouille !== undefined && data.etape_fouille !== null) ? data.etape_fouille : true;
-    if (checkBeton) checkBeton.checked = (data.etape_beton !== undefined && data.etape_beton !== null) ? data.etape_beton : true;
-    if (checkMatage) checkMatage.checked = (data.etape_matage !== undefined && data.etape_matage !== null) ? data.etape_matage : true;
+    if (checkFouille) checkFouille.checked = dataSupabase.etape_fouille !== undefined ? dataSupabase.etape_fouille : true;
+    if (checkBeton) checkBeton.checked = dataSupabase.etape_beton !== undefined ? dataSupabase.etape_beton : true;
+    if (checkMatage) checkMatage.checked = dataSupabase.etape_matage !== undefined ? dataSupabase.etape_matage : true;
 
-    // 🟢 Gestion de la sélection des boutons radio "statut_blindage"
+    // Gestion des boutons radio "statut_blindage"
+    const statutActif = dataSupabase.statut_blindage || dataBase.statut_blindage;
     const radiosStatut = document.querySelectorAll('input[name="statut_blindage"]');
     radiosStatut.forEach(radio => {
-        radio.checked = (data.statut_blindage && radio.value === data.statut_blindage);
+        radio.checked = (statutActif && radio.value === statutActif);
     });
 
-    // 5. Mise à jour finale et application des règles d'état des étapes
+    // 6. Mise à jour finale et application des règles d'état des étapes
     if (typeof refreshBlocs === "function") refreshBlocs();
     
-    // Appel pour vérifier l'état/verrouillage des 3 étapes selon blindage/hors_p1
     const evtChange = new Event('change');
     if (chkHorsP1) chkHorsP1.dispatchEvent(evtChange);
 
