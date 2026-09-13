@@ -50,6 +50,10 @@ async function synchroniserSupportActuel() {
     const radioStatutSelectionne = document.querySelector('input[name="statut_blindage"]:checked');
     const statutBlindageVal = radioStatutSelectionne ? radioStatutSelectionne.value : null;
 
+    // 🟢 5 ter. Récupération des quantités de Big-Bags (terre & mignonette)
+    const terreReel = document.getElementById("nb_big_bag_terre")?.value;
+    const mignonetteReel = document.getElementById("nb_big_bag_mignonette")?.value;
+
     // 6. Requête de mise à jour vers Supabase
     const { error } = await supabaseClient
       .from('blindage')
@@ -65,9 +69,11 @@ async function synchroniserSupportActuel() {
         p_reel: pSaisi ? parseFloat(pSaisi) : null,
         sup_reel: supReel ? parseFloat(supReel) : null,
         m3_reel: volReelNum,
-        statut_blindage: statutBlindageVal, // 🟢 Enregistrement de "Conforme", "Non conforme" ou null
-        effectue: 1, // Marqué comme effectué lors de la génération/synchro
-        date_exec: dateJour // Date de réalisation
+        terre: terreReel !== "" ? parseInt(terreReel, 10) : 0,          // 🟢 Ajout Big-Bag terre
+        mignonette: mignonetteReel !== "" ? parseInt(mignonetteReel, 10) : 0, // 🟢 Ajout Big-Bag mignonette
+        statut_blindage: statutBlindageVal, 
+        effectue: 1, 
+        date_exec: dateJour 
       })
       .eq('chantier', nomChantier)
       .eq('support', numSupportInput);
