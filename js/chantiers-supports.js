@@ -351,22 +351,54 @@ function resetSaisieAvantSupport() {
   calculer();
 }
 
-function filtrerSupports() {
-    const chantier = document.getElementById("selectChantier").value;
+async function filtrerSupports() {
+    const chantierSelect = document.getElementById("selectChantier");
     const supportSelect = document.getElementById("selectSupport");
+    if (!chantierSelect || !supportSelect) return;
 
+    const chantier = chantierSelect.value;
     resetSaisieAvantSupport();
     supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
 
-    const filtres = baseSupports.filter(s => {
+    if (!chantier) return;
+
+    // 1. On récupère l'état de tous les supports de ce chantier depuis Supabase
+    let supportsFinisMap = {};
+    try {
+        const { data, error } = await supabaseClient
+            .from('blindage')
+            .select('support, etape_fouille, etape_beton, etape_matage')
+            .eq('chantier', chantier);
+
+        if (!error && data) {
+            data.forEach(row => {
+                const fouilleOk = String(row.etape_fouille).trim().toUpperCase() === "OUI";
+                const betonOk = String(row.etape_beton).trim().toUpperCase() === "OUI";
+                const matageOk = String(row.etape_matage).trim().toUpperCase() === "OUI";
+
+                // Si les 3 étapes sont validées, le support est considéré comme fini
+                if (fouilleOk && betonOk && matageOk) {
+                    supportsFinisMap[String(row.support).trim()] = true;
+                }
+            });
+        }
+    } catch (err) {
+        console.warn("⚠️ Erreur lors de la vérification des supports terminés :", err);
+    }
+
+    // 2. On filtre la base locale en excluant ceux qui sont finis
+    const supportsDuChantier = baseSupports.filter(s => {
         if (s.chantier !== chantier) return false;
-        const valEff = s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : "");
-        return valEff !== 1 && String(valEff).trim() !== "1";
+        const nomSupport = String(s.support).trim();
+        // On masque si les 3 étapes sont à OUI dans Supabase
+        if (supportsFinisMap[nomSupport]) return false;
+        return true;
     });
     
-    filtres.sort((a, b) => String(a.support).localeCompare(String(b.support), 'fr', { numeric: true, sensitivity: 'base' }));
+    supportsDuChantier.sort((a, b) => String(a.support).localeCompare(String(b.support), 'fr', { numeric: true, sensitivity: 'base' }));
 
-    filtres.forEach(s => {
+    // 3. On peuple le menu déroulant
+    supportsDuChantier.forEach(s => {
         let opt = document.createElement("option");
         opt.value = s.support;
         opt.textContent = s.support;
