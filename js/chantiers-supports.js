@@ -117,6 +117,16 @@ async function chargerSupport() {
     // Fonction utilitaire pour afficher 0 au lieu de vide
     const valOuVide = (val) => (val !== undefined && val !== null && val !== "") ? val : "";
 
+    // 🟢 Fonction utilitaire universelle pour convertir n'importe quel format en booléen JS
+    const parseBooleen = (val) => {
+        if (val === true || val === 1 || val === "1") return true;
+        if (typeof val === "string") {
+            const v = val.trim().toLowerCase();
+            return v === "true" || v === "oui" || v === "1" || v === "on";
+        }
+        return false;
+    };
+
     // 2. Remplissage des champs de saisie (inputs)
     document.getElementById("valF").value = valOuVide(dataBase.F);
     document.getElementById("valSUP").value = valOuVide(dataBase.SUP);
@@ -165,26 +175,18 @@ async function chargerSupport() {
         appliquerEchantillon(dataBase.ECH);
     }
     
-    document.getElementById("blindageCheck").checked = (dataSupabase.blindage === true || dataBase.BLIND === "OUI");
+    document.getElementById("blindageCheck").checked = (dataSupabase.blindage !== undefined) ? parseBooleen(dataSupabase.blindage) : (dataBase.BLIND === "OUI");
     document.getElementById("carotte").checked = (dataBase.CARO === "OUI");
     document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
 
-    // 🟢 Fonction ultra-souple pour normaliser et tester n'importe quel format (true, TRUE, "true", "TRUE", 1, "1", "OUI", etc.)
-    const estCoche = (val) => {
-        if (val === true || val === 1) return true;
-        if (val === false || val === 0 || val === null || val === undefined) return false;
-        const str = String(val).trim().toLowerCase();
-        return str === "true" || str === "1" || str === "oui" || str === "yes" || str === "on";
-    };
-
-    // Application pour Hors P1
-    const valHorsP1 = dataSupabase.hors_p1 !== undefined ? dataSupabase.hors_p1 : dataBase.hors_p1;
+    // 🟢 Récupération ultra-robuste de Hors P1
     const chkHorsP1 = document.getElementById("check_hors_p1");
     if (chkHorsP1) {
-        chkHorsP1.checked = estCoche(valHorsP1);
+        const valHorsP1 = dataSupabase.hors_p1 !== undefined ? dataSupabase.hors_p1 : dataBase.hors_p1;
+        chkHorsP1.checked = parseBooleen(valHorsP1);
     }
 
-    // Application pour les 3 étapes
+    // 🟢 Récupération ultra-robuste des 3 étapes
     const checkFouille = document.getElementById("check_fouille");
     const checkBeton = document.getElementById("check_beton");
     const checkMatage = document.getElementById("check_matage");
@@ -193,9 +195,9 @@ async function chargerSupport() {
     const valBeton = dataSupabase.etape_beton !== undefined ? dataSupabase.etape_beton : dataBase.etape_beton;
     const valMatage = dataSupabase.etape_matage !== undefined ? dataSupabase.etape_matage : dataBase.etape_matage;
 
-    if (checkFouille) checkFouille.checked = (dataSupabase.etape_fouille !== undefined) ? estCoche(valFouille) : true;
-    if (checkBeton) checkBeton.checked = (dataSupabase.etape_beton !== undefined) ? estCoche(valBeton) : true;
-    if (checkMatage) checkMatage.checked = (dataSupabase.etape_matage !== undefined) ? estCoche(valMatage) : true;
+    if (checkFouille) checkFouille.checked = (valFouille !== undefined && valFouille !== null) ? parseBooleen(valFouille) : true;
+    if (checkBeton) checkBeton.checked = (valBeton !== undefined && valBeton !== null) ? parseBooleen(valBeton) : true;
+    if (checkMatage) checkMatage.checked = (valMatage !== undefined && valMatage !== null) ? parseBooleen(valMatage) : true;
 
     // Gestion des boutons radio "statut_blindage"
     const statutActif = dataSupabase.statut_blindage || dataBase.statut_blindage;
@@ -423,4 +425,49 @@ function gererSaisieEchantillon() {
   }
   calculer();
 }
+
+/* --- 5. SYNCHRONISATION DESCENDANTE (INTERFACE -> SUPABASE) --- */
+document.addEventListener("DOMContentLoaded", function () {
+    const champsACocher = ["check_hors_p1", "check_fouille", "check_beton", "check_matage", "blindageCheck"];
+
+    champsACocher.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener("change", async function () {
+                const selectSupport = document.getElementById("selectSupport");
+                const chantierSelect = document.getElementById("selectChantier");
+                
+                if (!selectSupport || !selectSupport.value || !chantierSelect || !chantierSelect.value) return;
+
+                const supportNom = selectSupport.value;
+                const nomChantier = chantierSelect.value;
+                
+                let nomChampSupabase = "";
+                if (id === "check_hors_p1") nomChampSupabase = "hors_p1";
+                else if (id === "blindageCheck") nomChampSupabase = "blindage";
+                else nomChampSupabase = id.replace("check_", "etape_");
+
+                const valeurCochee = this.checked;
+
+                try {
+                    const { error } = await supabaseClient
+                        .from('blindage')
+                        .upsert({
+                            chantier: nomChantier,
+                            support: supportNom,
+                            [nomChampSupabase]: valeurCochee
+                        }, { onConflict: 'chantier,support' });
+
+                    if (error) {
+                        console.error("Erreur lors de la mise à jour Supabase :", error.message);
+                    } else {
+                        console.log(`Mise à jour OK : ${nomChampSupabase} = ${valeurCochee}`);
+                    }
+                } catch (err) {
+                    console.error("Erreur réseau/Supabase :", err);
+                }
+            });
+        }
+    });
+});
 // FIN DU FICHIER - NE RIEN SUPPRIMER APRES CETTE LIGNE
