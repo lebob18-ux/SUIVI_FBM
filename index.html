@@ -103,39 +103,6 @@
   </div>
   <div class="section-content" id="sec-fouille-global">
     
-    <!-- Sous-partie : Implantation / Échantillon / Arasement / Encastrement -->
-    <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">📍 Implantation / Échantillon / Arasement / Encastrement</div>
-    <table class="cotes-table" style="margin-bottom: 10px;">
-      <thead>
-        <tr>
-          <th></th>
-          <th>Imp</th>
-          <th>Éch</th>
-          <th>Arase</th>
-          <th>Encast</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="cotes-label">Saisie</td>
-          <td><input type="number" id="I" step="any" oninput="calculer()" onkeydown="passerAEchantillon(event)"></td>
-          <td>
-            <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
-            <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="cm" style="display: none; margin-top: 4px; width: 100%;">
-          </td>
-          <td><input type="number" id="AR" oninput="calculer()"></td>
-          <td><input type="number" id="Enc" onblur="calculer()"></td>
-        </tr>
-        <tr>
-          <td class="cotes-label">Réf.</td>
-          <td><span class="ref" id="I_ref"></span></td>
-          <td><span class="ref" id="ECH_ref"></span></td>
-          <td><span class="ref" id="AR_ref"></span></td>
-          <td><span class="ref" id="Enc_ref"></span></td>
-        </tr>
-      </tbody>
-    </table>
-	
     <!-- Sous-partie : Cotes Fouille (A / B / H) -->
     <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">📐 Cotes Fouille (A / B / H)</div>
     <table class="cotes-table" style="margin-bottom: 10px;">
@@ -163,40 +130,6 @@
       </tbody>
     </table>
 
-    <!-- Sous-partie : Références (FRUIT / Position longitudinale) -->
-    <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">🔗 Références (FRUIT / Position longitudinale)</div>
-    <table class="cotes-table">
-      <thead>
-        <tr>
-          <th></th>
-          <th>F</th>
-          <th>Support (P)</th>
-          <th>Imp. depuis (P)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="cotes-label">Saisie</td>
-          <td><input type="number" id="valF" oninput="calculer()"></td>
-          <td><input type="text" id="valSUP" oninput="calculer()" disabled></td>
-          <td rowspan="2" style="vertical-align: middle;">
-            <div id="bloc-N" style="display: none;">
-              <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
-              <span class="ref" id="P_ref_N"></span>
-            </div>
-            <div id="bloc-S" style="display: none;">
-              <input type="text" id="valP_S" oninput="gérerVisibilitéP()">
-              <span class="ref" id="P_ref_S"></span>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td class="cotes-label">Réf.</td>
-          <td><span class="ref" id="F_ref"></span></td>
-          <td><span class="ref" id="SUP_ref"></span></td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 </div>
 
@@ -241,9 +174,75 @@
     <span class="section-arrow" id="arrow-sec-matage">▾</span>
   </div>
   <div class="section-content" id="sec-matage">
-    <div style="font-size:0.85em; color:#666; text-align:center; padding:10px;">
-      Module Matage / Cotes de calage
-    </div>
+    
+    <!-- Sous-partie : Implantation / Échantillon / Arasement / Encastrement (relatif au matage de support) -->
+    <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">📍 Implantation / Échantillon / Arasement / Encastrement</div>
+    <table class="cotes-table" style="margin-bottom: 10px;">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Imp</th>
+          <th>Éch</th>
+          <th>Arase</th>
+          <th>Encast</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cotes-label">Saisie</td>
+          <td><input type="number" id="I" step="any" oninput="calculer()" onkeydown="passerAEchantillon(event)"></td>
+          <td>
+            <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
+            <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="cm" style="display: none; margin-top: 4px; width: 100%;">
+          </td>
+          <td><input type="number" id="AR" oninput="calculer()"></td>
+          <td><input type="number" id="Enc" onblur="calculer()"></td>
+        </tr>
+        <tr>
+          <td class="cotes-label">Réf.</td>
+          <td><span class="ref" id="I_ref"></span></td>
+          <td><span class="ref" id="ECH_ref"></span></td>
+          <td><span class="ref" id="AR_ref"></span></td>
+          <td><span class="ref" id="Enc_ref"></span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Sous-partie : Références (FRUIT / Position longitudinale pour le matage) -->
+    <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">🔗 Références (FRUIT / Position longitudinale)</div>
+    <table class="cotes-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>F</th>
+          <th>Support (P)</th>
+          <th>Imp. depuis (P)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cotes-label">Saisie</td>
+          <td><input type="number" id="valF" oninput="calculer()"></td>
+          <td><input type="text" id="valSUP" oninput="calculer()" disabled></td>
+          <td rowspan="2" style="vertical-align: middle;">
+            <div id="bloc-N" style="display: none;">
+              <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
+              <span class="ref" id="P_ref_N"></span>
+            </div>
+            <div id="bloc-S" style="display: none;">
+              <input type="text" id="valP_S" oninput="gérerVisibilitéP()">
+              <span class="ref" id="P_ref_S"></span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="cotes-label">Réf.</td>
+          <td><span class="ref" id="F_ref"></span></td>
+          <td><span class="ref" id="SUP_ref"></span></td>
+        </tr>
+      </tbody>
+    </table>
+
   </div>
 </div>
 
