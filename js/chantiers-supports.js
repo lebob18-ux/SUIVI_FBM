@@ -85,7 +85,6 @@ document.addEventListener("focusin", function(e) {
 });
 
 /* --- 4. GESTION SUPPORTS & ECHANTILLONS (SYNCHRO DESCENDANTE) --- */
-
 async function chargerSupport() {
     const selectSupport = document.getElementById("selectSupport");
     const supportNom = selectSupport ? selectSupport.value.trim() : "";
@@ -97,22 +96,20 @@ async function chargerSupport() {
 
     let dataSupabase = {};
     try {
-        console.log(`🔍 Recherche Supabase pour Chantier: "${nomChantier}" | Support: "${supportNom}"`);
-        
         const { data, error } = await supabaseClient
             .from('blindage')
             .select('hors_p1, etape_fouille, etape_beton, etape_matage, blind, carotte, statut')
             .eq('chantier', nomChantier)
             .eq('support', supportNom)
-            .maybeSingle();
+            .limit(1); // Utilisation d'un tableau limité à 1 pour éviter l'erreur 400 Bad Request
         
         if (error) {
             console.error("❌ Erreur SQL Supabase:", error.message);
-        } else if (data) {
-            console.log("✅ Données trouvées dans Supabase:", data);
-            dataSupabase = data;
+        } else if (data && data.length > 0) {
+            console.log("✅ Données trouvées dans Supabase:", data[0]);
+            dataSupabase = data[0];
         } else {
-            console.warn("⚠️ Aucune ligne existante dans Supabase pour ce support. Utilisation des valeurs par défaut.");
+            console.warn("⚠️ Aucune ligne existante dans Supabase pour ce support.");
         }
     } catch (err) {
         console.warn("❌ Erreur réseau Supabase:", err);
@@ -223,6 +220,7 @@ async function chargerSupport() {
     if (typeof rechargerBLsSupport === "function") rechargerBLsSupport();
     calculer();
 }
+/* --- 4. GESTION SUPPORTS & ECHANTILLONS (SYNCHRO DESCENDANTE) --- */
 
 const aliasEchantillon = {
 "HE180A":"HEA180","HEA180":"HEA180","HE200A":"HEA200","HEA200":"HEA200",
