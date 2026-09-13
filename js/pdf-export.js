@@ -328,23 +328,29 @@ y = doc.lastAutoTable.finalY + 5;
       }
     }
 
-    // ---------- Section 5 : volumes ----------
-// APRÈS
-titreSection("VOLUMES", violet);
+// ---------- Section 5 : volumes & big-bags ----------
+titreSection("VOLUMES & BIG-BAGS", violet);
 const volCarotteVisible = g("display_vol_carotte") && g("display_vol_carotte").style.display !== "none";
-const headVolumes = ["Volume theorique", "Volume reel"];
-const rowVolumes = [txt("vol_prevu") || "-", txt("vol_modifie") || "-"];
+const headVolumes = ["Volume theorique", "Volume reel", "Big-Bag terre", "Big-Bag mignonette"];
+const rowVolumes = [
+  txt("vol_prevu") || "-", 
+  txt("vol_modifie") || "-",
+  val("nb_big_bag_terre") || "0",
+  val("nb_big_bag_mignonette") || "0"
+];
+
 if (volCarotteVisible) {
-  headVolumes.push("Beton net (hors carotte)");
-  rowVolumes.push(txt("vol_carotte") || "-");
+  headVolumes.splice(2, 0, "Beton net (hors carotte)");
+  rowVolumes.splice(2, 0, txt("vol_carotte") || "-");
 }
+
 doc.autoTable({
   startY: y,
   margin: { left: marge, right: marge, bottom: footerReserve },
   head: [headVolumes],
   body: [rowVolumes],
   theme: 'grid',
-  styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
+  styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
   headStyles: { fillColor: violet, textColor: 255, fontStyle: 'bold' },
   bodyStyles: { fontStyle: 'bold', textColor: [0, 100, 180] },
 });
