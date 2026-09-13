@@ -222,6 +222,7 @@ async function chargerSupport() {
     calculer();
 }
 
+/* --- 4. GESTION SUPPORTS & ECHANTILLONS (SYNCHRO DESCENDANTE) --- */
 const aliasEchantillon = {
 "HE180A":"HEA180","HEA180":"HEA180","HE200A":"HEA200","HEA200":"HEA200",
 "HE220A":"HEA220","HEA220":"HEA220","HE240A":"HEA240","HEA240":"HEA240",
