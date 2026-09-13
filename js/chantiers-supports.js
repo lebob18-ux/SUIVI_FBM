@@ -110,12 +110,7 @@ async function chargerSupport() {
 
     const valOuVide = (val) => (val !== undefined && val !== null && val !== "") ? val : "";
 
-    const parseBooleenStricte = (val) => {
-        if (val === true || val === 1 || val === "1" || val === "true") return true;
-        return false;
-    };
-
-    // Analyse du champ texte 'blind' de Supabase (ex: "OUI", "true", "1", etc.)
+    // Analyse unifiée des formats texte ("OUI", "true", "1", etc.)
     const estVraiTexte = (val) => {
         if (val === true || val === 1 || val === "1") return true;
         if (typeof val === "string") {
@@ -125,7 +120,7 @@ async function chargerSupport() {
         return false;
     };
 
-    // Remplissage des inputs standards
+    // Remplissage des inputs
     document.getElementById("valF").value = valOuVide(dataBase.F);
     document.getElementById("valSUP").value = valOuVide(dataBase.SUP);
     document.getElementById("I").value = valOuVide(dataBase.I);
@@ -170,52 +165,49 @@ async function chargerSupport() {
         appliquerEchantillon(dataBase.ECH);
     }
     
-    // --- RESTAURATION DES CASES À COCHER DEPUIS SUPABASE ---
-
-    // 1. Blindage (colonne texte 'blind')
+    // Restauration des états depuis Supabase (format texte)
     const chkBlindage = document.getElementById("blindageCheck");
     if (chkBlindage) {
-        const valBlind = dataSupabase.blind !== undefined && dataSupabase.blind !== null ? dataSupabase.blind : dataBase.BLIND;
-        chkBlindage.checked = estVraiTexte(valBlind);
+        chkBlindage.checked = (dataSupabase.blind !== undefined && dataSupabase.blind !== null) ? estVraiTexte(dataSupabase.blind) : (dataBase.BLIND === "OUI");
     }
 
-    // 2. Carotte
     const chkCarotte = document.getElementById("carotte");
     if (chkCarotte) {
-        chkCarotte.checked = (dataSupabase.carotte !== undefined && dataSupabase.carotte !== null) ? parseBooleenStricte(dataSupabase.carotte) : (dataBase.CARO === "OUI");
+        chkCarotte.checked = (dataSupabase.carotte !== undefined && dataSupabase.carotte !== null) ? estVraiTexte(dataSupabase.carotte) : (dataBase.CARO === "OUI");
     }
 
     document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
 
-    // 3. Hors P1 (colonne booléenne 'hors_p1')
     const chkHorsP1 = document.getElementById("check_hors_p1");
     if (chkHorsP1) {
-        const valHorsP1 = dataSupabase.hors_p1 !== undefined && dataSupabase.hors_p1 !== null ? dataSupabase.hors_p1 : dataBase.hors_p1;
-        chkHorsP1.checked = parseBooleenStricte(valHorsP1);
+        chkHorsP1.checked = (dataSupabase.hors_p1 !== undefined && dataSupabase.hors_p1 !== null) ? estVraiTexte(dataSupabase.hors_p1) : false;
     }
 
-    // 4. Étapes (fouille, béton, matage)
     const checkFouille = document.getElementById("check_fouille");
     const checkBeton = document.getElementById("check_beton");
     const checkMatage = document.getElementById("check_matage");
 
-    if (checkFouille) checkFouille.checked = dataSupabase.etape_fouille !== undefined ? parseBooleenStricte(dataSupabase.etape_fouille) : true;
-    if (checkBeton) checkBeton.checked = dataSupabase.etape_beton !== undefined ? parseBooleenStricte(dataSupabase.etape_beton) : true;
-    if (checkMatage) checkMatage.checked = dataSupabase.etape_matage !== undefined ? parseBooleenStricte(dataSupabase.etape_matage) : true;
+    if (checkFouille) {
+        checkFouille.checked = (dataSupabase.etape_fouille !== undefined && dataSupabase.etape_fouille !== null) ? estVraiTexte(dataSupabase.etape_fouille) : true;
+    }
+    if (checkBeton) {
+        checkBeton.checked = (dataSupabase.etape_beton !== undefined && dataSupabase.etape_beton !== null) ? estVraiTexte(dataSupabase.etape_beton) : true;
+    }
+    if (checkMatage) {
+        checkMatage.checked = (dataSupabase.etape_matage !== undefined && dataSupabase.etape_matage !== null) ? estVraiTexte(dataSupabase.etape_matage) : true;
+    }
 
-    // 5. Statut
     const statutActif = dataSupabase.statut || dataBase.statut_blindage;
     const radiosStatut = document.querySelectorAll('input[name="statut_blindage"]');
     radiosStatut.forEach(radio => {
         radio.checked = (statutActif && radio.value === statutActif);
     });
 
-    // Forçage de l'actualisation dynamique de l'interface (affichage des blocs et règles d'activation)
     if (typeof refreshBlocs === "function") refreshBlocs();
     
-    // Déclenchement des événements pour propager les états aux écouteurs d'événements
-    if (chkBlindage) chkBlindage.dispatchEvent(new Event('change'));
+    // Déclenchement pour propager la logique d'interface
     if (chkHorsP1) chkHorsP1.dispatchEvent(new Event('change'));
+    if (chkBlindage) chkBlindage.dispatchEvent(new Event('change'));
 
     if (typeof restaurerLocal === "function") restaurerLocal();
     if (typeof rechargerBLsSupport === "function") rechargerBLsSupport();
@@ -226,7 +218,7 @@ const aliasEchantillon = {
 "HE180A":"HEA180","HEA180":"HEA180","HE200A":"HEA200","HEA200":"HEA200",
 "HE220A":"HEA220","HEA220":"HEA220","HE240A":"HEA240","HEA240":"HEA240",
 "HE300A":"HEA300","HEA300":"HEA300","HE320A":"HEA320","HEA320":"HEA320",
-"HE220B":"HEB220","HEB220":"HEB220","HE240B":"HEB240","HEB240":"HEA240",
+"HE220B":"HEB220","HEB220":"HEB220","HE240B":"HEB240","HEB240":"HEB240",
 "HE260B":"HEB260","HEB260":"HEB260","HE300B":"HEB300","HEB300":"HEB300",
 "HE320B":"HEB320","HEB320":"HEB320","JHE280A":"JHEA280","JHEA280":"JHEA280",
 "JHE320A":"JHEA320","JHEA320":"JHEA320","JHE280B":"JHEB280","JHEB280":"JHEB280",
@@ -392,7 +384,7 @@ function gererSaisieEchantillon() {
 
 /* --- 5. SYNCHRONISATION DESCENDANTE (INTERFACE -> SUPABASE) --- */
 document.addEventListener("DOMContentLoaded", function () {
-    const champsACocher = ["check_hors_p1", "check_fouille", "check_beton", "check_matage", "blindageCheck"];
+    const champsACocher = ["check_hors_p1", "check_fouille", "check_beton", "check_matage", "blindageCheck", "carotte"];
 
     champsACocher.forEach(id => {
         const element = document.getElementById(id);
@@ -408,16 +400,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 
                 let nomChampSupabase = "";
                 if (id === "check_hors_p1") nomChampSupabase = "hors_p1";
-                else if (id === "blindageCheck") nomChampSupabase = "blind"; // Colonne 'blind' en texte
+                else if (id === "blindageCheck") nomChampSupabase = "blind";
+                else if (id === "carotte") nomChampSupabase = "carotte";
                 else nomChampSupabase = id.replace("check_", "etape_");
 
-                // Texte ("OUI"/"NON") pour blind, booléen (true/false) pour les autres
-                let valeurCochee;
-                if (id === "blindageCheck") {
-                    valeurCochee = this.checked ? "OUI" : "NON";
-                } else {
-                    valeurCochee = this.checked ? true : false;
-                }
+                // Envoi systématique d'une chaîne texte "OUI" ou "NON" pour TOUS ces champs
+                const valeurCochee = this.checked ? "OUI" : "NON";
 
                 try {
                     const { data: existants, error: errSelect } = await supabaseClient
@@ -451,7 +439,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
 
                     if (error) {
-                        console.error("Erreur lors de la mise à jour Supabase :", error.message);
+                        console.error("Erreur Supabase :", error.message);
                     } else {
                         console.log(`Mise à jour OK : ${nomChampSupabase} = ${valeurCochee}`);
                     }
