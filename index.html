@@ -268,7 +268,28 @@
     <span id="display_vol_carotte" style="display: none;">🧱 Béton Net sans 🥕: <span id="vol_carotte" style="color: #d97706; font-weight: bold;">0.00 m³</span></span>
   </div>
 </div>
-
+<div class="section collapsed">
+  <div class="section-title" onclick="toggleSection('sec-bl-beton')">
+    <span>🧾 BL-BÉTON</span>
+    <span class="section-arrow" id="arrow-sec-bl-beton">▾</span>
+  </div>
+  <div class="section-content" id="sec-bl-beton">
+    <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
+      <input list="bl-datalist" id="bl-input" placeholder="Type Béton"
+        style="flex:2; height:32px; font-size:0.85em;">
+      <datalist id="bl-datalist"></datalist>
+      <button type="button" onclick="scannerQR()"
+        style="background:#7C2270; color:white; padding:5px 10px; margin:0; font-size:1.1em;">📷</button>
+    </div>
+    <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
+      <input type="number" id="slump-input" placeholder="Slump (cm)"
+        style="flex:1; height:32px; font-size:0.85em;" step="1" min="0">
+      <button type="button" onclick="ajouterBL()"
+        style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">➕ Ajouter</button>
+    </div>
+    <div id="bl-liste"></div>
+  </div>
+</div>
 <div class="section collapsed" id="sec-alertes-wrap">
   <div class="section-title" onclick="toggleSection('sec-alertes')">
     <span>🚨 Alertes</span>
@@ -292,28 +313,7 @@
   </div>   
 </div>  
 
-<div class="section collapsed">
-  <div class="section-title" onclick="toggleSection('sec-bl-beton')">
-    <span>🧾 BL-BÉTON</span>
-    <span class="section-arrow" id="arrow-sec-bl-beton">▾</span>
-  </div>
-  <div class="section-content" id="sec-bl-beton">
-    <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
-      <input list="bl-datalist" id="bl-input" placeholder="Type Béton"
-        style="flex:2; height:32px; font-size:0.85em;">
-      <datalist id="bl-datalist"></datalist>
-      <button type="button" onclick="scannerQR()"
-        style="background:#7C2270; color:white; padding:5px 10px; margin:0; font-size:1.1em;">📷</button>
-    </div>
-    <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
-      <input type="number" id="slump-input" placeholder="Slump (cm)"
-        style="flex:1; height:32px; font-size:0.85em;" step="1" min="0">
-      <button type="button" onclick="ajouterBL()"
-        style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">➕ Ajouter</button>
-    </div>
-    <div id="bl-liste"></div>
-  </div>
-</div>
+
 
 <div class="section collapsed">
   <div class="section-title" onclick="toggleSection('sec-signature')">
