@@ -97,7 +97,7 @@ async function chargerSupport() {
     const dataBase = baseSupports.find(s => s.support === supportNom);
     if (!dataBase) return;
 
-    // 1. Récupération des données fraîches depuis Supabase (pour avoir hors_p1 et les étapes à jour)
+    // 1. Récupération des données fraîches depuis Supabase
     let dataSupabase = {};
     try {
         const { data, error } = await supabaseClient
@@ -169,14 +169,22 @@ async function chargerSupport() {
     document.getElementById("carotte").checked = (dataBase.CARO === "OUI");
     document.getElementById("display_type").innerText = dataBase.TYPE ? "🧊 " + dataBase.TYPE : "";
 
-    // 🟢 Récupération ultra-robuste de Hors P1 (depuis Supabase en priorité, sinon base locale)
+    // 🟢 Fonction ultra-souple pour normaliser et tester n'importe quel format (true, TRUE, "true", "TRUE", 1, "1", "OUI", etc.)
+    const estCoche = (val) => {
+        if (val === true || val === 1) return true;
+        if (val === false || val === 0 || val === null || val === undefined) return false;
+        const str = String(val).trim().toLowerCase();
+        return str === "true" || str === "1" || str === "oui" || str === "yes" || str === "on";
+    };
+
+    // Application pour Hors P1
+    const valHorsP1 = dataSupabase.hors_p1 !== undefined ? dataSupabase.hors_p1 : dataBase.hors_p1;
     const chkHorsP1 = document.getElementById("check_hors_p1");
     if (chkHorsP1) {
-        const valHorsP1 = dataSupabase.hors_p1 !== undefined ? dataSupabase.hors_p1 : dataBase.hors_p1;
-        chkHorsP1.checked = (valHorsP1 === true || valHorsP1 === "true" || valHorsP1 === 1 || valHorsP1 === "OUI");
+        chkHorsP1.checked = estCoche(valHorsP1);
     }
 
-    // 🟢 Récupération ultra-robuste des 3 étapes depuis Supabase / base locale
+    // Application pour les 3 étapes
     const checkFouille = document.getElementById("check_fouille");
     const checkBeton = document.getElementById("check_beton");
     const checkMatage = document.getElementById("check_matage");
@@ -185,9 +193,9 @@ async function chargerSupport() {
     const valBeton = dataSupabase.etape_beton !== undefined ? dataSupabase.etape_beton : dataBase.etape_beton;
     const valMatage = dataSupabase.etape_matage !== undefined ? dataSupabase.etape_matage : dataBase.etape_matage;
 
-    if (checkFouille) checkFouille.checked = (valFouille === true || valFouille === "true" || valFouille === 1);
-    if (checkBeton) checkBeton.checked = (valBeton === true || valBeton === "true" || valBeton === 1);
-    if (checkMatage) checkMatage.checked = (valMatage === true || valMatage === "true" || valMatage === 1);
+    if (checkFouille) checkFouille.checked = (dataSupabase.etape_fouille !== undefined) ? estCoche(valFouille) : true;
+    if (checkBeton) checkBeton.checked = (dataSupabase.etape_beton !== undefined) ? estCoche(valBeton) : true;
+    if (checkMatage) checkMatage.checked = (dataSupabase.etape_matage !== undefined) ? estCoche(valMatage) : true;
 
     // Gestion des boutons radio "statut_blindage"
     const statutActif = dataSupabase.statut_blindage || dataBase.statut_blindage;
