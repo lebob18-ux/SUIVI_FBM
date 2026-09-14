@@ -48,29 +48,30 @@ async function genererRecap(containerId) {
       chantiersMap[nomChantier] = { 
         total: 0, 
         effectues: 0, 
-        m3TotalPrevu: 0,      // Somme totale des m3 prévus du chantier
+        m3TotalPrevu: 0,      // Somme totale de tous les prévus du chantier
         m3PrevuEffectue: 0,   // Somme des m3 prévus des supports réalisés (pour l'écart)
-        m3Reel: 0             // Somme des vrais m3 réels saisis
+        m3ReelTotal: 0        // Somme des vrais m3 réels saisis sur le terrain
       };
     }
     const c = chantiersMap[nomChantier];
     c.total++;
     
     const m3PrevuVal = parseFloat(s.m3_prevu) || 0;
-    c.m3TotalPrevu += m3PrevuVal; // Total de tous les prévus du chantier
+    c.m3TotalPrevu += m3PrevuVal; // 1. Total global prévu du chantier
 
-    // On récupère les données de Supabase en priorité, sinon baseSupports
+    // Données Supabase
     const supData = supabaseMap[cleSupabase];
     const valEff = supData ? supData.effectue : (s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : ""));
-    const m3ReelVal = supData ? supData.m3_reel : (parseFloat(s.m3_reel) || 0);
+    
+    // On prend STRICTEMENT le m3 réel saisi (sans fallback sur le prévu)
+    const m3ReelVal = supData ? (parseFloat(supData.m3_reel) || 0) : 0;
 
-    // Un support est compté "réalisé" si le m3 réel est > 0 ou si le statut l'indique explicitement
     const estRealise = (m3ReelVal > 0) || (valEff === 1 || String(valEff).trim() === "1" || String(valEff).trim() === "OUI");
 
     if (estRealise) {
       c.effectues++;
-      c.m3PrevuEffectue += m3PrevuVal; // Cumul du prévu uniquement sur les éléments faits
-      c.m3Reel += m3ReelVal;            // Cumul du réel mesuré
+      c.m3PrevuEffectue += m3PrevuVal; // Prévu des éléments réalisés
+      c.m3ReelTotal += m3ReelVal;      // Vrai réel cumulé
     }
   });
 
@@ -86,8 +87,8 @@ async function genererRecap(containerId) {
     const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
     const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
     
-    // Écart = Total des m3 réels saisis - Total des m3 prévus de ces mêmes éléments réalisés
-    const ecart = c.m3Reel - c.m3PrevuEffectue;
+    // Écart = Total des m3 réels - Total des m3 prévus des éléments réalisés
+    const ecart = c.m3ReelTotal - c.m3PrevuEffectue;
     const couleurEcart = ecart > 0 ? "#dc2626" : "#16a34a";
 
     html += `
@@ -107,15 +108,15 @@ async function genererRecap(containerId) {
           <table style="width:100%; border-collapse:collapse; font-size:0.78em;">
             <thead>
               <tr>
-                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ prévu (à date)</th>
-                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ réel (à date)</th>
+                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ prévu (réalisé)</th>
+                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ réel</th>
                 <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">Écart</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold;">${c.m3PrevuEffectue.toFixed(2)}</td>
-                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:${couleurEcart};">${c.m3Reel.toFixed(2)}</td>
+                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:${couleurEcart};">${c.m3ReelTotal.toFixed(2)}</td>
                 <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:${couleurEcart};">${ecart >= 0 ? '+' : ''}${ecart.toFixed(2)}</td>
               </tr>
             </tbody>
