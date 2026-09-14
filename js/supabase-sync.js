@@ -60,6 +60,9 @@ async function synchroniserSupportActuel() {
     const etapeBetonVal = document.getElementById("check_beton")?.checked || false;
     const etapeMatageVal = document.getElementById("check_matage")?.checked || false;
 
+    // 🟢 5 quinquies. Récupération du numéro de BL Béton
+    const blBetonVal = document.getElementById("bl_beton")?.value.trim();
+
     // 6. Requête de mise à jour vers Supabase
     const { error } = await supabaseClient
       .from('blindage')
@@ -76,12 +79,13 @@ async function synchroniserSupportActuel() {
         sup_reel: supReel ? parseFloat(supReel) : null,
         m3_reel: volReelNum,
         terre: terreReel !== "" ? parseInt(terreReel, 10) : 0,         
-        mignonette: mignonetteReel !== "" ? parseInt(mignonetteReel, 10) : 0, 
+        mignonette: mignonetteReel !== "" ? parseInt(mignonetteReel, 10) : 0,  
         statut_blindage: statutBlindageVal,
-        hors_p1: horsP1Val,                    // 🟢 Ajout Hors P1
-        etape_fouille: etapeFouilleVal,        // 🟢 Ajout Étape Fouille
-        etape_beton: etapeBetonVal,            // 🟢 Ajout Étape Béton
-        etape_matage: etapeMatageVal,          // 🟢 Ajout Étape Matage
+        bl_beton: blBetonVal ? String(blBetonVal).toUpperCase() : null, // 🟢 Ajout BL Béton
+        hors_p1: horsP1Val,                     
+        etape_fouille: etapeFouilleVal,         
+        etape_beton: etapeBetonVal,             
+        etape_matage: etapeMatageVal,           
         effectue: 1,  
         date_exec: dateJour 
       })
