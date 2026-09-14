@@ -99,7 +99,7 @@ async function chargerSupport() {
     try {
         const { data, error } = await supabaseClient
             .from('blindage')
-            .select('hors_p1, etape_fouille, etape_beton, etape_matage, blind, caro')
+            .select('hors_p1, etape_fouille, etape_beton, etape_matage, blind, caro, bl_beton')
             .eq('chantier', nomChantier)
             .eq('support', supportNom)
             .limit(1);
@@ -189,6 +189,12 @@ async function chargerSupport() {
     const chkHorsP1 = document.getElementById("check_hors_p1");
     if (chkHorsP1) {
         chkHorsP1.checked = (dataSupabase.hors_p1 !== undefined && dataSupabase.hors_p1 !== null) ? estVraiTexte(dataSupabase.hors_p1) : false;
+    }
+
+    // Application BL Béton
+    const inputBlBeton = document.getElementById("bl_beton");
+    if (inputBlBeton) {
+        inputBlBeton.value = (dataSupabase.bl_beton !== undefined && dataSupabase.bl_beton !== null) ? dataSupabase.bl_beton : "";
     }
 
     // Actualisation des blocs et déverrouillage des étapes
@@ -307,6 +313,8 @@ function resetSaisieAvantSupport() {
   document.getElementById("AF").value = "";
   document.getElementById("B_Fouille").value = "";
   document.getElementById("H_Fouille").value = "";
+  const inputBlBeton = document.getElementById("bl_beton");
+  if (inputBlBeton) inputBlBeton.value = "";
 
   document.getElementById("display_type").innerText = "";
   document.getElementById("AF_ref").innerText = "";
