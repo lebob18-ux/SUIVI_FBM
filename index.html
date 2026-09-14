@@ -182,11 +182,17 @@
   </div>
   <div class="section-content" id="sec-beton">
     <!-- Saisie des bons de livraison (BL) et flash QR code -->
+<!-- Saisie du Numéro de BL et flash QR code -->
+    <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
+      <input type="text" id="bl_beton" placeholder="N° de BL" style="flex:1; height:32px; font-size:0.85em; text-transform:uppercase;" oninput="this.value = this.value.toUpperCase();">
+      <button type="button" onclick="scannerQR()" style="background:#7C2270; color:white; padding:5px 10px; margin:0; font-size:1.1em;">📷</button>
+    </div>
+    <!-- Saisie du Type de Béton -->
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
       <input list="bl-datalist" id="bl-input" placeholder="Type Béton" style="flex:2; height:32px; font-size:0.85em;">
       <datalist id="bl-datalist"></datalist>
-      <button type="button" onclick="scannerQR()" style="background:#7C2270; color:white; padding:5px 10px; margin:0; font-size:1.1em;">📷</button>
     </div>
+    <!-- Slump et Bouton Ajouter -->
     <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
       <input type="number" id="slump-input" placeholder="Slump (cm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0">
       <button type="button" onclick="ajouterBL()" style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">➕ Ajouter</button>
