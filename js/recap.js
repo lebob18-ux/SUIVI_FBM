@@ -1,14 +1,5 @@
 /* ============================================================
-   RÉCAPITULATIF PAR CHANTIER
-   ============================================================ */
-
-const RECAP_EMAILS_AUTORISES = [
-  "robert.lavignon@reseau.sncf.fr"
-];
-
-
-/* ============================================================
-    RÉCAPITULATIF PAR CHANTIER (Mis à jour avec Supabase)
+   RÉCAPITULATIF PAR CHANTIER & GESTION DES ONGLETS
    ============================================================ */
 
 const RECAP_EMAILS_AUTORISES = [
@@ -132,14 +123,11 @@ async function genererRecap(containerId) {
   container.innerHTML = html;
 }
 
-  container.innerHTML = html;
-}
-
 /* ============================================================
-    GESTION DES ONGLETS (FBM / Admin)
+   GESTION DES ONGLETS (FBM / Admin)
    ============================================================ */
 
-function ouvrirOnglet(nom) {
+window.ouvrirOnglet = function(nom) {
   const fbmPage  = document.getElementById("fbmPage");
   const adminPage = document.getElementById("adminPage");
   
@@ -149,11 +137,10 @@ function ouvrirOnglet(nom) {
   document.getElementById("tabFBM")?.classList.toggle("active", nom === "fbm");
   document.getElementById("tabAdmin")?.classList.toggle("active", nom === "admin");
   
-  // Si on bascule sur l'admin, on lance la génération du récap avec la fonction asynchrone
   if (nom === "admin") {
     setTimeout(() => genererRecap("recap-content-admin"), 100);
   }
-}
+};
 
 /* Visibilité onglet Admin selon email */
 function controlerVisibiliteRecap() {
