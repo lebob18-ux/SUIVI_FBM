@@ -1,4 +1,4 @@
-const CACHE = "fbm-v1";
+const CACHE = "fbm-v2"; // Incrémente la version pour forcer la mise à jour
 const FICHIERS = [
   "./", "./index.html", "./style.css",
   "./data.js", "./bl-liste.js", "./email-liste.js",
@@ -13,7 +13,15 @@ const FICHIERS = [
 
 self.addEventListener("install", e => {
   e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(FICHIERS))
+    caches.open(CACHE).then(async cache => {
+      for (const fichier of FICHIERS) {
+        try {
+          await cache.add(fichier);
+        } catch (err) {
+          console.warn("⚠️ Fichier ignoré du cache (introuvable ou 404) :", fichier);
+        }
+      }
+    })
   );
   self.skipWaiting();
 });
