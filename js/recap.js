@@ -73,6 +73,9 @@ async function genererRecap(containerId) {
       c.m3PrevuEffectue += m3PrevuVal; // Prévu des éléments réalisés
       c.m3ReelTotal += m3ReelVal;      // Vrai réel cumulé
     }
+
+    // --- LIGNE DE DÉBOGAGE CONSOLE ---
+    console.log(`Chantier: ${nomChantier} | Support: ${nomSupport} | Prévu: ${m3PrevuVal} | Réel Saisi: ${m3ReelVal} | Fait: ${estRealise}`);
   });
 
   const chantiers = Object.keys(chantiersMap);
