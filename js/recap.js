@@ -48,26 +48,29 @@ async function genererRecap(containerId) {
       chantiersMap[nomChantier] = { 
         total: 0, 
         effectues: 0, 
-        m3TotalPrevu: 0,      
-        m3PrevuEffectue: 0,  
-        m3Reel: 0 
+        m3TotalPrevu: 0,      // Somme totale des m3 prévus du chantier
+        m3PrevuEffectue: 0,   // Somme des m3 prévus des supports réalisés (pour l'écart)
+        m3Reel: 0             // Somme des vrais m3 réels saisis
       };
     }
     const c = chantiersMap[nomChantier];
     c.total++;
     
     const m3PrevuVal = parseFloat(s.m3_prevu) || 0;
-    c.m3TotalPrevu += m3PrevuVal;
+    c.m3TotalPrevu += m3PrevuVal; // Total de tous les prévus du chantier
 
-    // On récupère le statut et le m3 réel depuis Supabase en priorité, sinon baseSupports
+    // On récupère les données de Supabase en priorité, sinon baseSupports
     const supData = supabaseMap[cleSupabase];
     const valEff = supData ? supData.effectue : (s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : ""));
+    const m3ReelVal = supData ? supData.m3_reel : (parseFloat(s.m3_reel) || 0);
 
-    if (valEff === 1 || String(valEff).trim() === "1" || String(valEff).trim() === "OUI") {
+    // Un support est compté "réalisé" si le m3 réel est > 0 ou si le statut l'indique explicitement
+    const estRealise = (m3ReelVal > 0) || (valEff === 1 || String(valEff).trim() === "1" || String(valEff).trim() === "OUI");
+
+    if (estRealise) {
       c.effectues++;
-      c.m3PrevuEffectue += m3PrevuVal;
-      // Récupération du m3 réel injecté via Supabase
-      c.m3Reel += supData ? supData.m3_reel : (parseFloat(s.m3_reel) || 0);
+      c.m3PrevuEffectue += m3PrevuVal; // Cumul du prévu uniquement sur les éléments faits
+      c.m3Reel += m3ReelVal;            // Cumul du réel mesuré
     }
   });
 
@@ -83,6 +86,7 @@ async function genererRecap(containerId) {
     const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
     const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
     
+    // Écart = Total des m3 réels saisis - Total des m3 prévus de ces mêmes éléments réalisés
     const ecart = c.m3Reel - c.m3PrevuEffectue;
     const couleurEcart = ecart > 0 ? "#dc2626" : "#16a34a";
 
