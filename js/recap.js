@@ -7,35 +7,76 @@ const RECAP_EMAILS_AUTORISES = [
 ];
 
 
-function genererRecap(containerId) {
+/* ============================================================
+    RÉCAPITULATIF PAR CHANTIER (Mis à jour avec Supabase)
+   ============================================================ */
+
+const RECAP_EMAILS_AUTORISES = [
+  "robert.lavignon@reseau.sncf.fr"
+];
+
+async function genererRecap(containerId) {
   const cid = containerId || "recap-content-fbm";
   const container = document.getElementById(cid);
   if (!container) { console.warn("Container introuvable :", cid); return; }
   if (typeof baseSupports === "undefined") { console.error("baseSupports non défini"); return; }
 
+  container.innerHTML = "<p style='color:#666; font-size:0.8em; text-align:center;'>Chargement des données...</p>";
+
+  // 1. Récupération des données réelles depuis Supabase
+  let dataSupabase = [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('blindage')
+      .select('chantier, support, m3_reel, effectue');
+    
+    if (!error && data) {
+      dataSupabase = data;
+    }
+  } catch (err) {
+    console.warn("⚠️ Impossible de charger les volumes réels depuis Supabase :", err);
+  }
+
+  // Création d'une map pour retrouver rapidement les m3 réels de Supabase par Chantier_Support
+  const supabaseMap = {};
+  dataSupabase.forEach(row => {
+    const cle = `${String(row.chantier).trim()}_${String(row.support).trim()}`;
+    supabaseMap[cle] = {
+      m3_reel: parseFloat(row.m3_reel) || 0,
+      effectue: row.effectue
+    };
+  });
+
   const chantiersMap = {};
   baseSupports.forEach(s => {
-    if (!chantiersMap[s.chantier]) {
-      chantiersMap[s.chantier] = { 
+    const nomChantier = String(s.chantier).trim();
+    const nomSupport = String(s.support).trim();
+    const cleSupabase = `${nomChantier}_${nomSupport}`;
+
+    if (!chantiersMap[nomChantier]) {
+      chantiersMap[nomChantier] = { 
         total: 0, 
         effectues: 0, 
-        m3TotalPrevu: 0,     
+        m3TotalPrevu: 0,      
         m3PrevuEffectue: 0,  
         m3Reel: 0 
       };
     }
-    const c = chantiersMap[s.chantier];
+    const c = chantiersMap[nomChantier];
     c.total++;
     
     const m3PrevuVal = parseFloat(s.m3_prevu) || 0;
     c.m3TotalPrevu += m3PrevuVal;
 
-    const valEff = s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : "");
+    // On récupère le statut et le m3 réel depuis Supabase en priorité, sinon baseSupports
+    const supData = supabaseMap[cleSupabase];
+    const valEff = supData ? supData.effectue : (s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : ""));
 
-    if (valEff === 1 || String(valEff).trim() === "1") {
+    if (valEff === 1 || String(valEff).trim() === "1" || String(valEff).trim() === "OUI") {
       c.effectues++;
       c.m3PrevuEffectue += m3PrevuVal;
-      c.m3Reel += parseFloat(s.m3_reel) || 0;
+      // Récupération du m3 réel injecté via Supabase
+      c.m3Reel += supData ? supData.m3_reel : (parseFloat(s.m3_reel) || 0);
     }
   });
 
@@ -87,6 +128,9 @@ function genererRecap(containerId) {
         </div>
       </div>`;
   });
+
+  container.innerHTML = html;
+}
 
   container.innerHTML = html;
 }
