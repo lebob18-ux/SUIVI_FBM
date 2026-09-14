@@ -46,22 +46,51 @@ async function synchroniserSupportActuel() {
     const fReel = document.getElementById("valF")?.value;
     const supReel = document.getElementById("valSUP")?.value;
 
-    // 🟢 5 bis. Récupération du statut blindage (boutons radio)
+    // Récupération du statut blindage (boutons radio)
     const radioStatutSelectionne = document.querySelector('input[name="statut_blindage"]:checked');
     const statutBlindageVal = radioStatutSelectionne ? radioStatutSelectionne.value : null;
 
-    // 🟢 5 ter. Récupération des quantités de Big-Bags (terre & mignonette)
+    // Récupération des quantités de Big-Bags (terre & mignonette)
     const terreReel = document.getElementById("nb_big_bag_terre")?.value;
     const mignonetteReel = document.getElementById("nb_big_bag_mignonette")?.value;
 
-    // 🟢 5 quater. Récupération des états Hors P1 et des 3 étapes
+    // Récupération des états Hors P1 et des 3 étapes
     const horsP1Val = document.getElementById("check_hors_p1")?.checked || false;
     const etapeFouilleVal = document.getElementById("check_fouille")?.checked || false;
     const etapeBetonVal = document.getElementById("check_beton")?.checked || false;
     const etapeMatageVal = document.getElementById("check_matage")?.checked || false;
 
-    // 🟢 5 quinquies. Récupération du numéro de BL Béton
-    const blBetonVal = document.getElementById("bl_beton")?.value.trim();
+    // 🟢 Récupération des nouveaux champs saisis dans l'interface
+    const saisieBl = document.getElementById("bl_beton")?.value.trim();
+    const saisieTypeBeton = document.getElementById("type_beton")?.value.trim();
+    const saisieSlump = document.getElementById("slump")?.value.trim();
+
+    // 🟢 ÉTAPE INTERMÉDIAIRE : Récupérer les anciennes valeurs en base pour concaténer proprement
+    const { data: ancienneData, error: errFetch } = await supabaseClient
+      .from('blindage')
+      .select('bl_beton, type_beton, slump')
+      .eq('chantier', nomChantier)
+      .eq('support', numSupportInput)
+      .maybeSingle();
+
+    if (errFetch) console.warn("Impossible de récupérer l'historique pour concaténation :", errFetch.message);
+
+    // Fonction utilitaire pour gérer l'ajout avec séparateur " / " sans dupliquer si c'est exactement la même valeur
+    const fusionnerTexte = (ancien, nouveau) => {
+      if (!nouveau) return ancien || null;
+      const nouveauNettoye = nouveau.toUpperCase();
+      if (!ancien) return nouveauNettoye;
+      // Si la valeur exacte n'est pas déjà présente dans la chaîne, on l'ajoute
+      const elements = ancien.split(" / ").map(e => e.trim());
+      if (!elements.includes(nouveauNettoye)) {
+        return ancien + " / " + nouveauNettoye;
+      }
+      return ancien;
+    };
+
+    const blFinal = fusionnerTexte(ancienneData?.bl_beton, saisieBl);
+    const typeBetonFinal = fusionnerTexte(ancienneData?.type_beton, saisieTypeBeton);
+    const slumpFinal = fusionnerTexte(ancienneData?.slump, saisieSlump);
 
     // 6. Requête de mise à jour vers Supabase
     const { error } = await supabaseClient
@@ -81,7 +110,9 @@ async function synchroniserSupportActuel() {
         terre: terreReel !== "" ? parseInt(terreReel, 10) : 0,         
         mignonette: mignonetteReel !== "" ? parseInt(mignonetteReel, 10) : 0,  
         statut_blindage: statutBlindageVal,
-        bl_beton: blBetonVal ? String(blBetonVal).toUpperCase() : null, // 🟢 Ajout BL Béton
+        bl_beton: blFinal,
+        type_beton: typeBetonFinal,
+        slump: slumpFinal,
         hors_p1: horsP1Val,                     
         etape_fouille: etapeFouilleVal,         
         etape_beton: etapeBetonVal,             
@@ -94,6 +125,11 @@ async function synchroniserSupportActuel() {
 
     if (error) throw error;
     
+    // Mettre à jour l'affichage local de l'input avec la valeur complète combinée
+    if (document.getElementById("bl_beton") && blFinal) document.getElementById("bl_beton").value = blFinal;
+    if (document.getElementById("type_beton") && typeBetonFinal) document.getElementById("type_beton").value = typeBetonFinal;
+    if (document.getElementById("slump") && slumpFinal) document.getElementById("slump").value = slumpFinal;
+
     console.log(`✅ Support ${numSupportInput} (${nomChantier}) synchronisé avec succès dans Supabase.`);
     return true;
 
