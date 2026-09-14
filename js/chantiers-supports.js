@@ -99,7 +99,7 @@ async function chargerSupport() {
     try {
         const { data, error } = await supabaseClient
             .from('blindage')
-            .select('hors_p1, etape_fouille, etape_beton, etape_matage, blind, caro, bl_beton')
+            .select('hors_p1, etape_fouille, etape_beton, etape_matage, blind, caro, bl_beton, type_beton, slump')
             .eq('chantier', nomChantier)
             .eq('support', supportNom)
             .limit(1);
@@ -191,10 +191,18 @@ async function chargerSupport() {
         chkHorsP1.checked = (dataSupabase.hors_p1 !== undefined && dataSupabase.hors_p1 !== null) ? estVraiTexte(dataSupabase.hors_p1) : false;
     }
 
-    // Application BL Béton
+    // Application BL Béton, Type de béton & Slump
     const inputBlBeton = document.getElementById("bl_beton");
     if (inputBlBeton) {
         inputBlBeton.value = (dataSupabase.bl_beton !== undefined && dataSupabase.bl_beton !== null) ? dataSupabase.bl_beton : "";
+    }
+    const inputTypeBeton = document.getElementById("type_beton");
+    if (inputTypeBeton) {
+        inputTypeBeton.value = (dataSupabase.type_beton !== undefined && dataSupabase.type_beton !== null) ? dataSupabase.type_beton : "";
+    }
+    const inputSlump = document.getElementById("slump");
+    if (inputSlump) {
+        inputSlump.value = (dataSupabase.slump !== undefined && dataSupabase.slump !== null) ? dataSupabase.slump : "";
     }
 
     // Actualisation des blocs et déverrouillage des étapes
@@ -228,7 +236,7 @@ async function chargerSupport() {
     calculer();
 }
 
-/* --- 4. GESTION SUPPORTS & ECHANTILLONS (SYNCHRO DESCENDANTE) --- */
+/* --- ECHANTILLONS & CONFIG --- */
 const aliasEchantillon = {
 "HE180A":"HEA180","HEA180":"HEA180","HE200A":"HEA200","HEA200":"HEA200",
 "HE220A":"HEA220","HEA220":"HEA220","HE240A":"HEA240","HEA240":"HEA240",
@@ -313,8 +321,13 @@ function resetSaisieAvantSupport() {
   document.getElementById("AF").value = "";
   document.getElementById("B_Fouille").value = "";
   document.getElementById("H_Fouille").value = "";
+  
   const inputBlBeton = document.getElementById("bl_beton");
   if (inputBlBeton) inputBlBeton.value = "";
+  const inputTypeBeton = document.getElementById("type_beton");
+  if (inputTypeBeton) inputTypeBeton.value = "";
+  const inputSlump = document.getElementById("slump");
+  if (inputSlump) inputSlump.value = "";
 
   document.getElementById("display_type").innerText = "";
   document.getElementById("AF_ref").innerText = "";
@@ -370,7 +383,6 @@ async function filtrerSupports() {
 
     if (!chantier) return;
 
-    // 1. On récupère l'état de tous les supports de ce chantier depuis Supabase
     let supportsFinisMap = {};
     try {
         const { data, error } = await supabaseClient
@@ -384,7 +396,6 @@ async function filtrerSupports() {
                 const betonOk = String(row.etape_beton).trim().toUpperCase() === "OUI";
                 const matageOk = String(row.etape_matage).trim().toUpperCase() === "OUI";
 
-                // Si les 3 étapes sont validées, le support est considéré comme fini
                 if (fouilleOk && betonOk && matageOk) {
                     supportsFinisMap[String(row.support).trim()] = true;
                 }
@@ -394,18 +405,15 @@ async function filtrerSupports() {
         console.warn("⚠️ Erreur lors de la vérification des supports terminés :", err);
     }
 
-    // 2. On filtre la base locale en excluant ceux qui sont finis
     const supportsDuChantier = baseSupports.filter(s => {
         if (s.chantier !== chantier) return false;
         const nomSupport = String(s.support).trim();
-        // On masque si les 3 étapes sont à OUI dans Supabase
         if (supportsFinisMap[nomSupport]) return false;
         return true;
     });
     
     supportsDuChantier.sort((a, b) => String(a.support).localeCompare(String(b.support), 'fr', { numeric: true, sensitivity: 'base' }));
 
-    // 3. On peuple le menu déroulant
     supportsDuChantier.forEach(s => {
         let opt = document.createElement("option");
         opt.value = s.support;
@@ -494,3 +502,133 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+
+/**
+ * Envoie les valeurs réelles de l'interface vers la table Supabase 'blindage' (avec gestion du cumul multi-BL)
+ */
+async function synchroniserSupportActuel() {
+  const numSupportInput = document.getElementById("selectSupport")?.value.trim();
+  const chantierSelect = document.getElementById("selectChantier");
+  const nomChantier = (chantierSelect && chantierSelect.selectedIndex >= 0 && chantierSelect.options[chantierSelect.selectedIndex])
+    ? chantierSelect.options[chantierSelect.selectedIndex].text
+    : "";
+
+  if (!numSupportInput) {
+    console.warn("Synchronisation ignorée : aucun support sélectionné.");
+    return false;
+  }
+
+  try {
+    const volReelTexte = document.getElementById("vol_modifie") ? document.getElementById("vol_modifie").innerText : "0";
+    const volReelNum = parseFloat(volReelTexte.replace("m³", "").trim()) || 0;
+
+    let echValeur = null;
+    const selEch = document.getElementById("E_select");
+    if (selEch && selEch.style.display !== "none") {
+      const opt = selEch.options[selEch.selectedIndex];
+      echValeur = opt ? opt.text : selEch.value;
+    } else {
+      const inputE = document.getElementById("E");
+      echValeur = inputE ? inputE.value : null;
+    }
+
+    const blocNVisible = document.getElementById("bloc-N") && document.getElementById("bloc-N").style.display !== "none";
+    const pSaisi = blocNVisible ? document.getElementById("valP_N")?.value : document.getElementById("valP_S")?.value;
+
+    const dateJour = new Date().toISOString().slice(0, 10);
+
+    const iReel = document.getElementById("I")?.value;
+    const arReel = document.getElementById("AR")?.value;
+    const encReel = document.getElementById("Enc")?.value;
+    const aReel = document.getElementById("AF")?.value;
+    const bReel = document.getElementById("B_Fouille")?.value;
+    const hReel = document.getElementById("H_Fouille")?.value;
+    const fReel = document.getElementById("valF")?.value;
+    const supReel = document.getElementById("valSUP")?.value;
+
+    const radioStatutSelectionne = document.querySelector('input[name="statut_blindage"]:checked');
+    const statutBlindageVal = radioStatutSelectionne ? radioStatutSelectionne.value : null;
+
+    const terreReel = document.getElementById("nb_big_bag_terre")?.value;
+    const mignonetteReel = document.getElementById("nb_big_bag_mignonette")?.value;
+
+    const horsP1Val = document.getElementById("check_hors_p1")?.checked || false;
+    const etapeFouilleVal = document.getElementById("check_fouille")?.checked || false;
+    const etapeBetonVal = document.getElementById("check_beton")?.checked || false;
+    const etapeMatageVal = document.getElementById("check_matage")?.checked || false;
+
+    const saisieBl = document.getElementById("bl_beton")?.value.trim();
+    const saisieTypeBeton = document.getElementById("type_beton")?.value.trim();
+    const saisieSlump = document.getElementById("slump")?.value.trim();
+
+    // Récupération des anciennes valeurs pour concaténation propre (multi-BL)
+    const { data: ancienneData, error: errFetch } = await supabaseClient
+      .from('blindage')
+      .select('bl_beton, type_beton, slump')
+      .eq('chantier', nomChantier)
+      .eq('support', numSupportInput)
+      .maybeSingle();
+
+    if (errFetch) console.warn("Impossible de récupérer l'historique pour concaténation :", errFetch.message);
+
+    const fusionnerTexte = (ancien, nouveau) => {
+      if (!nouveau) return ancien || null;
+      const nouveauNettoye = nouveau.toUpperCase();
+      if (!ancien) return nouveauNettoye;
+      const elements = ancien.split(" / ").map(e => e.trim());
+      if (!elements.includes(nouveauNettoye)) {
+        return ancien + " / " + nouveauNettoye;
+      }
+      return ancien;
+    };
+
+    const blFinal = fusionnerTexte(ancienneData?.bl_beton, saisieBl);
+    const typeBetonFinal = fusionnerTexte(ancienneData?.type_beton, saisieTypeBeton);
+    const slumpFinal = fusionnerTexte(ancienneData?.slump, saisieSlump);
+
+    const { error } = await supabaseClient
+      .from('blindage')
+      .update({
+        i_reel: iReel ? parseFloat(iReel) : null,
+        ech_reel: echValeur ? String(echValeur).trim() : null,
+        ar_reel: arReel ? parseFloat(arReel) : null,
+        enc_reel: encReel ? parseFloat(encReel) : null,
+        a_reel: aReel ? parseFloat(aReel) : null,
+        b_reel: bReel ? parseFloat(bReel) : null,
+        h_reel: hReel ? parseFloat(hReel) : null,
+        f_reel: fReel ? parseFloat(fReel) : null,
+        p_reel: pSaisi ? parseFloat(pSaisi) : null,
+        sup_reel: supReel ? parseFloat(supReel) : null,
+        m3_reel: volReelNum,
+        terre: terreReel !== "" ? parseInt(terreReel, 10) : 0,         
+        mignonette: mignonetteReel !== "" ? parseInt(mignonetteReel, 10) : 0,  
+        statut_blindage: statutBlindageVal,
+        bl_beton: blFinal,
+        type_beton: typeBetonFinal,
+        slump: slumpFinal,
+        hors_p1: horsP1Val,                     
+        etape_fouille: etapeFouilleVal,         
+        etape_beton: etapeBetonVal,             
+        etape_matage: etapeMatageVal,           
+        effectue: 1,  
+        date_exec: dateJour 
+      })
+      .eq('chantier', nomChantier)
+      .eq('support', numSupportInput);
+
+    if (error) throw error;
+    
+    if (document.getElementById("bl_beton") && blFinal) document.getElementById("bl_beton").value = blFinal;
+    if (document.getElementById("type_beton") && typeBetonFinal) document.getElementById("type_beton").value = typeBetonFinal;
+    if (document.getElementById("slump") && slumpFinal) document.getElementById("slump").value = slumpFinal;
+
+    console.log(`✅ Support ${numSupportInput} (${nomChantier}) synchronisé avec succès dans Supabase.`);
+    return true;
+
+} catch (err) {
+    console.error("❌ Erreur lors de la synchronisation Supabase :", err);
+    alert("⚠️ Erreur Supabase : " + (err.message || JSON.stringify(err)));
+    return false;
+  }
+}
