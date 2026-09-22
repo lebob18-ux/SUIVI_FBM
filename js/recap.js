@@ -6,6 +6,24 @@ const RECAP_EMAILS_AUTORISES = [
   "robert.lavignon@reseau.sncf.fr"
 ];
 
+// Fonction pour gérer l'ouverture en mode accordéon des détails de chantier
+function basculerDetailChantier(idDetail) {
+  const elementCible = document.getElementById(idDetail);
+  if (!elementCible) return;
+
+  const estDejaOuvert = elementCible.style.display === 'block';
+
+  // 1. Fermer tous les blocs de détails ouverts
+  document.querySelectorAll('.detail-chantier-bloc').forEach(el => {
+    el.style.display = 'none';
+  });
+
+  // 2. Si celui qu'on vient de cliquer n'était pas ouvert, on l'ouvre
+  if (!estDejaOuvert) {
+    elementCible.style.display = 'block';
+  }
+}
+
 async function genererRecap(containerId) {
   const cid = containerId || "recap-content-fbm";
   const container = document.getElementById(cid);
@@ -66,7 +84,7 @@ async function genererRecap(containerId) {
     const chantiers = Object.keys(chantiersMap).sort();
     let html = "";
 
-chantiers.forEach(nom => {
+    chantiers.forEach(nom => {
       const c = chantiersMap[nom];
       const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
       const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
@@ -102,8 +120,8 @@ chantiers.forEach(nom => {
 
       html += `
       <div style="margin-bottom:12px; border:1px solid #e5e5e5; border-radius:8px; overflow:hidden; background:#fff;">
-        <!-- En-tête cliquable pour ouvrir/fermer le détail -->
-        <div onclick="const d = document.getElementById('${idDetail}'); d.style.display = d.style.display === 'none' ? 'block' : 'none';" style="background:linear-gradient(to right,#f7f0f6,#f5f5f5); padding:8px 10px; font-weight:bold; font-size:0.82em; color:#7C2270; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" title="Cliquer pour afficher/masquer le détail fouille par fouille">
+        <!-- En-tête cliquable avec la fonction accordéon -->
+        <div onclick="basculerDetailChantier('${idDetail}')" style="background:linear-gradient(to right,#f7f0f6,#f5f5f5); padding:8px 10px; font-weight:bold; font-size:0.82em; color:#7C2270; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" title="Cliquer pour afficher/masquer le détail fouille par fouille">
           <span>📁 ${nom} <span style="font-size:0.8em; color:#666; font-weight:normal;">(Cliquer pour le détail)</span></span>
           <span style="font-size:0.95em; color:#333;">Total chantier : <strong>${c.m3TotalPrevu.toFixed(2)} m³</strong></span>
         </div>
@@ -133,8 +151,8 @@ chantiers.forEach(nom => {
             </tbody>
           </table>
 
-          <!-- Zone de détail fouille par fouille (masquée par défaut) -->
-          <div id="${idDetail}" style="display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:8px;">
+          <!-- Zone de détail avec la classe commune 'detail-chantier-bloc' pour l'accordéon -->
+          <div id="${idDetail}" class="detail-chantier-bloc" style="display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:8px;">
             <div style="font-size:0.8em; font-weight:bold; color:#7C2270; margin-bottom:6px;">🔍 Détail des fouilles / supports :</div>
             <table style="width:100%; border-collapse:collapse; font-size:0.75em;">
               <thead>
