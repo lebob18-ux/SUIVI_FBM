@@ -10,91 +10,71 @@ async function genererRecap(containerId) {
   const cid = containerId || "recap-content-fbm";
   const container = document.getElementById(cid);
   if (!container) { console.warn("Container introuvable :", cid); return; }
-  if (typeof baseSupports === "undefined") { console.error("baseSupports non défini"); return; }
 
   container.innerHTML = "<p style='color:#666; font-size:0.8em; text-align:center;'>Chargement des données...</p>";
 
-  // 1. Récupération des données réelles depuis Supabase
-  let dataSupabase = [];
   try {
+    // 1. Récupération directe depuis Supabase (comme dans l'admin)
     const { data, error } = await supabaseClient
       .from('blindage')
-      .select('chantier, support, m3_reel, effectue');
+      .select('*')
+      .range(0, 9999);
     
-    if (!error && data) {
-      dataSupabase = data;
-    }
-  } catch (err) {
-    console.warn("⚠️ Impossible de charger les volumes réels depuis Supabase :", err);
-  }
+    if (error) throw error;
+    const dataBlindage = data || [];
 
-  // Création d'une map pour retrouver rapidement les m3 réels de Supabase par Chantier_Support
-  const supabaseMap = {};
-  dataSupabase.forEach(row => {
-    const cle = `${String(row.chantier).trim()}_${String(row.support).trim()}`;
-    supabaseMap[cle] = {
-      m3_reel: parseFloat(row.m3_reel) || 0,
-      effectue: row.effectue
-    };
-  });
-
-  const chantiersMap = {};
-  baseSupports.forEach(s => {
-    const nomChantier = String(s.chantier).trim();
-    const nomSupport = String(s.support).trim();
-    const cleSupabase = `${nomChantier}_${nomSupport}`;
-
-    if (!chantiersMap[nomChantier]) {
-      chantiersMap[nomChantier] = { 
-        total: 0, 
-        effectues: 0, 
-        m3TotalPrevu: 0,      // Somme totale de tous les prévus du chantier
-        m3PrevuEffectue: 0,   // Somme des m3 prévus des supports réalisés (pour l'écart)
-        m3ReelTotal: 0        // Somme des vrais m3 réels saisis sur le terrain
-      };
-    }
-    const c = chantiersMap[nomChantier];
-    c.total++;
-    
-    const m3PrevuVal = parseFloat(s.m3_prevu) || 0;
-    c.m3TotalPrevu += m3PrevuVal; // 1. Total global prévu du chantier
-
-    // Données Supabase
-    const supData = supabaseMap[cleSupabase];
-    const valEff = supData ? supData.effectue : (s.EFFECTUE !== undefined ? s.EFFECTUE : (s.effectue !== undefined ? s.effectue : ""));
-    
-    // On prend STRICTEMENT le m3 réel saisi (sans fallback sur le prévu)
-    const m3ReelVal = supData ? (parseFloat(supData.m3_reel) || 0) : 0;
-
-    const estRealise = (m3ReelVal > 0) || (valEff === 1 || String(valEff).trim() === "1" || String(valEff).trim() === "OUI");
-
-    if (estRealise) {
-      c.effectues++;
-      c.m3PrevuEffectue += m3PrevuVal; // Prévu des éléments réalisés
-      c.m3ReelTotal += m3ReelVal;      // Vrai réel cumulé
+    if (dataBlindage.length === 0) {
+      container.innerHTML = "<p style='color:#999; font-size:0.8em; text-align:center;'>Aucune donnée disponible.</p>";
+      return;
     }
 
-    // --- LIGNE DE DÉBOGAGE CONSOLE ---
-    console.log(`Chantier: ${nomChantier} | Support: ${nomSupport} | Prévu: ${m3PrevuVal} | Réel Saisi: ${m3ReelVal} | Fait: ${estRealise}`);
-  });
+    const chantiersMap = {};
 
-  const chantiers = Object.keys(chantiersMap);
-  if (chantiers.length === 0) {
-    container.innerHTML = "<p style='color:#999; font-size:0.8em; text-align:center;'>Aucune donnée disponible.</p>";
-    return;
-  }
+    // 2. Traitement des données par chantier
+    dataBlindage.forEach(row => {
+      const nomChantier = row.chantier ? String(row.chantier).trim().toUpperCase() : "INCONNU";
+      
+      if (!chantiersMap[nomChantier]) {
+        chantiersMap[nomChantier] = { 
+          total: 0, 
+          effectues: 0, 
+          m3TotalPrevu: 0,   
+          m3PrevuEffectue: 0, 
+          m3ReelTotal: 0       
+        };
+      }
+      
+      const c = chantiersMap[nomChantier];
+      c.total++;
+      
+      const m3PrevuVal = parseFloat(row.m3_prevu || row.m3_prevu_total || 0);
+      const m3ReelVal = parseFloat(row.m3_reel || row.m3_reel_date || 0);
 
-  let html = "";
-  chantiers.forEach(nom => {
-    const c = chantiersMap[nom];
-    const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
-    const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
-    
-    // Écart = Total des m3 réels - Total des m3 prévus des éléments réalisés
-    const ecart = c.m3ReelTotal - c.m3PrevuEffectue;
-    const couleurEcart = ecart > 0 ? "#dc2626" : "#16a34a";
+      c.m3TotalPrevu += m3PrevuVal;
 
-    html += `
+      // Vérification si réalisé (via m3 réel > 0 ou colonne effectue/Fait)
+      const valEff = row.effectue !== undefined ? row.effectue : row.Fait;
+      const estRealise = (m3ReelVal > 0) || (valEff === 1 || valEff === true || String(valEff).trim() === "1" || String(valEff).trim() === "OUI");
+
+      if (estRealise) {
+        c.effectues++;
+        c.m3PrevuEffectue += m3PrevuVal;
+        c.m3ReelTotal += m3ReelVal;
+      }
+    });
+
+    const chantiers = Object.keys(chantiersMap).sort();
+    let html = "";
+
+    chantiers.forEach(nom => {
+      const c = chantiersMap[nom];
+      const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
+      const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
+      
+      const ecart = c.m3ReelTotal - c.m3PrevuEffectue;
+      const couleurEcart = ecart > 0 ? "#dc2626" : "#16a34a";
+
+      html += `
       <div style="margin-bottom:12px; border:1px solid #e5e5e5; border-radius:8px; overflow:hidden;">
         <div style="background:linear-gradient(to right,#f7f0f6,#f5f5f5); padding:6px 10px; font-weight:bold; font-size:0.82em; color:#7C2270; display:flex; justify-content:space-between; align-items:center;">
           <span>📁 ${nom}</span>
@@ -126,9 +106,14 @@ async function genererRecap(containerId) {
           </table>
         </div>
       </div>`;
-  });
+    });
 
-  container.innerHTML = html;
+    container.innerHTML = html;
+
+  } catch (err) {
+    console.error("Erreur chargement récap :", err);
+    container.innerHTML = "<p style='color:#dc2626; font-size:0.8em; text-align:center;'>Erreur lors du chargement des données de récapitulatif.</p>";
+  }
 }
 
 /* ============================================================
