@@ -66,7 +66,7 @@ async function genererRecap(containerId) {
     const chantiers = Object.keys(chantiersMap).sort();
     let html = "";
 
-    chantiers.forEach(nom => {
+chantiers.forEach(nom => {
       const c = chantiersMap[nom];
       const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
       const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
@@ -74,12 +74,40 @@ async function genererRecap(containerId) {
       const ecart = c.m3ReelTotal - c.m3PrevuEffectue;
       const couleurEcart = ecart > 0 ? "#dc2626" : "#16a34a";
 
+      // ID unique pour cibler le détail de ce chantier
+      const idDetail = `detail-chantier-${nom.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+      // Filtrer les supports appartenant à ce chantier pour le tableau détaillé
+      const supportsDuChantier = dataBlindage.filter(row => (row.chantier ? String(row.chantier).trim().toUpperCase() : "INCONNU") === nom);
+
+      let htmlLignesDetails = "";
+      supportsDuChantier.forEach(s => {
+        const nomSupport = s.support || "-";
+        const prevu = parseFloat(s.m3_prevu || s.m3_prevu_total || 0).toFixed(2);
+        const reel = parseFloat(s.m3_reel || s.m3_reel_date || 0).toFixed(2);
+        const valEff = s.effectue !== undefined ? s.effectue : s.Fait;
+        const estFait = (parseFloat(reel) > 0) || (valEff === 1 || valEff === true || String(valEff).trim() === "1" || String(valEff).trim() === "OUI");
+        const statutTxt = estFait ? "✅ Fait" : "⏳ En cours";
+        const couleurStatut = estFait ? "#16a34a" : "#d97706";
+
+        htmlLignesDetails += `
+          <tr>
+            <td style="padding:4px 6px; border:1px solid #ddd; text-align:left; font-weight:bold;">${nomSupport}</td>
+            <td style="padding:4px 6px; border:1px solid #ddd; text-align:center;">${prevu}</td>
+            <td style="padding:4px 6px; border:1px solid #ddd; text-align:center;">${reel}</td>
+            <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; color:${couleurStatut}; font-weight:bold;">${statutTxt}</td>
+          </tr>
+        `;
+      });
+
       html += `
-      <div style="margin-bottom:12px; border:1px solid #e5e5e5; border-radius:8px; overflow:hidden;">
-        <div style="background:linear-gradient(to right,#f7f0f6,#f5f5f5); padding:6px 10px; font-weight:bold; font-size:0.82em; color:#7C2270; display:flex; justify-content:space-between; align-items:center;">
-          <span>📁 ${nom}</span>
+      <div style="margin-bottom:12px; border:1px solid #e5e5e5; border-radius:8px; overflow:hidden; background:#fff;">
+        <!-- En-tête cliquable pour ouvrir/fermer le détail -->
+        <div onclick="const d = document.getElementById('${idDetail}'); d.style.display = d.style.display === 'none' ? 'block' : 'none';" style="background:linear-gradient(to right,#f7f0f6,#f5f5f5); padding:8px 10px; font-weight:bold; font-size:0.82em; color:#7C2270; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" title="Cliquer pour afficher/masquer le détail fouille par fouille">
+          <span>📁 ${nom} <span style="font-size:0.8em; color:#666; font-weight:normal;">(Cliquer pour le détail)</span></span>
           <span style="font-size:0.95em; color:#333;">Total chantier : <strong>${c.m3TotalPrevu.toFixed(2)} m³</strong></span>
         </div>
+        
         <div style="padding:8px 10px;">
           <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#555; margin-bottom:4px;">
             <span>Massifs : <strong>${c.effectues} / ${c.total}</strong></span>
@@ -104,10 +132,28 @@ async function genererRecap(containerId) {
               </tr>
             </tbody>
           </table>
+
+          <!-- Zone de détail fouille par fouille (masquée par défaut) -->
+          <div id="${idDetail}" style="display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:8px;">
+            <div style="font-size:0.8em; font-weight:bold; color:#7C2270; margin-bottom:6px;">🔍 Détail des fouilles / supports :</div>
+            <table style="width:100%; border-collapse:collapse; font-size:0.75em;">
+              <thead>
+                <tr style="background:#fafafa;">
+                  <th style="padding:4px 6px; border:1px solid #ddd; text-align:left; color:#555;">Support</th>
+                  <th style="padding:4px 6px; border:1px solid #ddd; text-align:center; color:#555;">Prévu (m³)</th>
+                  <th style="padding:4px 6px; border:1px solid #ddd; text-align:center; color:#555;">Réel (m³)</th>
+                  <th style="padding:4px 6px; border:1px solid #ddd; text-align:center; color:#555;">Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${htmlLignesDetails}
+              </tbody>
+            </table>
+          </div>
+
         </div>
       </div>`;
     });
-
     container.innerHTML = html;
 
   } catch (err) {
