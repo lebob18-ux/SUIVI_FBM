@@ -115,6 +115,12 @@ async function verifierAccesDemandé() {
   if (resultat.acces) {
     document.getElementById("auth-overlay").style.display = "none";
     gererAffichageAdmin(resultat.admin);
+    
+    // Si l'utilisateur validé est admin, on bascule direct sur l'onglet admin avant de recharger ou finaliser
+    if (resultat.admin && typeof ouvrirOnglet === "function") {
+      ouvrirOnglet('admin');
+    }
+    
     window.location.reload();
   } else {
     alert("⏳ Votre accès n'a pas encore été validé par l'administrateur.");
@@ -132,6 +138,12 @@ async function initIdentite() {
       overlay.style.display = "none";
       appliquerIdentite(identite);
       gererAffichageAdmin(resultat.admin);
+
+      // 🔀 Redirection automatique vers l'onglet Admin au lancement si admin = true
+      if (resultat.admin && typeof ouvrirOnglet === "function") {
+        ouvrirOnglet('admin');
+      }
+
     } else {
       // Déjà demandé mais pas encore validé
       overlay.style.display = "flex";
