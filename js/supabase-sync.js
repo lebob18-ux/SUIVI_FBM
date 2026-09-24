@@ -46,6 +46,11 @@ async function synchroniserSupportActuel() {
     const fReel = document.getElementById("valF")?.value;
     const supReel = document.getElementById("valSUP")?.value;
 
+    // Récupération de l'état des cases à cocher FBM
+    const fouilleCoche = document.getElementById('check_fouille')?.checked || false;
+    const betonCoche = document.getElementById('check_beton')?.checked || false;
+    const matageCoche = document.getElementById('check_matage')?.checked || false;
+
     // 6. Requête de mise à jour vers Supabase
     const { error } = await supabaseClient
       .from('blindage')
@@ -62,7 +67,14 @@ async function synchroniserSupportActuel() {
         sup_reel: supReel ? parseFloat(supReel) : null,
         m3_reel: volReelNum,
         effectue: 1, // Marqué comme effectué lors de la génération/synchro
-        date_exec: dateJour // Date de réalisation
+        date_exec: dateJour, // Date globale de réalisation
+        
+        // Gestion des dates pour chaque phase (si cochée = date du jour, sinon null)
+        // 💡 Note : Si tu veux préserver une date déjà existante en base quand la case reste cochée, 
+        // Supabase gère aussi l'option de ne l'envoyer que si elle change, mais ici on met la date du jour à la validation.
+        date_fouille: fouilleCoche ? dateJour : null,
+        date_beton: betonCoche ? dateJour : null,
+        date_matage: matageCoche ? dateJour : null
       })
       .eq('chantier', nomChantier)
       .eq('support', numSupportInput);
