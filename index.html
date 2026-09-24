@@ -50,6 +50,15 @@
         width: auto;
         color: #818181;
     }
+    /* Style pour rendre le logo cliquable avec un effet visuel */
+    #logoSNCF {
+        cursor: pointer;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    #logoSNCF:hover {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
 </style>
 </head>
 <body>
@@ -95,10 +104,10 @@
 <div id="fbmPage">    
 <div class="box">
 
-<!-- En-tête avec Logo, Titre et Badge RJ -->
+<!-- En-tête avec Logo (cliquable pour ouvrir le menu), Titre et Badge RJ -->
 <div class="header-row">
 <div style="display:flex; justify-content:center; margin-bottom:8px;">
-<img id="logoSNCF" src="assets/ainm.svg" width="100" height="100" alt="Logo SNCF">
+<img id="logoSNCF" src="assets/ainm.svg" width="100" height="100" alt="Logo SNCF" onclick="basculerMenuParametres()" title="Ouvrir le menu">
 </div>
 <h3 id="pageTitle"></h3>
 <div style="display:flex; justify-content:center; margin-bottom:6px;">
