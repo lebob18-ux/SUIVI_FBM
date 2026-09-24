@@ -35,7 +35,38 @@ async function exporterPDF() {
     document.getElementById("selectSupport").focus();
     return;
   }
-// 🟢 Appel de notre fonction dédiée à la mise à jour Supabase
+
+  // --- CONTRÔLE DES CASES À COCHER AVANT EXPORT ---
+  const fouilleCoche = document.getElementById('check_fouille').checked;
+  const betonCoche = document.getElementById('check_beton').checked;
+  const matageCoche = document.getElementById('check_matage').checked;
+  
+  const isBlindage = document.getElementById('blindageCheck').checked;
+  const isHorsP1 = document.getElementById('check_hors_p1').checked;
+
+  if (isBlindage || isHorsP1) {
+    // Cas Blindage ou Hors P1 : on vérifie la condition spécifique (ex: que la case blindage ou hors P1 est active)
+    if (!isBlindage && !isHorsP1) {
+      alert("⚠️ En mode Blindage/Hors P1, veuillez valider l'option correspondante.");
+      return;
+    }
+  } else {
+    // Cas général : les 3 phases doivent être vraies ou validées par popup
+    if (!fouilleCoche || !betonCoche || !matageCoche) {
+      const confirmation = confirm("Voulez-vous valider les 3 Phase ?");
+      if (!confirmation) {
+        return; // Stoppe l'export si l'utilisateur refuse
+      } else {
+        // Coche automatiquement les 3 si l'utilisateur valide
+        document.getElementById('check_fouille').checked = true;
+        document.getElementById('check_beton').checked = true;
+        document.getElementById('check_matage').checked = true;
+      }
+    }
+  }
+  // ------------------------------------------------
+
+  // 🟢 Appel de notre fonction dédiée à la mise à jour Supabase
   await synchroniserSupportActuel();
   const btnPdf = document.getElementById("btnExportPdf");
   const btnOriginalHTML = btnPdf.innerHTML;
@@ -72,11 +103,11 @@ async function exporterPDF() {
     const nomChantier = (chantierSelect.selectedIndex >= 0 && chantierSelect.options[chantierSelect.selectedIndex])
       ? chantierSelect.options[chantierSelect.selectedIndex].text
       : "";
-// APRÈS
-const typeSupport = clean(txt("display_type")).replace(/^Type\s*:\s*/i, "");
-const dateStr = new Date().toLocaleString("fr-FR");
-const supportData = baseSupports.find(s => s.support === numSupportInput);
-const idSupport = supportData?.ID || "";
+
+    const typeSupport = clean(txt("display_type")).replace(/^Type\s*:\s*/i, "");
+    const dateStr = new Date().toLocaleString("fr-FR");
+    const supportData = baseSupports.find(s => s.support === numSupportInput);
+    const idSupport = supportData?.ID || "";
 
     const verifVoie = g("verifVoie").checked;
     const verifCarotte = g("carotte").checked;
@@ -92,11 +123,11 @@ const idSupport = supportData?.ID || "";
     const footerReserve = 14;
 
     // Rasterise le logo SNCF (SVG -> PNG) pour l'intégrer au PDF
-const logoDataUrl = await logoSVGversPNG(216, 153);
-const logoRatio = 153 / 216;
+    const logoDataUrl = await logoSVGversPNG(216, 153);
+    const logoRatio = 153 / 216;
 
-const logoAinmDataUrl = (typeof logoAINMversPNG === "function") ? await logoAINMversPNG(737, 291) : null;
-const logoAinmRatio = 291.02362 / 737.00789;
+    const logoAinmDataUrl = (typeof logoAINMversPNG === "function") ? await logoAINMversPNG(737, 291) : null;
+    const logoAinmRatio = 291.02362 / 737.00789;
 
     /* ---- bandeau dégradé (couleurs identité visuelle) ---- */
     function bandeauDegrade(y0, h) {
@@ -111,31 +142,30 @@ const logoAinmRatio = 291.02362 / 737.00789;
       }
     }
 
-// APRÈS
-function enteteComplete() {
-  bandeauDegrade(0, 27);
-  if (logoDataUrl) {
-    const logoH = 15;
-    const logoW = logoH / logoRatio;
-    doc.addImage(logoDataUrl, "PNG", marge, 4.5, logoW, logoH);
-  }
-  if (logoAinmDataUrl) {
-    const logoAinmH = 9;
-    const logoAinmW = logoAinmH / logoAinmRatio;
-    doc.addImage(logoAinmDataUrl, "PNG", pageW - marge - logoAinmW, 3, logoAinmW, logoAinmH);
-  }
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14.5);
-  doc.text("FICHE DE CONTROLE FOUILLE / BLINDAGE", pageW / 2, 9, { align: "center" });
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.text("SNCF Reseau  -  Outil FBM", pageW / 2, 14.5, { align: "center" });
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("Chantier : " + (nomChantier || "-") + "    RJ : " + (window.numeroRJ || "-"), marge, 24);
-  doc.text("Support : " + numSupportInput, pageW - marge, 24, { align: "right" });
-}
+    function enteteComplete() {
+      bandeauDegrade(0, 27);
+      if (logoDataUrl) {
+        const logoH = 15;
+        const logoW = logoH / logoRatio;
+        doc.addImage(logoDataUrl, "PNG", marge, 4.5, logoW, logoH);
+      }
+      if (logoAinmDataUrl) {
+        const logoAinmH = 9;
+        const logoAinmW = logoAinmH / logoAinmRatio;
+        doc.addImage(logoAinmDataUrl, "PNG", pageW - marge - logoAinmW, 3, logoAinmW, logoAinmH);
+      }
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14.5);
+      doc.text("FICHE DE CONTROLE FOUILLE / BLINDAGE", pageW / 2, 9, { align: "center" });
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.text("SNCF Reseau  -  Outil FBM", pageW / 2, 14.5, { align: "center" });
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Chantier : " + (nomChantier || "-") + "    RJ : " + (window.numeroRJ || "-"), marge, 24);
+      doc.text("Support : " + numSupportInput, pageW - marge, 24, { align: "right" });
+    }
 
     function enteteAllegee(numPage) {
       doc.setFillColor(violet[0], violet[1], violet[2]);
@@ -170,11 +200,9 @@ function enteteComplete() {
     doc.setTextColor(70, 70, 70);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-  // APRÈS
-doc.text("Genere le " + dateStr + (typeSupport ? "   -   Type : " + typeSupport : "") + (idSupport ? "   -   ID : " + idSupport : ""), marge, y);
+    doc.text("Genere le " + dateStr + (typeSupport ? "    -    Type : " + typeSupport : "") + (idSupport ? "    -    ID : " + idSupport : ""), marge, y);
     y += 4;
 
-    // Vérifie qu'il reste assez de place, sinon ajoute une page (avec en-tête allégée)
     function assurerPlace(hauteurNecessaire) {
       if (y + hauteurNecessaire > pageH - footerReserve) {
         doc.addPage();
@@ -206,24 +234,23 @@ doc.text("Genere le " + dateStr + (typeSupport ? "   -   Type : " + typeSupport 
       return val("E") + " cm";
     })();
 
-// APRÈS
-const blocNVisible = g("bloc-N") && g("bloc-N").style.display !== "none";
-const valPActuel = blocNVisible ? val("valP_N") : val("valP_S");
-const refPActuel = blocNVisible ? txt("P_ref_N") : txt("P_ref_S");
-const sensPTexte = blocNVisible ? "amont" : "aval";
+    const blocNVisible = g("bloc-N") && g("bloc-N").style.display !== "none";
+    const valPActuel = blocNVisible ? val("valP_N") : val("valP_S");
+    const refPActuel = blocNVisible ? txt("P_ref_N") : txt("P_ref_S");
+    const sensPTexte = blocNVisible ? "amont" : "aval";
 
-const rowsFouille = [
-  ["Implantation (I)", val("I") ? val("I") + " m" : "-", txt("I_ref")],
-  ["Echantillon", echValeur || "-", txt("ECH_ref")],
-  ["Arasement (AR)", val("AR") ? val("AR") + " Cm" : "-", txt("AR_ref")],
-  ["Encastrement (Enc)", val("Enc") ? val("Enc") + " m" : "-", txt("Enc_ref")],
-  ["Cote A", val("AF") ? val("AF") + " m" : "-", txt("AF_ref")],
-  ["Cote B", val("B_Fouille") ? val("B_Fouille") + " m" : "-", txt("B_ref")],
-  ["Cote H", val("H_Fouille") ? val("H_Fouille") + " m" : "-", txt("H_ref")],
-  ["F", val("valF") || "-", txt("F_ref")],
-  ["P (" + sensPTexte + " de SUP)", valPActuel || "-", refPActuel],
-  ["SUP", val("valSUP") || "-", txt("SUP_ref")],
-];
+    const rowsFouille = [
+      ["Implantation (I)", val("I") ? val("I") + " m" : "-", txt("I_ref")],
+      ["Echantillon", echValeur || "-", txt("ECH_ref")],
+      ["Arasement (AR)", val("AR") ? val("AR") + " Cm" : "-", txt("AR_ref")],
+      ["Encastrement (Enc)", val("Enc") ? val("Enc") + " m" : "-", txt("Enc_ref")],
+      ["Cote A", val("AF") ? val("AF") + " m" : "-", txt("AF_ref")],
+      ["Cote B", val("B_Fouille") ? val("B_Fouille") + " m" : "-", txt("B_ref")],
+      ["Cote H", val("H_Fouille") ? val("H_Fouille") + " m" : "-", txt("H_ref")],
+      ["F", val("valF") || "-", txt("F_ref")],
+      ["P (" + sensPTexte + " de SUP)", valPActuel || "-", refPActuel],
+      ["SUP", val("valSUP") || "-", txt("SUP_ref")],
+    ];
 
     doc.autoTable({
       startY: y,
@@ -234,28 +261,26 @@ const rowsFouille = [
       styles: { fontSize: 8, cellPadding: 1.8, textColor: [40, 40, 40], lineColor: [225, 225, 225] },
       headStyles: { fillColor: violet, textColor: 255, fontStyle: 'bold', fontSize: 8 },
       columnStyles: { 2: { textColor: [22, 130, 60], fontStyle: 'bold' } },
-      didDrawPage: function () { /* pagination gérée par autotable elle-même */ }
     });
     y = doc.lastAutoTable.finalY + 5;
 
     // ---------- Section 2 : configuration ----------
-// APRÈS
-titreSection("CONFIGURATION", [90, 90, 90]);
-doc.autoTable({
-  startY: y,
-  margin: { left: marge, right: marge, bottom: footerReserve },
-  head: [["Voies annoncees / interceptees (TES.D)", "Carottage", "Blindage"]],
-  body: [[
-    verifVoie ? "OUI" : "NON",
-    verifCarotte ? "OUI" : "NON",
-    verifBlindage ? "OUI" : "NON",
-  ]],
-  theme: 'grid',
-  styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
-  headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: 'bold', fontSize: 7.3 },
-  bodyStyles: { fontStyle: 'bold' },
-});
-y = doc.lastAutoTable.finalY + 5;
+    titreSection("CONFIGURATION", [90, 90, 90]);
+    doc.autoTable({
+      startY: y,
+      margin: { left: marge, right: marge, bottom: footerReserve },
+      head: [["Voies annoncees / interceptees (TES.D)", "Carottage", "Blindage"]],
+      body: [[
+        verifVoie ? "OUI" : "NON",
+        verifCarotte ? "OUI" : "NON",
+        verifBlindage ? "OUI" : "NON",
+      ]],
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
+      headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: 'bold', fontSize: 7.3 },
+      bodyStyles: { fontStyle: 'bold' },
+    });
+    y = doc.lastAutoTable.finalY + 5;
 
     // ---------- Section 3 (option) : carottage ----------
     if (verifCarotte) {
@@ -320,56 +345,51 @@ y = doc.lastAutoTable.finalY + 5;
     }
 
     // ---------- Section 5 : volumes ----------
-// APRÈS
-titreSection("VOLUMES", violet);
-const volCarotteVisible = g("display_vol_carotte") && g("display_vol_carotte").style.display !== "none";
-const headVolumes = ["Volume theorique", "Volume reel"];
-const rowVolumes = [txt("vol_prevu") || "-", txt("vol_modifie") || "-"];
-if (volCarotteVisible) {
-  headVolumes.push("Beton net (hors carotte)");
-  rowVolumes.push(txt("vol_carotte") || "-");
-}
-doc.autoTable({
-  startY: y,
-  margin: { left: marge, right: marge, bottom: footerReserve },
-  head: [headVolumes],
-  body: [rowVolumes],
-  theme: 'grid',
-  styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
-  headStyles: { fillColor: violet, textColor: 255, fontStyle: 'bold' },
-  bodyStyles: { fontStyle: 'bold', textColor: [0, 100, 180] },
-});
-y = doc.lastAutoTable.finalY + 5;
+    titreSection("VOLUMES", violet);
+    const volCarotteVisible = g("display_vol_carotte") && g("display_vol_carotte").style.display !== "none";
+    const headVolumes = ["Volume theorique", "Volume reel"];
+    const rowVolumes = [txt("vol_prevu") || "-", txt("vol_modifie") || "-"];
+    if (volCarotteVisible) {
+      headVolumes.push("Beton net (hors carotte)");
+      rowVolumes.push(txt("vol_carotte") || "-");
+    }
+    doc.autoTable({
+      startY: y,
+      margin: { left: marge, right: marge, bottom: footerReserve },
+      head: [headVolumes],
+      body: [rowVolumes],
+      theme: 'grid',
+      styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
+      headStyles: { fillColor: violet, textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fontStyle: 'bold', textColor: [0, 100, 180] },
+    });
+    y = doc.lastAutoTable.finalY + 5;
 
+    // ---------- Section BL-BÉTON ----------
+    if (typeof blsActuels !== "undefined" && blsActuels.length > 0) {
+      titreSection("BONS DE LIVRAISON BÉTON", violet);
+      const rowsBL = blsActuels.map((item, i) => [
+        i + 1,
+        item.bl,
+        item.slumps.length > 0 ? item.slumps.join(" / ") + " cm" : "-"
+      ]);
+      doc.autoTable({
+        startY: y,
+        margin: { left: marge, right: marge, bottom: footerReserve },
+        head: [["#", "N° BL", "Slump(s)"]],
+        body: rowsBL,
+        theme: "grid",
+        styles: { fontSize: 8.5, cellPadding: 2.5 },
+        headStyles: { fillColor: violet, textColor: 255, fontStyle: "bold" },
+        columnStyles: {
+          0: { cellWidth: 10, halign: "center" },
+          1: { fontStyle: "bold" },
+          2: { halign: "center", textColor: [3, 105, 161] }
+        },
+      });
+      y = doc.lastAutoTable.finalY + 5;
+    }
 
-
-// ---------- Section BL-BÉTON ----------
-if (typeof blsActuels !== "undefined" && blsActuels.length > 0) {
-  titreSection("BONS DE LIVRAISON BÉTON", violet);
-  const rowsBL = blsActuels.map((item, i) => [
-    i + 1,
-    item.bl,
-    item.slumps.length > 0 ? item.slumps.join(" / ") + " cm" : "-"
-  ]);
-  doc.autoTable({
-    startY: y,
-    margin: { left: marge, right: marge, bottom: footerReserve },
-    head: [["#", "N° BL", "Slump(s)"]],
-    body: rowsBL,
-    theme: "grid",
-    styles: { fontSize: 8.5, cellPadding: 2.5 },
-    headStyles: { fillColor: violet, textColor: 255, fontStyle: "bold" },
-    columnStyles: {
-      0: { cellWidth: 10, halign: "center" },
-      1: { fontStyle: "bold" },
-      2: { halign: "center", textColor: [3, 105, 161] }
-    },
-  });
-  y = doc.lastAutoTable.finalY + 5;
-}
-// ---------- Section BL-BÉTON ----------
-
-    
     // ---------- Section 6 : résultat blindage / LTV ----------
     titreSection("RESULTAT", rouge);
 
@@ -398,25 +418,22 @@ if (typeof blsActuels !== "undefined" && blsActuels.length > 0) {
     y += 2;
 
     // ---------- Section 7 : seuils réglementaires ----------
-// APRÈS
-doc.autoTable({
-  startY: y,
-  margin: { left: marge, right: marge, bottom: footerReserve },
-  head: [["BMax", "DMin", "Hmax"]],
-  body: [[
-    clean(txt("BMax_display")) || "-",
-    clean(txt("DMin_display")) || "-",
-    clean(txt("Hmax_display")) || "-",
-  ]],
-  theme: 'grid',
-  styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
-  headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: 'bold' },
-  bodyStyles: { fontStyle: 'bold', textColor: [22, 130, 60] },
-});
-y = doc.lastAutoTable.finalY + 8;
+    doc.autoTable({
+      startY: y,
+      margin: { left: marge, right: marge, bottom: footerReserve },
+      head: [["BMax", "DMin", "Hmax"]],
+      body: [[
+        clean(txt("BMax_display")) || "-",
+        clean(txt("DMin_display")) || "-",
+        clean(txt("Hmax_display")) || "-",
+      ]],
+      theme: 'grid',
+      styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
+      headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { fontStyle: 'bold', textColor: [22, 130, 60] },
+    });
+    y = doc.lastAutoTable.finalY + 8;
 
-
-// APRÈS
     // ---------- Rédacteur ----------
     const nomRedacteur = val("nomRedacteur");
     const emailRedacteur = val("emailRedacteur");
@@ -441,20 +458,10 @@ y = doc.lastAutoTable.finalY + 8;
       piedDePage(p, totalPages);
     }
 
-// APRÈS
-const nomFichier = "FBM_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
-const pdfBlob = doc.output("blob");
-const pdfFile = new File([pdfBlob], nomFichier, { type: "application/pdf" });
+    // ---------- Téléchargement direct du PDF ----------
+    const nomFichier = "FBM_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
+    doc.save(nomFichier);
 
-if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-  navigator.share({
-    files: [pdfFile],
-    title: "Relevé FBM",
-    text: "Résultat calcul blindage - Support N°: " + numSupportInput
-  }).catch(() => { doc.save(nomFichier); });
-} else {
-  doc.save(nomFichier);
-}
   } catch (err) {
     console.error(err);
     alert("⚠️ Erreur lors de la génération du PDF :\n" + err.message);
