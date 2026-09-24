@@ -1,4 +1,4 @@
-// Configuration Supabase
+// Configuration Supabase_BOB
 const SUPABASE_URL = "https://thbqkeugjvsxbryfnzuo.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_2-Ij-nrTPeK6rB-kSD-QTg_b42zNakq";
 
