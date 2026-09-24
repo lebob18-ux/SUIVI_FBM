@@ -1,13 +1,15 @@
 /* ============================================================
-   VARIABLES GLOBALES ET INITIALISATION DES PHASES
+   INITIALISATION DES PHASES ET SECURITE GLOBALE
    ============================================================ */
-let phasesInitialesCount = 0;
+if (typeof window.phasesInitialesCount === 'undefined') {
+    window.phasesInitialesCount = 0;
+}
 
 function memoriserEtatInitialPhases() {
     const f = document.getElementById('check_fouille')?.checked ? 1 : 0;
     const b = document.getElementById('check_beton')?.checked ? 1 : 0;
     const m = document.getElementById('check_matage')?.checked ? 1 : 0;
-    phasesInitialesCount = f + b + m;
+    window.phasesInitialesCount = f + b + m;
 }
 
 function logoSVGversPNG(largeurPx, hauteurPx) {
@@ -44,6 +46,11 @@ function initChantiers() {
   if (!select) return;
 
   const chantiersMap = {};
+  if (typeof baseSupports === "undefined") {
+    console.warn("⚠️ baseSupports n'est pas encore défini.");
+    return;
+  }
+
   baseSupports.forEach(s => {
     const chantierNom = s.chantier || s.CHANTIER;
     if (!chantierNom) return;
@@ -82,21 +89,21 @@ function initChantiers() {
 }
 
 function resetSaisieAvantSupport() {
-  document.getElementById("I").value = "";
-  document.getElementById("AR").value = "";
-  document.getElementById("Enc").value = "";
-  document.getElementById("AF").value = "";
-  document.getElementById("B_Fouille").value = "";
-  document.getElementById("H_Fouille").value = "";
+  const elI = document.getElementById("I"); if(elI) elI.value = "";
+  const elAR = document.getElementById("AR"); if(elAR) elAR.value = "";
+  const elEnc = document.getElementById("Enc"); if(elEnc) elEnc.value = "";
+  const elAF = document.getElementById("AF"); if(elAF) elAF.value = "";
+  const elBF = document.getElementById("B_Fouille"); if(elBF) elBF.value = "";
+  const elHF = document.getElementById("H_Fouille"); if(elHF) elHF.value = "";
 
-  document.getElementById("display_type").innerText = "";
-  document.getElementById("AF_ref").innerText = "";
-  document.getElementById("B_ref").innerText = "";
-  document.getElementById("H_ref").innerText = "";
-  document.getElementById("I_ref").innerText = "";
-  document.getElementById("AR_ref").innerText = "";
-  document.getElementById("Enc_ref").innerText = "";
-  document.getElementById("ECH_ref").innerText = "";
+  const dt = document.getElementById("display_type"); if(dt) dt.innerText = "";
+  const afr = document.getElementById("AF_ref"); if(afr) afr.innerText = "";
+  const br = document.getElementById("B_ref"); if(br) br.innerText = "";
+  const hr = document.getElementById("H_ref"); if(hr) hr.innerText = "";
+  const ir = document.getElementById("I_ref"); if(ir) ir.innerText = "";
+  const arr = document.getElementById("AR_ref"); if(arr) arr.innerText = "";
+  const encr = document.getElementById("Enc_ref"); if(encr) encr.innerText = "";
+  const echr = document.getElementById("ECH_ref"); if(echr) echr.innerText = "";
 
   let selectE = document.getElementById("E_select");
   let inputE = document.getElementById("E");
@@ -109,15 +116,16 @@ function resetSaisieAvantSupport() {
     inputE.value = "";
     inputE.style.display = "none";
   }
-  document.getElementById("display_nom").innerText = "-";
-  document.getElementById("display_larg").innerText = "0";
-  document.getElementById("display_prof").innerText = "0";
+  
+  const dNom = document.getElementById("display_nom"); if(dNom) dNom.innerText = "-";
+  const dLarg = document.getElementById("display_larg"); if(dLarg) dLarg.innerText = "0";
+  const dProf = document.getElementById("display_prof"); if(dProf) dProf.innerText = "0";
   
   if (typeof largeurEchantillon !== "undefined") largeurEchantillon = 0;
   if (typeof profondeurEchantillon !== "undefined") profondeurEchantillon = 0;
 
-  document.getElementById("blindageCheck").checked = false;
-  document.getElementById("carotte").checked = false;
+  const blind = document.getElementById("blindageCheck"); if(blind) blind.checked = false;
+  const caro = document.getElementById("carotte"); if(caro) caro.checked = false;
   if (window.refreshBlocs) window.refreshBlocs();
 
   if (typeof calculer === "function") calculer();
@@ -160,48 +168,52 @@ function filtrerSupports() {
 
 function chargerSupport() {
     const selectSupport = document.getElementById("selectSupport");
+    if (!selectSupport) return;
+    
     const data = baseSupports.find(s => (s.support || s.SUPPORT) === selectSupport.value);
-
     if (!data) return;
 
     const valOuVide = (val) => (val !== undefined && val !== null && val !== "") ? val : "";
 
-    document.getElementById("valF").value = valOuVide(data.F);
-    document.getElementById("valSUP").value = valOuVide(data.SUP);
-    document.getElementById("I").value = valOuVide(data.I);
-    document.getElementById("AF").value = valOuVide(data.AF);
-    document.getElementById("B_Fouille").value = valOuVide(data.B);
-    document.getElementById("H_Fouille").value = valOuVide(data.H);
-    document.getElementById("AR").value = valOuVide(data.AR);
-    document.getElementById("Enc").value = valOuVide(data.Enc);
+    const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+    const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
 
-    document.getElementById("F_ref").innerText = valOuVide(data.F);
-    document.getElementById("SUP_ref").innerText = valOuVide(data.SUP);
-    document.getElementById("I_ref").innerText = valOuVide(data.I);
-    document.getElementById("AF_ref").innerText = valOuVide(data.AF);
-    document.getElementById("B_ref").innerText = valOuVide(data.B);
-    document.getElementById("H_ref").innerText = valOuVide(data.H);
-    document.getElementById("AR_ref").innerText = valOuVide(data.AR);
-    document.getElementById("Enc_ref").innerText = valOuVide(data.Enc);
-    document.getElementById("ECH_ref").innerText = valOuVide(data.ECH);
+    setVal("valF", valOuVide(data.F));
+    setVal("valSUP", valOuVide(data.SUP));
+    setVal("I", valOuVide(data.I));
+    setVal("AF", valOuVide(data.AF));
+    setVal("B_Fouille", valOuVide(data.B));
+    setVal("H_Fouille", valOuVide(data.H));
+    setVal("AR", valOuVide(data.AR));
+    setVal("Enc", valOuVide(data.Enc));
+
+    setTxt("F_ref", valOuVide(data.F));
+    setTxt("SUP_ref", valOuVide(data.SUP));
+    setTxt("I_ref", valOuVide(data.I));
+    setTxt("AF_ref", valOuVide(data.AF));
+    setTxt("B_ref", valOuVide(data.B));
+    setTxt("H_ref", valOuVide(data.H));
+    setTxt("AR_ref", valOuVide(data.AR));
+    setTxt("Enc_ref", valOuVide(data.Enc));
+    setTxt("ECH_ref", valOuVide(data.ECH));
 
     const valP = (data.P !== undefined && data.P !== null) ? parseFloat(data.P) : 0;
     const valeurAbsolueP = Math.abs(valP);
 
-    document.getElementById("P_ref_N").innerText = valeurAbsolueP;
-    document.getElementById("P_ref_S").innerText = valeurAbsolueP;
+    setTxt("P_ref_N", valeurAbsolueP);
+    setTxt("P_ref_S", valeurAbsolueP);
 
     const blocN = document.getElementById("bloc-N");
     const blocS = document.getElementById("bloc-S");
 
     if (valP >= 0) {
-        document.getElementById("valP_S").value = valeurAbsolueP;
-        document.getElementById("valP_N").value = "";
+        setVal("valP_S", valeurAbsolueP);
+        setVal("valP_N", "");
         if (blocS) blocS.style.display = "block";
         if (blocN) blocN.style.display = "none";
     } else {
-        document.getElementById("valP_N").value = valeurAbsolueP;
-        document.getElementById("valP_S").value = "";
+        setVal("valP_N", valeurAbsolueP);
+        setVal("valP_S", "");
         if (blocN) blocN.style.display = "block";
         if (blocS) blocS.style.display = "none";
     }
@@ -210,7 +222,6 @@ function chargerSupport() {
         appliquerEchantillon(data.ECH);
     }
     
-    // Initialisation des cases à cocher selon les dates présentes
     const chkF = document.getElementById('check_fouille');
     const chkB = document.getElementById('check_beton');
     const chkM = document.getElementById('check_matage');
@@ -221,9 +232,9 @@ function chargerSupport() {
     
     memoriserEtatInitialPhases();
 
-    document.getElementById("blindageCheck").checked = (data.BLIND === "OUI");
-    document.getElementById("carotte").checked = (data.CARO === "OUI");
-    document.getElementById("display_type").innerText = data.TYPE ? "🧊 " + data.TYPE : "";
+    const blind = document.getElementById("blindageCheck"); if(blind) blind.checked = (data.BLIND === "OUI");
+    const caro = document.getElementById("carotte"); if(caro) caro.checked = (data.CARO === "OUI");
+    const dt = document.getElementById("display_type"); if(dt) dt.innerText = data.TYPE ? "🧊 " + data.TYPE : "";
 
     if (typeof refreshBlocs === "function") refreshBlocs();
     if (typeof restaurerLocal === "function") restaurerLocal();
@@ -284,8 +295,8 @@ function appliquerEchantillon(ech) {
     validerEchantillonPopup(profil.valeur, profil.largeur, profil.nom);
   } else if (typeof validerEchantillonPopup === "function") {
     validerEchantillonPopup("manuel", "0", "Autre...");
-    document.getElementById("E").value = cle;
-    document.getElementById("display_prof").innerText = cle;
+    const elE = document.getElementById("E"); if(elE) elE.value = cle;
+    const dProf = document.getElementById("display_prof"); if(dProf) dProf.innerText = cle;
     if (typeof calculer === "function") calculer();
   }
 }
@@ -298,9 +309,11 @@ function gererSaisieEchantillon() {
   let selectE = document.getElementById("E_select");
   let inputE = document.getElementById("E");
   if (selectE && (selectE.value === "manual" || selectE.value === "manuel")) {
-    inputE.style.display = "block";
-    inputE.value = ""; 
-    inputE.focus();
+    if(inputE) {
+      inputE.style.display = "block";
+      inputE.value = ""; 
+      inputE.focus();
+    }
   } else if(inputE) {
     inputE.style.display = "none";
   }
