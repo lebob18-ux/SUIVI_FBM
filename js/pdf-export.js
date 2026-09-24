@@ -83,7 +83,7 @@ function validerSaisiesFBM() {
         }
     }
 
-    return erreurs.length === 0;
+    return erreurs; // On retourne le tableau des erreurs (vide si tout est OK)
 }
 
 function logoSVGversPNG(largeurPx, hauteurPx) {
@@ -125,7 +125,11 @@ async function exporterPDF() {
   }
 
   // --- 1. CONTRÔLE DES CHAMPS Vides SELON LES PHASES COCHÉES ---
-  if (!validerSaisiesFBM()) {
+  const erreursSaisies = validerSaisiesFBM();
+  if (erreursSaisies.length > 0) {
+    // Nettoyage des balises Markdown (**) pour l'affichage propre dans le popup alert
+    const texteErreurs = erreursSaisies.map(e => e.replace(/\*\*/g, "")).join("\n• ");
+    alert("❌ Impossible d'enregistrer !\n\nVeuillez corriger les éléments suivants :\n\n• " + texteErreurs);
     return; // Stoppe net si des données manquent dans les chapitres cochés
   }
 
