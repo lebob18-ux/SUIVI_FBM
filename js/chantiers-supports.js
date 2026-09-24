@@ -71,7 +71,6 @@ function initChantiers() {
 
   select.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
   
-  // Tri croissant alphabétique/numérique des chantiers
   const chantiersUniques = [...new Set(baseSupports.map(s => s.chantier || s.CHANTIER))].filter(Boolean).sort((a, b) => 
     a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
   );
@@ -145,7 +144,6 @@ function filtrerSupports() {
 
     if (!chantier) return;
 
-    // Filtre des supports non terminés
     const filtres = baseSupports.filter(s => {
         const nomChantier = s.chantier || s.CHANTIER;
         if (nomChantier !== chantier) return false;
@@ -157,7 +155,6 @@ function filtrerSupports() {
         return !(df && db && dm);
     });
     
-    // Tri croissant intelligent des supports (ex: S1, S2, S10 au lieu de S1, S10, S2)
     filtres.sort((a, b) => {
         const supA = String(a.support || a.SUPPORT || "");
         const supB = String(b.support || b.SUPPORT || "");
@@ -187,15 +184,19 @@ function chargerSupport() {
     const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
     const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
 
-    setVal("valF", valOuVide(data.F));
-    setVal("valSUP", valOuVide(data.SUP));
-    setVal("I", valOuVide(data.I));
-    setVal("AF", valOuVide(data.AF));
-    setVal("B_Fouille", valOuVide(data.B));
-    setVal("H_Fouille", valOuVide(data.H));
-    setVal("AR", valOuVide(data.AR));
-    setVal("Enc", valOuVide(data.Enc));
+    // 1. ON VIDE LES CHAMPS DE SAISIE ACTIVE (l'opérateur doit les taper)
+    setVal("valF", "");
+    setVal("valSUP", "");
+    setVal("I", "");
+    setVal("AF", "");
+    setVal("B_Fouille", "");
+    setVal("H_Fouille", "");
+    setVal("AR", "");
+    setVal("Enc", "");
+    setVal("valP_N", "");
+    setVal("valP_S", "");
 
+    // 2. ON CONSERVE ET AFFICHE LES VALEURS DE REFERENCE POUR INFORMATION
     setTxt("F_ref", valOuVide(data.F));
     setTxt("SUP_ref", valOuVide(data.SUP));
     setTxt("I_ref", valOuVide(data.I));
@@ -216,17 +217,14 @@ function chargerSupport() {
     const blocS = document.getElementById("bloc-S");
 
     if (valP >= 0) {
-        setVal("valP_S", valeurAbsolueP);
-        setVal("valP_N", "");
         if (blocS) blocS.style.display = "block";
         if (blocN) blocN.style.display = "none";
     } else {
-        setVal("valP_N", valeurAbsolueP);
-        setVal("valP_S", "");
         if (blocN) blocN.style.display = "block";
         if (blocS) blocS.style.display = "none";
     }
 
+    // 3. ON LAISSE L'ÉCHANTILLON ACTIF COMME DEMANDÉ
     if (typeof appliquerEchantillon === "function") {
         appliquerEchantillon(data.ECH);
     }
