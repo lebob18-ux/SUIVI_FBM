@@ -12,16 +12,23 @@ function memoriserEtatInitialPhases() {
 /* ============================================================
    VALIDATION DES SAISIES PAR PHASE COCHÉE (F, B, M)
    ============================================================ */
+/* ============================================================
+   VALIDATION DES SAISIES PAR PHASE COCHÉE (F, B, M)
+   ============================================================ */
 function validerSaisiesFBM() {
     let erreurs = [];
 
     // 1. Bloc FOUILLE (si check_fouille est coché)
     if (document.getElementById('check_fouille')?.checked) {
-        //let af = document.getElementById('AF')?.value;
-        let bFouille = document.getElementById('B_Fouille')?.value;
-        let hFouille = document.getElementById('H_Fouille')?.value;
+        let afEl = document.getElementById('AF');
+        let bFouille = document.getElementById('B_Fouille');
+        let hFouille = document.getElementById('H_Fouille');
         
-        if (!af || !bFouille || !hFouille) {
+        let af = afEl ? afEl.value : "";
+        let bFouilleVal = bFouille ? bFouille.value : "";
+        let hFouilleVal = hFouille ? hFouille.value : "";
+        
+        if (!af || !bFouilleVal || !hFouilleVal) {
             erreurs.push("📐 **Fouille** : Les cotes A, B ou H sont incomplètes.");
         }
     }
@@ -83,7 +90,7 @@ function validerSaisiesFBM() {
         }
     }
 
-    return erreurs; // On retourne le tableau des erreurs (vide si tout est OK)
+    return erreurs;
 }
 
 function logoSVGversPNG(largeurPx, hauteurPx) {
