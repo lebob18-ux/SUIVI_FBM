@@ -50,7 +50,7 @@
         width: auto;
         color: #818181;
     }
-    /* Bouton d'ouverture du menu */
+    /* Bouton d'ouverture du menu (optionnel, conservé si besoin) */
     #btnOuvrirMenu {
         background: #7C2270;
         color: white;
@@ -105,9 +105,9 @@
 <div id="fbmPage">    
 <div class="box">
 
-<!-- Bouton d'ouverture du menu latéral -->
+<!-- Bouton d'ouverture du menu latéral (Optionnel, vous pouvez le garder ou le supprimer si le glissé vous suffit) -->
 <div>
-  <button id="btnOuvrirMenu" onclick="basculerMenuParametres()">☰ Menu</button>
+  <button id="btnOuvrirMenu" onclick="basculerMenuParametres()">☰ Menu (ou glisser)</button>
 </div>
 
 <!-- En-tête avec Logo, Titre et Badge RJ -->
@@ -587,6 +587,35 @@
   function gererAmelioration() {
       basculerMenuParametres();
       alert("Fonctionnalité d'amélioration bientôt disponible !");
+  }
+
+  // === GESTION DU GLISSER / SWIPE TACTILE ===
+  let touchStartX = 0;
+  let touchEndX = 0;
+  const minSwipeDistance = 50; // Distance minimale en pixels pour valider le geste
+
+  document.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+  }, false);
+
+  document.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      gererSwipe();
+  }, false);
+
+  function gererSwipe() {
+      const menu = document.getElementById('menuParametres');
+      const diff = touchEndX - touchStartX;
+
+      // Glisser vers la droite depuis le bord gauche (ouverture)
+      if (touchStartX < 50 && diff > minSwipeDistance) {
+          menu.style.width = "250px";
+      }
+      
+      // Glisser vers la gauche (fermeture si le menu est ouvert)
+      if (menu.style.width === "250px" && diff < -minSwipeDistance) {
+          menu.style.width = "0";
+      }
   }
 </script>
 </body>
