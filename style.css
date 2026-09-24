@@ -303,24 +303,37 @@ input[readonly]{
     background:#e9d4e6;
 }
 /* ==========================================
-   CORRECTION MOBILE : CASES FBM ET HORS P1
+   ADAPTATION MOBILE DES CASES FBM / HORS P1
    ========================================== */
 @media (max-width: 480px) {
-  /* Cible le bloc qui contient tes checkboxes F, B, M et Hors P1 */
-  .fbm-checkboxes-container, .phases-container, div:has(> #check_fouille) {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 4px 8px;
-    width: 100%;
+  /* Cible la ligne ou le conteneur des checkboxes */
+  div:has(> #check_fouille) {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    gap: 2px !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
   }
 
-  /* Force chaque groupe (checkbox + label) à prendre un peu d'espace de manière propre */
-  div:has(> #check_fouille) label, 
-  div:has(> #check_beton) label, 
+  /* Réduit la taille du texte et resserre chaque étiquette de case */
+  div:has(> #check_fouille) label,
+  div:has(> #check_beton) label,
   div:has(> #check_matage) label,
   div:has(> #horsP1) label {
-    font-size: 0.75em;
-    white-space: nowrap;
+    font-size: 0.62em !important;
+    letter-spacing: -0.3px;
+    white-space: nowrap !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Réduit légèrement l'espace autour des checkboxes elles-mêmes */
+  div:has(> #check_fouille) input[type="checkbox"],
+  div:has(> #check_beton) input[type="checkbox"],
+  div:has(> #check_matage) input[type="checkbox"],
+  div:has(> #horsP1) input[type="checkbox"] {
+    margin-right: 1px !important;
+    transform: scale(0.9);
   }
 }
