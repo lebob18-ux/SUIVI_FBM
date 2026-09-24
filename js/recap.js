@@ -137,8 +137,8 @@ async function genererRecap(containerId) {
           <tr style="border-bottom:1px solid #eee;">
             <td style="padding:5px 6px; border:1px solid #ddd; text-align:left; font-weight:bold;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span>${nomSupport}</span>
-                <button onclick="basculerDetailSupport('${idSupportBloc}')" style="background:#7C2270; color:#fff; border:none; border-radius:3px; padding:2px 5px; font-size:0.7em; cursor:pointer;" title="Afficher les cotes réelles A, B, H">📐</button>
+              //  <span>${nomSupport}</span>
+                <button onclick="basculerDetailSupport('${idSupportBloc}')" style="background:#7C2270; color:#fff; border:none; border-radius:3px; padding:2px 5px; font-size:0.7em; cursor:pointer;" title="Afficher les cotes réelles A, B, H">📐${nomSupport}</button>
               </div>
             </td>
             <td style="padding:5px 6px; border:1px solid #ddd; text-align:center;">${prevu}</td>
