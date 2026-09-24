@@ -701,44 +701,6 @@ function gérerVisibilitéP() {
     const inputActif = (blocN.style.display !== "none") ? document.getElementById("valP_N") : document.getElementById("valP_S");
     calculer();
 }
-
-function initChantiers() {
-  const select = document.getElementById("selectChantier");
-  if (!select) return;
-
-  const chantiersMap = {};
-  baseSupports.forEach(s => {
-    if (!chantiersMap[s.chantier]) {
-      chantiersMap[s.chantier] = { total: 0, effectues: 0 };
-    }
-    chantiersMap[s.chantier].total++;
-    
-    const df = s.date_fouille || s.DATE_FOUILLE;
-    const db = s.date_beton || s.DATE_BETON;
-    const dm = s.date_matage || s.DATE_MATAGE;
-
-    if (df && db && dm) {
-      chantiersMap[s.chantier].effectues++;
-    }
-  });
-
-  select.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
-  const chantiersUniques = [...new Set(baseSupports.map(s => s.chantier))];
-
-  chantiersUniques.forEach(c => {
-    const data = chantiersMap[c];
-
-    if (data && data.total > 0 && data.effectues === data.total) {
-      return; 
-    }
-
-    const opt = document.createElement("option");
-    opt.value = c;
-    opt.textContent = c;
-    select.appendChild(opt);
-  });
-}
-
 function resetSaisieAvantSupport() {
   document.getElementById("I").value = "";
   document.getElementById("AR").value = "";
@@ -779,29 +741,84 @@ function resetSaisieAvantSupport() {
 
   calculer();
 }
+function initChantiers() {
+  const select = document.getElementById("selectChantier");
+  if (!select) return;
+
+  const chantiersMap = {};
+  
+  baseSupports.forEach(s => {
+    // Récupération sécurisée (gère les minuscules et les majuscules venant de Supabase)
+    const nomChantier = s.chantier || s.CHANTIER;
+    if (!nomChantier) return;
+
+    if (!chantiersMap[nomChantier]) {
+      chantiersMap[nomChantier] = { total: 0, effectues: 0 };
+    }
+    chantiersMap[nomChantier].total++;
+    
+    const df = s.date_fouille || s.DATE_FOUILLE;
+    const db = s.date_beton || s.DATE_BETON;
+    const dm = s.date_matage || s.DATE_MATAGE;
+
+    // Un support est effectué si les 3 dates existent et ne sont pas vides
+    if (df && db && dm) {
+      chantiersMap[nomChantier].effectues++;
+    }
+  });
+
+  select.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
+  
+  // Récupération unique des chantiers (goutte d'eau de sécurité)
+  const chantiersUniques = [...new Set(baseSupports.map(s => s.chantier || s.CHANTIER))].filter(Boolean);
+
+  chantiersUniques.forEach(c => {
+    const data = chantiersMap[c];
+
+    // Si tu veux tester sans masquer les chantiers complets, commente la ligne ci-dessous :
+    if (data && data.total > 0 && data.effectues === data.total) {
+      return; // Masque le chantier s'il est 100% terminé
+    }
+
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    select.appendChild(opt);
+  });
+}
 
 function filtrerSupports() {
-    const chantier = document.getElementById("selectChantier").value;
+    const chantierSelect = document.getElementById("selectChantier");
+    const chantier = chantierSelect ? chantierSelect.value : "";
     const supportSelect = document.getElementById("selectSupport");
+
+    if (!supportSelect) return;
 
     resetSaisieAvantSupport();
 
     supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
 
+    if (!chantier) return;
+
     const filtres = baseSupports.filter(s => {
-        if (s.chantier !== chantier) return false;
+        const nomChantier = s.chantier || s.CHANTIER;
+        if (nomChantier !== chantier) return false;
         
         const df = s.date_fouille || s.DATE_FOUILLE;
         const db = s.date_beton || s.DATE_BETON;
         const dm = s.date_matage || s.DATE_MATAGE;
 
+        // Le support reste affiché s'il manque au moins une des 3 phases
         return !(df && db && dm);
     });
     
     filtres.forEach(s => {
+        const numSupport = s.support || s.SUPPORT;
+        if (!numSupport) return;
+
         let opt = document.createElement("option");
-        opt.value = s.support;
-        opt.textContent = s.support;
+        opt.value = numSupport;
+        opt.textContent = numSupport;
         supportSelect.appendChild(opt);
     });
 }
