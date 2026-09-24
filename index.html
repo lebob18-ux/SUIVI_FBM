@@ -11,17 +11,67 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FBM">
 <style>
-  @keyframes fadeInModal {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
-  .menu-item-app:hover {
-    background-color: #f5f0f5 !important;
-    color: #7C2270 !important;
-  }
+    /* Styles pour le menu latéral (sidebar) */
+    .sidebar {
+        height: 100%;
+        width: 0;
+        position: fixed;
+        z-index: 1000;
+        top: 0;
+        left: 0;
+        background-color: #111;
+        overflow-x: hidden;
+        transition: 0.3s;
+        padding-top: 60px;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+    }
+    .sidebar button, .sidebar a {
+        padding: 12px 20px;
+        text-decoration: none;
+        font-size: 18px;
+        color: #818181;
+        display: block;
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .sidebar button:hover, .sidebar a:hover {
+        color: #f1f1f1;
+        background-color: #222;
+    }
+    .sidebar .btn-fermer {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 30px;
+        width: auto;
+        color: #818181;
+    }
+    /* Bouton d'ouverture du menu */
+    #btnOuvrirMenu {
+        background: #7C2270;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
 </style>
 </head>
 <body>
+
+<!-- MENU LATÉRAL (SIDEBAR) -->
+<div id="menuParametres" class="sidebar">
+    <button class="btn-fermer" onclick="basculerMenuParametres()">&times;</button>
+    <button onclick="ouvrirOngletAdminDepuisMenu()">⚙️ Admin</button>
+    <button onclick="gererAmelioration()">🚀 Amélioration</button>
+</div>
+
 <!-- ÉCRAN DE VERROUILLAGE / DEMANDE D'ACCÈS -->
 <div id="auth-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center;">
     <div style="background: white; padding: 30px; border-radius: 8px; width: 400px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
@@ -43,32 +93,22 @@
     </div>
 </div>
 
-<!-- BOUTON ET MENU PARAMÈTRES / NAVIGATION EN HAUT À GAUCHE -->
-<div id="menuParametresGlobal" style="position: fixed; top: 12px; left: 12px; z-index: 998;">
-  <button onclick="basculerMenuParametres()" style="background:#7C2270; color:#fff; border:none; width:38px; height:38px; border-radius:50%; font-size:1.2em; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;" title="Paramètres & Menus">
-    ⚙️
-  </button>
-  
-  <!-- Panneau du menu déroulant -->
-  <div id="panneauMenuDeroulant" style="display:none; position:absolute; top:46px; left:0; background:#fff; width:200px; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.15); border:1px solid #e5e5e5; overflow:hidden;">
-    <div style="padding:10px 12px; background:#f9f5f9; border-bottom:1px solid #eee; font-weight:bold; font-size:0.8em; color:#7C2270;">
-      Menu Principal
-    </div>
-    <div class="menu-item-app" onclick="selectionnerMenuApp('fbm')" style="padding:10px 14px; font-size:0.85em; cursor:pointer; color:#333; border-bottom:1px solid #f2f2f2; display:flex; align-items:center; gap:8px;">
-      📋 FBM / Saisie
-    </div>
-    <div id="menuItemAdmin" class="menu-item-app" onclick="selectionnerMenuApp('admin')" style="padding:10px 14px; font-size:0.85em; cursor:pointer; color:#333; border-bottom:1px solid #f2f2f2; display:flex; align-items:center; gap:8px; display:none;">
-      ⚙️ Admin / Récap
-    </div>
-    <div class="menu-item-app" onclick="selectionnerMenuApp('amelioration')" style="padding:10px 14px; font-size:0.85em; cursor:pointer; color:#333; display:flex; align-items:center; gap:8px;">
-      🚀 Améliorations
-    </div>
-  </div>
+<!-- NAVIGATION PAR ONGLETS -->
+<div id="tabs" class="tabs" style="display:none;">
+    <button id="tabFBM" class="tab active" onclick="ouvrirOnglet('fbm')">
+        📋 SUIVIE GC AINM
+    </button>
+    <button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">⚙️ Admin</button>
 </div>
 
 <!-- PAGE PRINCIPALE FBM -->
 <div id="fbmPage">    
-<div class="box" style="margin-top: 20px;">
+<div class="box">
+
+<!-- Bouton d'ouverture du menu latéral -->
+<div>
+  <button id="btnOuvrirMenu" onclick="basculerMenuParametres()">☰ Menu</button>
+</div>
 
 <!-- En-tête avec Logo, Titre et Badge RJ -->
 <div class="header-row">
@@ -410,37 +450,6 @@
   </div>
 </div>
 
-</div> <!-- Fin de la box -->
-</div> <!-- Fin de fbmPage -->
-
-<!-- PAGE ADMINISTRATION -->
-<div id="adminPage" style="display:none; padding:60px 15px 20px 15px;">
-  <div class="box" style="max-width:600px; margin:0 auto;">
-    <h2>⚙️ Administration</h2>
-    <p>Bienvenue dans la zone réservée.</p>
-    <button id="btnRecapPdf" onclick="exporterRecapPDF()" style="background:#7C2270; color:white; width:100%; padding:10px; font-weight:bold; border-radius:8px; margin-bottom:12px;">📲 Partager PDF récap</button>
-    <h3 style="color:#7C2270;">📊 Récapitulatif chantiers</h3>
-    <div id="recap-content-admin" style="padding: 4px 0;">
-      <p style="color:#999;">Chargement en cours...</p>
-    </div>
-  </div>
-</div>
-
-<!-- PAGE AMÉLIORATIONS -->
-<div id="ameliorationPage" style="display:none; padding:60px 15px 20px 15px;">
-  <div style="max-width:600px; margin:0 auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
-    <h2 style="color:#7C2270; margin-top:0; font-size:1.2em;">🚀 Espace Améliorations & Suggestions</h2>
-    <p style="font-size:0.85em; color:#666;">Bienvenue dans l'espace d'évolution de l'application. Tu trouveras ici les prochaines fonctionnalités prévues ou tu peux noter tes idées.</p>
-    <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-    <h3 style="font-size:0.95em; color:#333;">Idées en cours / à venir :</h3>
-    <ul style="font-size:0.85em; color:#444; line-height:1.6; padding-left:20px;">
-      <li>Export global des données en format CSV / Excel</li>
-      <li>Mode hors-ligne renforcé pour les zones sans réseau</li>
-      <li>Ajout de photos directes par massif</li>
-    </ul>
-  </div>
-</div>
-
 <!-- MODALS -->
 <div id="divScanModal" class="custom-modal">
   <div style="background:#000; width:90%; max-width:360px; border-radius:12px; overflow:hidden; position:relative; padding:0;">
@@ -510,6 +519,24 @@
   </div>
 </div>
 
+</div> <!-- Fin de la box -->
+</div> <!-- Fin de fbmPage -->
+
+<!-- PAGE ADMINISTRATION -->
+<div id="adminPage" style="display:none;">
+  <div class="box">
+    <!-- Bouton pour revenir en arrière ou fermer l'admin -->
+    <button onclick="ouvrirOnglet('fbm')" style="background:#6c757d; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold; margin-bottom:10px;">← Retour</button>
+    <h2>⚙️ Administration</h2>
+    <p>Bienvenue dans la zone réservée.</p>
+    <button id="btnRecapPdf" onclick="exporterRecapPDF()" style="background:#7C2270; color:white; width:100%; padding:10px; font-weight:bold; border-radius:8px; margin-bottom:12px;">📲 Partager PDF récap</button>
+    <h3 style="color:#7C2270;">📊 Récapitulatif chantiers</h3>
+    <div id="recap-content-admin" style="padding: 4px 0;">
+      <p style="color:#999;">Chargement en cours...</p>
+    </div>
+  </div>
+</div>
+
 <!-- SCRIPTS JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -521,6 +548,7 @@
 <script src="js/ui-sections.js"></script>
 <script src="js/echantillon-modal.js"></script>
 <script src="js/calculs.js"></script>
+<!-- (partage.js supprimé) -->
 <script src="js/supabase-sync.js"></script>
 <script src="js/pdf-export.js"></script>
 <script src="js/pdf-recap.js"></script>
@@ -539,57 +567,27 @@
     });
   }
 
-  // --- Gestion du Menu Paramètres & Navigation ---
+  // Fonctions pour gérer le menu latéral et les boutons Admin / Amélioration
   function basculerMenuParametres() {
-    const panneau = document.getElementById("panneauMenuDeroulant");
-    if (!panneau) return;
-    panneau.style.display = panneau.style.display === 'block' ? 'none' : 'block';
-  }
-
-  // Fermer le menu si on clique en dehors
-  window.addEventListener('click', function(e) {
-    const menuContainer = document.getElementById("menuParametresGlobal");
-    const panneau = document.getElementById("panneauMenuDeroulant");
-    if (menuContainer && panneau && !menuContainer.contains(e.target)) {
-      panneau.style.display = 'none';
-    }
-  });
-
-  // Navigation entre les vues (FBM, Admin, Améliorations)
-  function selectionnerMenuApp(nom) {
-    const panneau = document.getElementById("panneauMenuDeroulant");
-    if (panneau) panneau.style.display = 'none';
-
-    const fbmPage = document.getElementById("fbmPage");
-    const adminPage = document.getElementById("adminPage");
-    const ameliorationPage = document.getElementById("ameliorationPage");
-
-    if (fbmPage) fbmPage.style.display = nom === "fbm" ? "block" : "none";
-    if (adminPage) adminPage.style.display = nom === "admin" ? "block" : "none";
-    if (ameliorationPage) ameliorationPage.style.display = nom === "amelioration" ? "block" : "none";
-
-    // Si on va sur l'admin, on déclenche la génération du récap
-    if (nom === "admin" && typeof genererRecap === "function") {
-      setTimeout(() => genererRecap("recap-content-admin"), 100);
-    }
-  }
-
-  // Vérification des droits d'accès pour afficher ou masquer l'item "Admin / Récap"
-  const RECAP_EMAILS_AUTORISES = ["robert.lavignon@reseau.sncf.fr"];
-
-  window.addEventListener("load", function() {
-    const menuItemAdmin = document.getElementById("menuItemAdmin");
-    if (!menuItemAdmin) return;
-    try {
-      const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur") || "{}");
-      const email = (identite.email || "").toLowerCase().trim();
-      if (RECAP_EMAILS_AUTORISES.includes(email)) {
-        menuItemAdmin.style.display = "flex";
+      const menu = document.getElementById('menuParametres');
+      if (menu.style.width === "250px") {
+          menu.style.width = "0";
+      } else {
+          menu.style.width = "250px";
       }
-    } catch (e) {
-      menuItemAdmin.style.display = "none";
-    }
-  });
+  }
+
+  function ouvrirOngletAdminDepuisMenu() {
+      basculerMenuParametres(); // Ferme le menu
+      if (typeof ouvrirOnglet === 'function') {
+          ouvrirOnglet('admin'); // Utilise votre fonction existante de gestion d'onglets
+      }
+  }
+
+  function gererAmelioration() {
+      basculerMenuParametres();
+      alert("Fonctionnalité d'amélioration bientôt disponible !");
+  }
 </script>
 </body>
 </html>
