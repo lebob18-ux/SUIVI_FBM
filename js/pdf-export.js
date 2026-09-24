@@ -13,53 +13,77 @@ function memoriserEtatInitialPhases() {
    VALIDATION DES SAISIES PAR PHASE COCHÉE (F, B, M)
    ============================================================ */
 function validerSaisiesFBM() {
-  const fouilleCoche = document.getElementById('check_fouille')?.checked || false;
-  const betonCoche = document.getElementById('check_beton')?.checked || false;
-  const matageCoche = document.getElementById('check_matage')?.checked || false;
+    let erreurs = [];
 
-  let erreurs = [];
+    // 1. Bloc FOUILLE (si check_fouille est coché)
+    if (document.getElementById('check_fouille')?.checked) {
+        let af = document.getElementById('AF')?.value;
+        let bFouille = document.getElementById('B_Fouille')?.value;
+        let hFouille = document.getElementById('H_Fouille')?.value;
+        
+        if (!af || !bFouille || !hFouille) {
+            erreurs.push("📐 **Fouille** : Les cotes A, B ou H sont incomplètes.");
+        }
+    }
 
-  // --- PHASE 1 : FOUILLE ---
-  if (fouilleCoche) {
-    const bFouille = document.getElementById('B_Fouille')?.value.trim();
-    const hFouille = document.getElementById('H_Fouille')?.value.trim();
-    const valF = document.getElementById('valF')?.value.trim();
-    const valSUP = document.getElementById('valSUP')?.value.trim();
+    // 2. Bloc BÉTON (si check_beton est coché)
+    if (document.getElementById('check_beton')?.checked) {
+        let blBeton = document.getElementById('bl_beton')?.value;
+        let blInput = document.getElementById('bl-input')?.value;
+        let slump = document.getElementById('slump-input')?.value;
+        
+        if (!blBeton || !blInput || !slump) {
+            erreurs.push("🧱 **Béton** : Le N° de BL, le type de béton ou le slump est manquant.");
+        }
+    }
 
-    if (!bFouille) erreurs.push("• [Fouille] Largeur Fouille (B)");
-    if (!hFouille) erreurs.push("• [Fouille] Profondeur Fouille (H)");
-    if (!valF) erreurs.push("• [Fouille] Cote F");
-    if (!valSUP) erreurs.push("• [Fouille] Cote SUP");
-  }
+    // 3. Bloc MATAGE (si check_matage est coché)
+    if (document.getElementById('check_matage')?.checked) {
+        let iMat = document.getElementById('I')?.value;
+        let arMat = document.getElementById('AR')?.value;
+        let encMat = document.getElementById('Enc')?.value;
+        let valF = document.getElementById('valF')?.value;
+        
+        if (!iMat || !arMat || !encMat || !valF) {
+            erreurs.push("🔨 **Matage** : Implantation, Arasement, Encastrement ou Fruit (F) manquant.");
+        }
+    }
 
-  // --- PHASE 2 : BÉTON ---
-  if (betonCoche) {
-    const aF = document.getElementById('AF')?.value.trim();
-    if (!aF) erreurs.push("• [Béton] Cote Béton (AF)");
-  }
+    // 4. Bloc BLINDAGE (si blindageCheck est coché)
+    if (document.getElementById('blindageCheck')?.checked) {
+        let distBlindage = document.getElementById('dist_blindage')?.value;
+        let statutBlindage = document.querySelector('input[name="statut_blindage"]:checked');
+        
+        if (!distBlindage || !statutBlindage) {
+            erreurs.push("🛡️ **Blindage** : La distance bord rail ou le statut (Conforme/Non conf.) est manquant.");
+        }
+    }
 
-  // --- PHASE 3 : MATAGE ---
-  if (matageCoche) {
-    const iReel = document.getElementById('I')?.value.trim();
-    const arReel = document.getElementById('AR')?.value.trim();
-    const encReel = document.getElementById('Enc')?.value.trim();
-    
-    const blocNVisible = document.getElementById("bloc-N") && document.getElementById("bloc-N").style.display !== "none";
-    const pSaisi = blocNVisible ? document.getElementById("valP_N")?.value.trim() : document.getElementById("valP_S")?.value.trim();
+    // 5. Bloc CAROTTE (si carotte est coché)
+    if (document.getElementById('carotte')?.checked) {
+        let aCarotte = document.getElementById('A_carotte')?.value;
+        let bCarotte = document.getElementById('B_carotte')?.value;
+        
+        if (!aCarotte || aCarotte === "0" || !bCarotte || bCarotte === "0") {
+            erreurs.push("🥕 **Carotte** : Les dimensions A ou B de la carotte sont requises.");
+        }
+    }
 
-    if (!iReel) erreurs.push("• [Matage] Cote I (Interaxe)");
-    if (!arReel) erreurs.push("• [Matage] Cote AR (Arase)");
-    if (!encReel) erreurs.push("• [Matage] Cote Enc");
-    if (!pSaisi) erreurs.push("• [Matage] Cote P (Portance / Déport)");
-  }
+    // Affichage dynamique dans ton bloc d'alertes existant (#tbf)
+    let alertesDiv = document.getElementById('tbf');
+    if (alertesDiv) {
+        if (erreurs.length > 0) {
+            alertesDiv.innerHTML = `
+                <div style="color: #dc2626; background: #fee2e2; padding: 8px 10px; border-radius: 6px; border: 1px solid #f87171; font-size: 0.85em; text-align: left;">
+                    <strong>⚠️ Champs requis manquants :</strong><br>
+                    • ` + erreurs.join("<br>• ") + `
+                </div>`;
+        } else {
+            alertesDiv.innerHTML = "";
+        }
+    }
 
-  // Si des champs manquent pour les phases cochées, on bloque
-  if (erreurs.length > 0) {
-    alert("❌ IMPOSSIBLE D'EXPORTER\n\nDes saisies obligatoires sont manquantes pour les phases cochées :\n\n" + erreurs.join("\n") + "\n\nVeuillez compléter ces champs pour continuer.");
-    return false;
-  }
-
-  return true;
+    return erreurs.length === 0;
 }
 
 function logoSVGversPNG(largeurPx, hauteurPx) {
