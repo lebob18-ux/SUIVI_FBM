@@ -85,9 +85,9 @@ async function genererRecap(containerId) {
 
       c.m3TotalPrevu += m3PrevuVal;
 
-      // Vérification si réalisé (via m3 réel > 0 ou colonne effectue/Fait)
-      const valEff = row.effectue !== undefined ? row.effectue : row.Fait;
-      const estRealise = (m3ReelVal > 0) || (valEff === 1 || valEff === true || String(valEff).trim() === "1" || String(valEff).trim() === "OUI");
+      // Vérification si réalisé : présence d'une date dans date_beton
+      const dateBetonVal = row.date_beton ? String(row.date_beton).trim() : "";
+      const estRealise = dateBetonVal !== "" && dateBetonVal !== "null" && dateBetonVal !== "undefined";
 
       if (estRealise) {
         c.effectues++;
@@ -118,8 +118,10 @@ async function genererRecap(containerId) {
         const nomSupport = s.support || "-";
         const prevu = parseFloat(s.m3_prevu || s.m3_prevu_total || 0).toFixed(2);
         const reel = parseFloat(s.m3_reel || s.m3_reel_date || 0).toFixed(2);
-        const valEff = s.effectue !== undefined ? s.effectue : s.Fait;
-        const estFait = (parseFloat(reel) > 0) || (valEff === 1 || valEff === true || String(valEff).trim() === "1" || String(valEff).trim() === "OUI");
+        
+        // Statut basé sur la présence d'une date dans date_beton
+        const dateBetonVal = s.date_beton ? String(s.date_beton).trim() : "";
+        const estFait = dateBetonVal !== "" && dateBetonVal !== "null" && dateBetonVal !== "undefined";
         const statutTxt = estFait ? "✅ Fait" : "⏳ En cours";
         const couleurStatut = estFait ? "#16a34a" : "#d97706";
 
