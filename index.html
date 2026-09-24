@@ -50,17 +50,6 @@
         width: auto;
         color: #818181;
     }
-    /* Bouton d'ouverture du menu (optionnel, conservé si besoin) */
-    #btnOuvrirMenu {
-        background: #7C2270;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
 </style>
 </head>
 <body>
@@ -68,6 +57,7 @@
 <!-- MENU LATÉRAL (SIDEBAR) -->
 <div id="menuParametres" class="sidebar">
     <button class="btn-fermer" onclick="basculerMenuParametres()">&times;</button>
+    <button onclick="actionEnregistrerDepuisMenu()">💾 Enregistrer</button>
     <button onclick="ouvrirOngletAdminDepuisMenu()">⚙️ Admin</button>
     <button onclick="gererAmelioration()">🚀 Amélioration</button>
 </div>
@@ -105,11 +95,6 @@
 <div id="fbmPage">    
 <div class="box">
 
-<!-- Bouton d'ouverture du menu latéral (Optionnel, vous pouvez le garder ou le supprimer si le glissé vous suffit) -->
-<div>
-  <button id="btnOuvrirMenu" onclick="basculerMenuParametres()">☰ Menu (ou glisser)</button>
-</div>
-
 <!-- En-tête avec Logo, Titre et Badge RJ -->
 <div class="header-row">
 <div style="display:flex; justify-content:center; margin-bottom:8px;">
@@ -118,9 +103,6 @@
 <h3 id="pageTitle"></h3>
 <div style="display:flex; justify-content:center; margin-bottom:6px;">
   <span id="rjBadge" onclick="document.getElementById('divRJModal').style.display='flex';" style="font-size:0.75em; font-weight:bold; color:#7C2270; background:#f5eaf3; padding:2px 10px; border-radius:10px; cursor:pointer;">RJ : --</span>
-</div>
-<div style="display:flex; gap:5px;">
-  <button id="btnExportPdf" onclick="exporterPDF()">💾 Enregistrer</button>
 </div>
 </div>
 
@@ -567,13 +549,20 @@
     });
   }
 
-  // Fonctions pour gérer le menu latéral et les boutons Admin / Amélioration
+  // Fonctions pour gérer le menu latéral et les boutons
   function basculerMenuParametres() {
       const menu = document.getElementById('menuParametres');
       if (menu.style.width === "250px") {
           menu.style.width = "0";
       } else {
           menu.style.width = "250px";
+      }
+  }
+
+  function actionEnregistrerDepuisMenu() {
+      basculerMenuParametres(); // Ferme le menu
+      if (typeof exporterPDF === 'function') {
+          exporterPDF(); // Lance votre fonction d'enregistrement existante
       }
   }
 
