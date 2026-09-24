@@ -60,7 +60,6 @@ function initChantiers() {
     }
     chantiersMap[chantierNom].total++;
     
-    // Un support est terminé si les 3 dates sont remplies
     const df = s.date_fouille || s.DATE_FOUILLE;
     const db = s.date_beton || s.DATE_BETON;
     const dm = s.date_matage || s.DATE_MATAGE;
@@ -71,12 +70,15 @@ function initChantiers() {
   });
 
   select.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
-  const chantiersUniques = [...new Set(baseSupports.map(s => s.chantier || s.CHANTIER))].filter(Boolean);
+  
+  // Tri croissant alphabétique/numérique des chantiers
+  const chantiersUniques = [...new Set(baseSupports.map(s => s.chantier || s.CHANTIER))].filter(Boolean).sort((a, b) => 
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+  );
 
   chantiersUniques.forEach(c => {
     const data = chantiersMap[c];
 
-    // Masque le chantier s'il est 100% terminé
     if (data && data.total > 0 && data.effectues === data.total) {
       return; 
     }
@@ -143,7 +145,7 @@ function filtrerSupports() {
 
     if (!chantier) return;
 
-    // Filtre : on garde les supports où il manque au moins une des 3 dates
+    // Filtre des supports non terminés
     const filtres = baseSupports.filter(s => {
         const nomChantier = s.chantier || s.CHANTIER;
         if (nomChantier !== chantier) return false;
@@ -155,6 +157,13 @@ function filtrerSupports() {
         return !(df && db && dm);
     });
     
+    // Tri croissant intelligent des supports (ex: S1, S2, S10 au lieu de S1, S10, S2)
+    filtres.sort((a, b) => {
+        const supA = String(a.support || a.SUPPORT || "");
+        const supB = String(b.support || b.SUPPORT || "");
+        return supA.localeCompare(supB, undefined, { numeric: true, sensitivity: 'base' });
+    });
+
     filtres.forEach(s => {
         const numSupport = s.support || s.SUPPORT;
         if (!numSupport) return;
