@@ -1,3 +1,14 @@
+// Variable globale pour stocker l'état initial des cases au chargement du support
+let phasesInitialesCount = 0;
+
+// Fonction à appeler lorsque tu charges / affiches les données d'un support (depuis Supabase)
+function memoriserEtatInitialPhases() {
+    const f = document.getElementById('check_fouille')?.checked ? 1 : 0;
+    const b = document.getElementById('check_beton')?.checked ? 1 : 0;
+    const m = document.getElementById('check_matage')?.checked ? 1 : 0;
+    phasesInitialesCount = f + b + m;
+}
+
 function logoSVGversPNG(largeurPx, hauteurPx) {
   return new Promise((resolve) => {
     fetch("assets/logo.svg")
@@ -42,16 +53,22 @@ async function exporterPDF() {
   const matageCoche = document.getElementById('check_matage').checked;
   
   const isBlindage = document.getElementById('blindageCheck').checked;
-  const isHorsP1 = document.getElementById('check_hors_p1').checked;
+  const isHorsP1 = document.getElementById('check_hors_p1')?.checked || false; // Adapte l'ID si besoin
+
+  const phasesActuellesCount = (fouilleCoche ? 1 : 0) + (betonCoche ? 1 : 0) + (matageCoche ? 1 : 0);
 
   if (isBlindage || isHorsP1) {
-    // Cas Blindage ou Hors P1 : on vérifie la condition spécifique (ex: que la case blindage ou hors P1 est active)
-    if (!isBlindage && !isHorsP1) {
-      alert("⚠️ En mode Blindage/Hors P1, veuillez valider l'option correspondante.");
+    // Cas Blindage ou Hors P1 : il faut au moins une phase validée, ET si des phases étaient déjà là, il en faut une de plus
+    if (phasesActuellesCount === 0) {
+      alert("⚠️ En mode Blindage / Hors P1, vous devez valider au moins une phase pour exporter.");
+      return;
+    }
+    if (phasesActuellesCount <= phasesInitialesCount) {
+      alert("⚠️ En mode Blindage / Hors P1, vous devez valider au moins une nouvelle phase supplémentaire par rapport à l'état initial.");
       return;
     }
   } else {
-    // Cas général : les 3 phases doivent être vraies ou validées par popup
+    // Cas général FBM classique : les 3 phases doivent être vraies ou validées par popup
     if (!fouilleCoche || !betonCoche || !matageCoche) {
       const confirmation = confirm("Voulez-vous valider les 3 Phase ?");
       if (!confirmation) {
