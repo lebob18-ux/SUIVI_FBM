@@ -7,13 +7,13 @@ const RECAP_EMAILS_AUTORISES = [
 ];
 
 // Fonction pour gérer l'ouverture en mode accordéon des détails de chantier
-function basculerDetailChantier(idDetail) {
+window.basculerDetailChantier = function(idDetail) {
   const elementCible = document.getElementById(idDetail);
   if (!elementCible) return;
 
   const estDejaOuvert = elementCible.style.display === 'block';
 
-  // 1. Fermer tous les blocs de détails ouverts
+  // 1. Fermer tous les blocs de détails de chantiers ouverts
   document.querySelectorAll('.detail-chantier-bloc').forEach(el => {
     el.style.display = 'none';
   });
@@ -22,7 +22,22 @@ function basculerDetailChantier(idDetail) {
   if (!estDejaOuvert) {
     elementCible.style.display = 'block';
   }
-}
+};
+
+// Fonction pour gérer l'ouverture du sous-sous-détail (Cotes A, B, H réelles par support)
+window.basculerDetailSupport = function(idSupportBloc) {
+  const elementCible = document.getElementById(idSupportBloc);
+  if (!elementCible) return;
+
+  const estOuvert = elementCible.style.display === 'table-row';
+  
+  // Fermer les autres sous-détails de supports ouverts dans ce même tableau
+  document.querySelectorAll('.detail-support-bloc').forEach(el => {
+    el.style.display = 'none';
+  });
+
+  elementCible.style.display = estOuvert ? 'none' : 'table-row';
+};
 
 async function genererRecap(containerId) {
   const cid = containerId || "recap-content-fbm";
@@ -56,7 +71,7 @@ async function genererRecap(containerId) {
         chantiersMap[nomChantier] = { 
           total: 0, 
           effectues: 0, 
-          m3TotalPrevu: 0,   
+          m3TotalPrevu: 0,    
           m3PrevuEffectue: 0, 
           m3ReelTotal: 0       
         };
@@ -99,7 +114,7 @@ async function genererRecap(containerId) {
       const supportsDuChantier = dataBlindage.filter(row => (row.chantier ? String(row.chantier).trim().toUpperCase() : "INCONNU") === nom);
 
       let htmlLignesDetails = "";
-      supportsDuChantier.forEach(s => {
+      supportsDuChantier.forEach((s, index) => {
         const nomSupport = s.support || "-";
         const prevu = parseFloat(s.m3_prevu || s.m3_prevu_total || 0).toFixed(2);
         const reel = parseFloat(s.m3_reel || s.m3_reel_date || 0).toFixed(2);
@@ -108,12 +123,36 @@ async function genererRecap(containerId) {
         const statutTxt = estFait ? "✅ Fait" : "⏳ En cours";
         const couleurStatut = estFait ? "#16a34a" : "#d97706";
 
+        // Récupération des cotes réelles depuis les colonnes demandées
+        const aReel = s.a_reel !== undefined && s.a_reel !== null && s.a_reel !== "" ? s.a_reel : "-";
+        const bReel = s.b_reel !== undefined && s.b_reel !== null && s.b_reel !== "" ? s.b_reel : "-";
+        const hReel = s.h_reel !== undefined && s.h_reel !== null && s.h_reel !== "" ? s.h_reel : "-";
+
+        // ID unique pour le sous-bloc des cotes de ce support
+        const idSupportBloc = `support-detail-${nom}-${nomSupport}-${index}`.replace(/[^a-zA-Z0-9]/g, '_');
+
         htmlLignesDetails += `
-          <tr>
-            <td style="padding:4px 6px; border:1px solid #ddd; text-align:left; font-weight:bold;">${nomSupport}</td>
-            <td style="padding:4px 6px; border:1px solid #ddd; text-align:center;">${prevu}</td>
-            <td style="padding:4px 6px; border:1px solid #ddd; text-align:center;">${reel}</td>
-            <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; color:${couleurStatut}; font-weight:bold;">${statutTxt}</td>
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:5px 6px; border:1px solid #ddd; text-align:left; font-weight:bold;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span>${nomSupport}</span>
+                <button onclick="basculerDetailSupport('${idSupportBloc}')" style="background:#7C2270; color:#fff; border:none; border-radius:3px; padding:2px 5px; font-size:0.7em; cursor:pointer;" title="Afficher les cotes réelles A, B, H">📐 Cotes</button>
+              </div>
+            </td>
+            <td style="padding:5px 6px; border:1px solid #ddd; text-align:center;">${prevu}</td>
+            <td style="padding:5px 6px; border:1px solid #ddd; text-align:center;">${reel}</td>
+            <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; color:${couleurStatut}; font-weight:bold;">${statutTxt}</td>
+          </tr>
+          <!-- Sous-sous-détail masqué par défaut pour les cotes A, B, H réelles -->
+          <tr id="${idSupportBloc}" class="detail-support-bloc" style="display:none; background:#faf5fa;">
+            <td colspan="4" style="padding:6px 10px; border:1px solid #ddd;">
+              <div style="font-size:0.75em; color:#7C2270; font-weight:bold; margin-bottom:3px;">🔍 Cotes réelles mesurées :</div>
+              <div style="display:flex; justify-content:space-around; font-size:0.75em; color:#333; background:#fff; padding:4px; border-radius:3px; border:1px solid #e5d5e5;">
+                <span>A réel : <strong>${aReel}</strong></span>
+                <span>B réel : <strong>${bReel}</strong></span>
+                <span>H réel : <strong>${hReel}</strong></span>
+              </div>
+            </td>
           </tr>
         `;
       });
