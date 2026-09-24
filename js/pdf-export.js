@@ -17,7 +17,7 @@ function validerSaisiesFBM() {
 
     // 1. Bloc FOUILLE (si check_fouille est coché)
     if (document.getElementById('check_fouille')?.checked) {
-        let af = document.getElementById('AF')?.value;
+        //let af = document.getElementById('AF')?.value;
         let bFouille = document.getElementById('B_Fouille')?.value;
         let hFouille = document.getElementById('H_Fouille')?.value;
         
