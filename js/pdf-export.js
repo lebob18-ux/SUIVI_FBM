@@ -115,6 +115,9 @@ function logoSVGversPNG(largeurPx, hauteurPx) {
 /* ============================================================
    EXPORT PDF — document structuré (pas une capture d'écran)
    ============================================================ */
+/* ============================================================
+   EXPORT PDF — document structuré (pas une capture d'écran)
+   ============================================================ */
 async function exporterPDF() {
   const numSupportInput = document.getElementById("selectSupport").value.trim();
 
@@ -124,16 +127,7 @@ async function exporterPDF() {
     return;
   }
 
-  // --- 1. CONTRÔLE DES CHAMPS Vides SELON LES PHASES COCHÉES ---
-  const erreursSaisies = validerSaisiesFBM();
-  if (erreursSaisies.length > 0) {
-    // Nettoyage des balises Markdown (**) pour l'affichage propre dans le popup alert
-    const texteErreurs = erreursSaisies.map(e => e.replace(/\*\*/g, "")).join("\n• ");
-    alert("❌ Impossible d'enregistrer !\n\nVeuillez corriger les éléments suivants :\n\n• " + texteErreurs);
-    return; // Stoppe net si des données manquent dans les chapitres cochés
-  }
-
-  // --- 2. CONTRÔLE DES RÈGLES DE VALIDATION / COCHES ---
+  // --- 1. CONTRÔLE DES RÈGLES DE VALIDATION / COCHES ---
   const fouilleCoche = document.getElementById('check_fouille').checked;
   const betonCoche = document.getElementById('check_beton').checked;
   const matageCoche = document.getElementById('check_matage').checked;
@@ -163,6 +157,15 @@ async function exporterPDF() {
         document.getElementById('check_matage').checked = true;
       }
     }
+  }
+  // ------------------------------------------------
+
+  // --- 2. CONTRÔLE DES CHAMPS Vides (Vérifié après les coches des 3 phases) ---
+  const erreursSaisies = validerSaisiesFBM();
+  if (erreursSaisies.length > 0) {
+    const texteErreurs = erreursSaisies.map(e => e.replace(/\*\*/g, "")).join("\n• ");
+    alert("❌ Impossible d'enregistrer !\n\nVeuillez corriger les éléments suivants :\n\n• " + texteErreurs);
+    return; // Bloque l'export si les champs obligatoires des 3 phases fraîchement cochées sont vides
   }
   // ------------------------------------------------
 
