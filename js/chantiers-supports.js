@@ -184,11 +184,11 @@ function chargerSupport() {
     const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
     const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
 
-    // 1. ON VIDE LES CHAMPS DE SAISIE ACTIVE (l'opérateur doit les taper)
+    // 1. ON VIDE LES CHAMPS DE SAISIE ACTIVE (sauf AF qu'on pré-remplit avec sa référence)
     setVal("valF", "");
     setVal("valSUP", "");
     setVal("I", "");
-    setVal("AF", "");
+    setVal("AF", valOuVide(data.AF !== undefined ? data.AF : data.A)); // <-- Remet la valeur de référence dans le champ modifiable A
     setVal("B_Fouille", "");
     setVal("H_Fouille", "");
     setVal("AR", "");
@@ -200,7 +200,7 @@ function chargerSupport() {
     setTxt("F_ref", valOuVide(data.F));
     setTxt("SUP_ref", valOuVide(data.SUP));
     setTxt("I_ref", valOuVide(data.I));
-    setTxt("AF_ref", valOuVide(data.AF));
+    setTxt("AF_ref", valOuVide(data.AF !== undefined ? data.AF : data.A));
     setTxt("B_ref", valOuVide(data.B));
     setTxt("H_ref", valOuVide(data.H));
     setTxt("AR_ref", valOuVide(data.AR));
