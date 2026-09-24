@@ -9,6 +9,59 @@ function memoriserEtatInitialPhases() {
     phasesInitialesCount = f + b + m;
 }
 
+/* ============================================================
+   VALIDATION DES SAISIES PAR PHASE COCHÉE (F, B, M)
+   ============================================================ */
+function validerSaisiesFBM() {
+  const fouilleCoche = document.getElementById('check_fouille')?.checked || false;
+  const betonCoche = document.getElementById('check_beton')?.checked || false;
+  const matageCoche = document.getElementById('check_matage')?.checked || false;
+
+  let erreurs = [];
+
+  // --- PHASE 1 : FOUILLE ---
+  if (fouilleCoche) {
+    const bFouille = document.getElementById('B_Fouille')?.value.trim();
+    const hFouille = document.getElementById('H_Fouille')?.value.trim();
+    const valF = document.getElementById('valF')?.value.trim();
+    const valSUP = document.getElementById('valSUP')?.value.trim();
+
+    if (!bFouille) erreurs.push("• [Fouille] Largeur Fouille (B)");
+    if (!hFouille) erreurs.push("• [Fouille] Profondeur Fouille (H)");
+    if (!valF) erreurs.push("• [Fouille] Cote F");
+    if (!valSUP) erreurs.push("• [Fouille] Cote SUP");
+  }
+
+  // --- PHASE 2 : BÉTON ---
+  if (betonCoche) {
+    const aF = document.getElementById('AF')?.value.trim();
+    if (!aF) erreurs.push("• [Béton] Cote Béton (AF)");
+  }
+
+  // --- PHASE 3 : MATAGE ---
+  if (matageCoche) {
+    const iReel = document.getElementById('I')?.value.trim();
+    const arReel = document.getElementById('AR')?.value.trim();
+    const encReel = document.getElementById('Enc')?.value.trim();
+    
+    const blocNVisible = document.getElementById("bloc-N") && document.getElementById("bloc-N").style.display !== "none";
+    const pSaisi = blocNVisible ? document.getElementById("valP_N")?.value.trim() : document.getElementById("valP_S")?.value.trim();
+
+    if (!iReel) erreurs.push("• [Matage] Cote I (Interaxe)");
+    if (!arReel) erreurs.push("• [Matage] Cote AR (Arase)");
+    if (!encReel) erreurs.push("• [Matage] Cote Enc");
+    if (!pSaisi) erreurs.push("• [Matage] Cote P (Portance / Déport)");
+  }
+
+  // Si des champs manquent pour les phases cochées, on bloque
+  if (erreurs.length > 0) {
+    alert("❌ IMPOSSIBLE D'EXPORTER\n\nDes saisies obligatoires sont manquantes pour les phases cochées :\n\n" + erreurs.join("\n") + "\n\nVeuillez compléter ces champs pour continuer.");
+    return false;
+  }
+
+  return true;
+}
+
 function logoSVGversPNG(largeurPx, hauteurPx) {
   return new Promise((resolve) => {
     fetch("assets/logo.svg")
@@ -47,18 +100,22 @@ async function exporterPDF() {
     return;
   }
 
-  // --- CONTRÔLE DES CASES À COCHER AVANT EXPORT ---
+  // --- 1. CONTRÔLE DES CHAMPS Vides SELON LES PHASES COCHÉES ---
+  if (!validerSaisiesFBM()) {
+    return; // Stoppe net si des données manquent dans les chapitres cochés
+  }
+
+  // --- 2. CONTRÔLE DES RÈGLES DE VALIDATION / COCHES ---
   const fouilleCoche = document.getElementById('check_fouille').checked;
   const betonCoche = document.getElementById('check_beton').checked;
   const matageCoche = document.getElementById('check_matage').checked;
   
   const isBlindage = document.getElementById('blindageCheck').checked;
-  const isHorsP1 = document.getElementById('check_hors_p1')?.checked || false; // Adapte l'ID si besoin
+  const isHorsP1 = document.getElementById('check_hors_p1')?.checked || false;
 
   const phasesActuellesCount = (fouilleCoche ? 1 : 0) + (betonCoche ? 1 : 0) + (matageCoche ? 1 : 0);
 
   if (isBlindage || isHorsP1) {
-    // Cas Blindage ou Hors P1 : il faut au moins une phase validée, ET si des phases étaient déjà là, il en faut une de plus
     if (phasesActuellesCount === 0) {
       alert("⚠️ En mode Blindage / Hors P1, vous devez valider au moins une phase pour exporter.");
       return;
@@ -68,13 +125,11 @@ async function exporterPDF() {
       return;
     }
   } else {
-    // Cas général FBM classique : les 3 phases doivent être vraies ou validées par popup
     if (!fouilleCoche || !betonCoche || !matageCoche) {
-      const confirmation = confirm("Voulez-vous valider les 3 Phase ?");
+      const confirmation = confirm("Voulez-vous valider les 3 Phases ?");
       if (!confirmation) {
-        return; // Stoppe l'export si l'utilisateur refuse
+        return; 
       } else {
-        // Coche automatiquement les 3 si l'utilisateur valide
         document.getElementById('check_fouille').checked = true;
         document.getElementById('check_beton').checked = true;
         document.getElementById('check_matage').checked = true;
@@ -95,13 +150,11 @@ async function exporterPDF() {
     const val = (id) => { const el = g(id); return el ? (el.value || "").toString().trim() : ""; };
     const txt = (id) => { const el = g(id); return el ? (el.innerText || "").toString().trim() : ""; };
 
-    // Retire les émojis (non supportés par les polices PDF standard)
     const clean = (s) => (s || "")
       .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u2139\uFE0F]/gu, "")
       .replace(/\s{2,}/g, " ")
       .trim();
 
-    // Découpe un bloc de résultat (avec <br>) en lignes, avec couleur déduite des émojis d'origine
     function lignesColorees(id) {
       const el = g(id);
       if (!el) return [];
@@ -139,14 +192,12 @@ async function exporterPDF() {
     const rouge = [228, 29, 37];
     const footerReserve = 14;
 
-    // Rasterise le logo SNCF (SVG -> PNG) pour l'intégrer au PDF
     const logoDataUrl = await logoSVGversPNG(216, 153);
     const logoRatio = 153 / 216;
 
     const logoAinmDataUrl = (typeof logoAINMversPNG === "function") ? await logoAINMversPNG(737, 291) : null;
     const logoAinmRatio = 291.02362 / 737.00789;
 
-    /* ---- bandeau dégradé (couleurs identité visuelle) ---- */
     function bandeauDegrade(y0, h) {
       const bandes = 60;
       for (let i = 0; i < bandes; i++) {
@@ -184,7 +235,7 @@ async function exporterPDF() {
       doc.text("Support : " + numSupportInput, pageW - marge, 24, { align: "right" });
     }
 
-    function enteteAllegee(numPage) {
+    function enteteAllegee() {
       doc.setFillColor(violet[0], violet[1], violet[2]);
       doc.rect(0, 0, pageW, 12, 'F');
       if (logoDataUrl) {
@@ -468,14 +519,12 @@ async function exporterPDF() {
       y += 5;
     }
 
-    // ---------- Pied de page sur toutes les pages ----------
     const totalPages = doc.internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
       piedDePage(p, totalPages);
     }
 
-    // ---------- Téléchargement direct du PDF ----------
     const nomFichier = "FBM_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
     doc.save(nomFichier);
 
