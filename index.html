@@ -510,6 +510,19 @@
   </div>
 </div>
 
+<!-- NOUVELLE MODALE POUR LES AMÉLIORATIONS -->
+<div id="divAmeliorationModal" class="custom-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+  <div class="custom-modal-content" style="background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+    <p style="font-weight: bold; font-size:1.1em; margin-bottom: 8px; color: #7C2270;">🚀 Proposer une amélioration</p>
+    <p style="font-size: 0.8em; color: #666; margin-bottom: 14px;">Votre suggestion sera enregistrée pour faire évoluer l'outil.</p>
+    
+    <textarea id="inputTexteAmelioration" placeholder="Décrivez votre idée ou anomalie constatée..." rows="4" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; margin-bottom:12px; font-family:inherit; resize:vertical;"></textarea>
+    
+    <button onclick="envoyerAmeliorationSupabase()" style="background: #16a34a; color: white; width: 100%; padding: 10px 0; margin-bottom: 8px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">Envoyer la suggestion</button>
+    <button onclick="document.getElementById('divAmeliorationModal').style.display='none';" style="background: #fee2e2; color: #dc2626; width: 100%; padding: 8px 0; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">❌ Annuler</button>
+  </div>
+</div>
+
 </div> <!-- Fin de la box -->
 </div> <!-- Fin de fbmPage -->
 
@@ -582,9 +595,44 @@
       }
   }
 
+  // Remplace l'ancienne alerte par l'ouverture de la modale d'amélioration
   function gererAmelioration() {
       basculerMenuParametres();
-      alert("Fonctionnalité d'amélioration bientôt disponible !");
+      document.getElementById('inputTexteAmelioration').value = ''; // Réinitialise le champ
+      document.getElementById('divAmeliorationModal').style.display = 'flex';
+  }
+
+  // Fonction pour envoyer la suggestion dans la nouvelle table Supabase
+  async function envoyerAmeliorationSupabase() {
+      const texte = document.getElementById('inputTexteAmelioration').value.trim();
+      if (!texte) {
+          alert("Veuillez saisir une description pour votre amélioration.");
+          return;
+      }
+
+      // Récupération automatique du rédacteur si présent dans l'interface, sinon valeurs par défaut
+      const nom = document.getElementById('nomRedacteur') ? document.getElementById('nomRedacteur').value.trim() : "ANONYME";
+      const email = document.getElementById('emailRedacteur') ? document.getElementById('emailRedacteur').value.trim() : "";
+
+      try {
+          // Utilise l'instance client Supabase globale (définie dans vos scripts de sync)
+          const { error } = await window._supabaseClient
+              .from('ameliorations') // Nom de la table dans Supabase
+              .insert([{ 
+                  redacteur: nom || "ANONYME", 
+                  email: email, 
+                  description: texte,
+                  statut: 'En attente'
+              }]);
+
+          if (error) throw error;
+
+          alert("✅ Merci ! Votre suggestion d'amélioration a bien été enregistrée.");
+          document.getElementById('divAmeliorationModal').style.display = 'none';
+      } catch (err) {
+          console.error("Erreur lors de l'enregistrement de l'amélioration :", err);
+          alert("❌ Erreur lors de l'envoi de l'amélioration. Vérifiez votre connexion.");
+      }
   }
 
   // === GESTION DU GLISSER / SWIPE TACTILE ===
