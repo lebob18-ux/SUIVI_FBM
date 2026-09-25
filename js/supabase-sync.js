@@ -52,8 +52,9 @@ async function synchroniserSupportActuel() {
     const matageCoche = document.getElementById('check_matage')?.checked || false;
 
     // 6. Requête de mise à jour vers Supabase
-    const nom = localStorage.getItem("nom") || "ANONYME";
-    const prenom = localStorage.getItem("prenom") || "";
+    const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur") || "{}");
+    const nom = identite.nom || "ANONYME";
+    const prenom = identite.prenom || "";
 
     const { error } = await supabaseClient
       .from('blindage')
