@@ -50,6 +50,7 @@
         width: auto;
         color: #818181;
     }
+    /* Style pour rendre le logo cliquable avec un effet visuel */
     #logoSNCF {
         cursor: pointer;
         transition: transform 0.2s ease, opacity 0.2s ease;
@@ -65,14 +66,36 @@
 <!-- MENU LATÉRAL (SIDEBAR) -->
 <div id="menuParametres" class="sidebar">
     <button class="btn-fermer" onclick="basculerMenuParametres()">&times;</button>
-    <button onclick="actionEnregistrerDepuisMenu()">💾 Enregistrer (Supabase & PDF)</button>
+    <button onclick="actionEnregistrerDepuisMenu()">💾 Enregistrer</button>
     <button onclick="ouvrirOngletAdminDepuisMenu()">⚙️ Admin</button>
     <button onclick="gererAmelioration()">🚀 Amélioration</button>
     
     <hr style="border-color: #333; margin: 15px 0;">
     <p style="color: #aaa; font-size: 0.8em; padding-left: 20px; margin-bottom: 5px;">🏗️ CHANTIERS</p>
     
+    <!-- Conteneur dynamique des chantiers -->
     <div id="listeChantiersSidebar"></div>
+</div>
+
+<!-- ÉCRAN DE VERROUILLAGE / DEMANDE D'ACCÈS -->
+<div id="auth-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 30px; border-radius: 8px; width: 400px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+        <h2 style="margin-top: 0; color: #333;">Accès à l'application</h2>
+        <p id="auth-message" style="color: #666; font-size: 14px; margin-bottom: 20px;">Veuillez renseigner vos informations pour demander l'accès.</p>     
+        <!-- Formulaire de demande -->
+        <div id="form-demande">
+            <input type="text" id="req-prenom" placeholder="Votre Prénom" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"><br>
+            <input type="text" id="req-nom" placeholder="Votre Nom" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"><br>
+            <input type="email" id="req-email" placeholder="Votre Email professionnel" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"><br>
+            <button onclick="envoyerDemandeAcces()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold;">Demander l'accès</button>
+        </div>
+        <!-- Message si déjà demandé mais en attente -->
+        <div id="attente-validation" style="display: none;">
+            <p style="color: #d9534f; font-weight: bold; margin-bottom: 10px;">Votre demande est en cours de validation par l'administrateur.</p>
+            <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Revenez plus tard et cliquez sur le bouton ci-dessous pour vérifier.</p>
+            <button onclick="verifierAccesDemandé()" style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; width: 100%;">Vérifier si validé</button>
+        </div>
+    </div>
 </div>
 
 <!-- NAVIGATION PAR ONGLETS -->
@@ -87,17 +110,18 @@
 <div id="fbmPage">    
 <div class="box">
 
+<!-- En-tête avec Logo (cliquable pour ouvrir le menu), Titre et Badge RJ -->
 <div class="header-row">
 <div style="display:flex; justify-content:center; margin-bottom:8px;">
 <img id="logoSNCF" src="assets/ainm.svg" width="100" height="100" alt="Logo SNCF" onclick="basculerMenuParametres()" title="Ouvrir le menu">
 </div>
 <h3 id="pageTitle"></h3>
-<div style="display:flex; justify-content:center; margin-bottom:6px; gap: 10px; align-items: center;">
+<div style="display:flex; justify-content:center; margin-bottom:6px;">
   <span id="rjBadge" onclick="document.getElementById('divRJModal').style.display='flex';" style="font-size:0.75em; font-weight:bold; color:#7C2270; background:#f5eaf3; padding:2px 10px; border-radius:10px; cursor:pointer;">RJ : --</span>
-  <button id="btnExportPdf" onclick="enregistrerComplet()" style="background:#7C2270; color:white; border:none; padding:4px 10px; border-radius:6px; font-size:0.75em; font-weight:bold; cursor:pointer;">💾 Enregistrer</button>
 </div>
 </div>
 
+<!-- Sélection des chantiers, supports, type et bouton poubelle -->
 <div class="header-row" style="display: flex; align-items: center; gap: 8px;">
   <select id="selectChantier" onchange="filtrerSupports()" style="flex: 1;">
     <option value="">-- choisir chantier --</option>
@@ -110,7 +134,7 @@
 </div>
 <div style="height: 5px;"></div>
 
-<!-- Options globales de saisie -->
+<!-- Options globales de saisie (Voie, Carotte, Blindage) -->
 <div class="single-field" style="margin-left: 5px; margin-bottom: 5px;">  
   <div style="display: flex; flex-direction: row; gap: 15px; align-items: center; width: 100%;">
     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold;">  
@@ -125,6 +149,7 @@
   </div>
 </div> 
 
+<!-- SECTION : CASES A COCHER (Fouille / Béton / Matage / Hors P1) -->
 <div class="single-field" style="margin-left: 5px; margin-bottom: 10px;">  
   <div style="display: flex; flex-direction: row; gap: 12px; align-items: center; width: 100%; flex-wrap: wrap;">
     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; cursor: pointer;">  
@@ -142,17 +167,25 @@
   </div>
 </div>
 
-<!-- CHAPITRE 1 : FOUILLE -->
+<!-- ========================================== -->
+<!-- CHAPITRE 1 : FOUILLE (Fermé par défaut)     -->
+<!-- ========================================== -->
 <div class="section collapsed mb-2">
   <div class="section-title" onclick="toggleSection('sec-fouille-global')">
     <span>📐 FOUILLE</span>
     <span class="section-arrow" id="arrow-sec-fouille-global">▾</span>
   </div>
   <div class="section-content" id="sec-fouille-global">    
+    <!-- Sous-partie : Cotes Fouille (A / B / H) -->
     <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">📐 Cotes Fouille (A / B / H)</div>
     <table class="cotes-table" style="margin-bottom: 10px;">
       <thead>
-        <tr><th></th><th>A</th><th>B</th><th>H</th></tr>
+        <tr>
+          <th></th>
+          <th>A</th>
+          <th>B</th>
+          <th>H</th>
+        </tr>
       </thead>
       <tbody>
         <tr>
@@ -169,32 +202,42 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Saisie Big-Bag de terre dans le chapitre Fouille -->
     <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; background: #fdf4ff; padding: 6px 8px; border-radius: 6px; border: 1px solid #f5d0fe;">
       <label for="nb_big_bag_terre" style="font-size: 0.8em; font-weight: bold; color: #7c2270;">📦 Nombre de Big-Bag de terre :</label>
       <input type="number" id="nb_big_bag_terre" min="0" step="1" value="0" style="width: 75px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; text-align: center;" oninput="calculer()">
     </div>
+
   </div>
 </div>
 
-<!-- CHAPITRE 2 : BÉTON -->
+<!-- ========================================== -->
+<!-- CHAPITRE 2 : BÉTON (Fermé par défaut)       -->
+<!-- ========================================== -->
 <div class="section collapsed mb-2">
   <div class="section-title" onclick="toggleSection('sec-beton')">
     <span>🧾 BÉTON</span>
     <span class="section-arrow" id="arrow-sec-beton">▾</span>
   </div>
   <div class="section-content" id="sec-beton">
+    <!-- Saisie du Numéro de BL -->
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
       <input type="text" id="bl_beton" placeholder="N° de BL" style="flex:1; height:32px; font-size:0.85em; text-transform:uppercase;" oninput="this.value = this.value.toUpperCase();">
     </div>
+    <!-- Saisie du Type de Béton -->
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
       <input list="bl-datalist" id="bl-input" placeholder="Type Béton" style="flex:2; height:32px; font-size:0.85em;">
       <datalist id="bl-datalist"></datalist>
     </div>
+    <!-- Slump et Bouton Ajouter -->
     <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
       <input type="number" id="slump-input" placeholder="Slump (cm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0">
       <button type="button" onclick="ajouterBL()" style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">➕ Ajouter</button>
     </div>
     <div id="bl-liste"></div>
+
+    <!-- BLOC VOLUME INTÉGRÉ -->
     <div class="result" style="margin-top: 10px; padding: 8px; border: 1px dashed #bbb; border-radius: 8px; background: #fafafa;">
       <div style="display: flex; justify-content: space-between; margin-bottom: 4px; flex-wrap: wrap; gap: 5px;">
         <span>🧱 Th: <span id="vol_prevu" style="color: #008000; font-weight: bold;">0.00 m³</span></span>
@@ -205,17 +248,26 @@
   </div>
 </div>
 
-<!-- CHAPITRE 3 : MATAGE -->
+<!-- ========================================== -->
+<!-- CHAPITRE 3 : MATAGE (Fermé par défaut)      -->
+<!-- ========================================== -->
 <div class="section collapsed mb-2">
   <div class="section-title" onclick="toggleSection('sec-matage')">
     <span>🔨 MATAGE</span>
     <span class="section-arrow" id="arrow-sec-matage">▾</span>
   </div>
   <div class="section-content" id="sec-matage">    
+    <!-- Sous-partie : Implantation / Échantillon / Arasement / Encastrement -->
     <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">📍 Implantation / Échantillon / Arasement / Encastrement</div>
     <table class="cotes-table" style="margin-bottom: 10px;">
       <thead>
-        <tr><th></th><th>Imp</th><th>Éch</th><th>Arase</th><th>Encast</th></tr>
+        <tr>
+          <th></th>
+          <th>Imp</th>
+          <th>Éch</th>
+          <th>Arase</th>
+          <th>Encast</th>
+        </tr>
       </thead>
       <tbody>
         <tr>
@@ -223,7 +275,7 @@
           <td><input type="number" id="I" step="any" oninput="calculer()" onkeydown="passerAEchantillon(event)"></td>
           <td>
             <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
-            <input type="number" id="E" oninput="calculer()" placeholder="cm" style="display: none; margin-top: 4px; width: 100%;">
+            <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="cm" style="display: none; margin-top: 4px; width: 100%;">
           </td>
           <td><input type="number" id="AR" oninput="calculer()"></td>
           <td><input type="number" id="Enc" onblur="calculer()"></td>
@@ -237,21 +289,61 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- Sous-partie : Références (FRUIT / Position longitudinale) -->
+    <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">🔗 Références (FRUIT / Position longitudinale)</div>
+    <table class="cotes-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>F</th>
+          <th>Support (P)</th>
+          <th>Imp. depuis (P)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cotes-label">Saisie</td>
+          <td><input type="number" id="valF" oninput="calculer()"></td>
+          <td><input type="text" id="valSUP" oninput="calculer()" disabled></td>
+          <td rowspan="2" style="vertical-align: middle;">
+            <div id="bloc-N" style="display: none;">
+              <input type="text" id="valP_N" oninput="gérerVisibilitéP()">
+              <span class="ref" id="P_ref_N"></span>
+            </div>
+            <div id="bloc-S" style="display: none;">
+              <input type="text" id="valP_S" oninput="gérerVisibilitéP()">
+              <span class="ref" id="P_ref_S"></span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class="cotes-label">Réf.</td>
+          <td><span class="ref" id="F_ref"></span></td>
+          <td><span class="ref" id="SUP_ref"></span></td>
+        </tr>
+      </tbody>
+    </table>
+
   </div>
 </div>
 
-<!-- CHAPITRE 4 : BLINDAGE -->
+<!-- ========================================== -->
+<!-- CHAPITRE 4 : BLINDAGE (Fermé par défaut)    -->
+<!-- ========================================== -->
 <div class="section collapsed mb-2">
   <div class="section-title" onclick="toggleSection('sec-blindage')">
     <span>🛡️ BLINDAGE</span>
     <span class="section-arrow" id="arrow-sec-blindage">▾</span>
   </div>
   <div class="section-content" id="sec-blindage">
+    <!-- Bloc Blindage -->
     <div id="bloc_saisie_blindage" style="display: flex; background: #e0f2fe; padding: 6px 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #93c5fd; width: 100% !important; flex-direction: column; gap: 4px; box-sizing: border-box;">  
       <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; gap: 6px;">
         <label style="color: #0369a1; font-weight: bold; font-size: 0.8em; white-space: nowrap; flex: 1;">Bord blindage bord rail (m)</label>
         <input type="number" id="dist_blindage" step="any" style="width: 75px !important; padding: 4px; border-radius: 4px; border: 1px solid #ccc; text-align: center;" onclick="this.select()" oninput="calculer()">
       </div>
+
       <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; gap: 6px; margin-top: 4px;">
         <label style="color: #0369a1; font-weight: bold; font-size: 0.8em; white-space: nowrap; flex: 1;">BLINDAGE</label>
         <div style="display: flex; gap: 8px; align-items: center; flex: 1; justify-content: flex-end;">
@@ -263,28 +355,92 @@
           </label>
         </div>
       </div>
+      
+      <div id="bloc_traverse_nit" class="row" style="display: none;">  
+        <div class="field"><label>Traverse</label><input type="number" id="LT" value="40" oninput="calculer()"></div>  
+        <div class="field">
+          <label>Sol-->Massif</label>
+          <div style="display:flex; gap:5px;">
+            <button type="button" onclick="toggleSignSOL()">±</button>
+            <input type="number" id="SOL" step="any" value="0" oninput="calculer()" style="flex:1;">
+          </div>
+        </div>
+        <div class="field"><label>NiT-->Hbis</label><input type="number" id="NIT" readonly></div>  
+      </div>
+
       <div id="alerte_blindage_bloc" style="margin-top: 2px; font-size: 0.85em; font-weight: bold; text-align: left;"></div>
     </div>
+
+    <!-- Saisie Big-Bag mignonette dans le chapitre Blindage -->
     <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: #f0fdf4; padding: 6px 8px; border-radius: 6px; border: 1px solid #bbf7d0;">
       <label for="nb_big_bag_mignonette" style="font-size: 0.8em; font-weight: bold; color: #16a34a;">📦 Nombre de Big-Bag mignonette :</label>
       <input type="number" id="nb_big_bag_mignonette" min="0" step="1" value="0" style="width: 75px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; text-align: center;" oninput="calculer()">
     </div>
+
+    <!-- Bloc Carotte -->
+    <div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 8px; border: 1px solid #ffeba2; width: 100% !important; flex-direction: column; gap: 8px; box-sizing: border-box;">  
+      <div class="row" style="display: flex; justify-content: space-between; width: 100%;">
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">A (cm)</label><input type="number" id="A_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">B (cm)</label><input type="number" id="B_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Encastrement</label><input type="number" id="H_carotte" readonly style="background: #e9ecef; cursor: not-allowed;"></div>
+      </div>
+      <div class="row" style="display: flex; justify-content: start; gap: 15px; width: 100%;">
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Plus petit e1(cm)</label><input type="number" id="E1_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();"></div>
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">Plus petit e2(cm)</label><input type="number" id="E2_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();"></div>
+        <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">P (cm)</label><input type="number" id="P_carotte" readonly style="background: #e9ecef; cursor: not-allowed;"></div>
+      </div>
+      <div id="info_echantillon_bloc" style="margin: 10px 0; padding: 8px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; text-align: center; font-size: 0.85em;">
+        <span style="color: #666;">Profilé : </span><span id="display_nom" style="font-weight:bold; color:#000;">-</span> |  
+        <span style="color: #666;">Larg : </span><span id="display_larg" style="font-weight:bold; color:#d97706;">0</span> mm |  
+        <span style="color: #666;">Prof : </span><span id="display_prof" style="font-weight:bold; color:#d97706;">0</span> mm
+      </div>
+      <div id="calculs_carotte_grid" style="display: none; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; font-size: 0.8em;">
+        <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e1 Cote A:↕ <span id="calc_S1" style="font-weight:bold;">0.00</span></div>
+        <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e1 Cote B:↔ <span id="calc_S2" style="font-weight:bold;">0.00</span></div>
+        <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote A:↕ <span id="calc_S3" style="font-weight:bold;">0.00</span></div>
+        <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote B:↔ <span id="calc_S4" style="font-weight:bold;">0.00</span></div>
+      </div>  
+    </div>
   </div>
 </div>
 
-<!-- Bloc rédacteur (Contenant les champs nom et prenom) -->
-<div id="bloc-redacteur">
+<!-- ========================================== -->
+<!-- CHAPITRE 5 : Alertes (Fermé par défaut)     -->
+<!-- ========================================== -->
+<div class="section collapsed mb-2" id="sec-alertes-wrap">
+  <div class="section-title" onclick="toggleSection('sec-alertes')">
+    <span>🚨 Alertes</span>
+    <span class="section-arrow" id="arrow-sec-alertes">▾</span>
+  </div>
+  <div class="section-content" id="sec-alertes">
+    <div class="result" style="margin:0;">  
+      <div id="tbf"></div>  
+      <div id="ltv" style="margin-top:4px; font-weight:bold; color:teal;"></div>
+      <div id="I_LTV" style="margin-top:4px; font-weight:bold;"></div>  
+    </div>
+  </div>
+</div>
+
+<!-- Ligne de résultats généraux -->
+<div class="result">  
+  <div class="result-line" id="bdLine">  
+    <span id="bf"></span>  
+    <span id="BMax_display"></span>  
+    <span id="DMin_display"></span> 
+    <span id="Hmax_display">    </span>    
+  </div>   
+</div>  
+
+<!-- Bloc rédacteur -->
+<div id="bloc-redacteur" style="display: none;">
   <div class="section collapsed">
     <div class="section-title" onclick="toggleSection('sec-signature')">
-      <span>👤 Rédacteur & Identité</span>
+      <span>👤 Rédacteur</span>
       <span class="section-arrow" id="arrow-sec-signature">▾</span>
     </div>
     <div class="section-content" id="sec-signature">
       <div class="result" style="margin-top: 0;">
-        <!-- Champ Prénom -->
-        <input type="text" id="prenomRedacteur" placeholder="Votre Prénom" oninput="this.value = this.value.toUpperCase();" style="width:100%; margin-bottom:6px; text-transform: uppercase;">
-        <!-- Champ Nom -->
-        <input type="text" id="nomRedacteur" placeholder="Votre Nom" oninput="this.value = this.value.toUpperCase();" style="width:100%; margin-bottom:6px; text-transform: uppercase;">
+        <input type="text" id="nomRedacteur" placeholder="Nom du rédacteur" oninput="this.value = this.value.toUpperCase();" style="width:100%; margin-bottom:6px; text-transform: uppercase;">
         <input type="email" id="emailRedacteur" placeholder="Email du rédacteur" oninput="this.value = this.value.toLowerCase();" style="width:100%; margin-bottom:0;">
       </div>
     </div>
@@ -292,33 +448,99 @@
 </div>
 
 <!-- MODALS -->
+<div id="divScanModal" class="custom-modal">
+  <div style="background:#000; width:90%; max-width:360px; border-radius:12px; overflow:hidden; position:relative; padding:0;">
+    <video id="scanVideo" style="width:100%; display:block;" autoplay playsinline muted></video>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+                width:200px; height:200px; border:3px solid #7C2270; border-radius:10px;
+                box-shadow:0 0 0 9999px rgba(0,0,0,0.45);"></div>
+    <p style="color:white; text-align:center; font-size:0.8em; margin:8px 0; position:relative; z-index:2;">
+      Cadre le QR code dans le carré
+    </p>
+    <button onclick="arreterScan()" style="width:100%; background:#dc2626; color:white;
+            padding:10px; margin:0; font-weight:bold; border-radius:0;">❌ Annuler</button>
+  </div>
+</div>
+
+<div id="divExtensionModal" class="custom-modal">
+  <div class="custom-modal-content" style="background: white; padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
+    <p style="font-weight: bold; font-size:1em; margin-bottom: 15px; color: #333;">Configuration de la Cote A</p>
+    
+    <div style="margin-bottom: 18px; text-align: left;">
+      <label style="font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 5px; text-align: left; color: #4b5563;">Nouvelle valeur pour A :</label>
+      <input type="number" id="modal_saisie_A" step="any" placeholder="Saisir la valeur..." style="width: 100%; height: 36px; font-size: 1.1em; border: 1px solid #3b82f6; border-radius: 6px; text-align: center;" onclick="this.select()">
+    </div>
+
+    <p style="font-weight: bold; font-size:0.85em; margin-bottom: 8px; text-align: left; color: #4b5563;">Type d'élargissement :</p>
+    
+    <button onclick="validerToutPopup('centre')" style="background: #f3f4f6; color: #1f2937; font-weight: bold;">1 : Les 2 côtés (Centré)</button>
+    <button onclick="validerToutPopup('champ')" style="background: #f5f3ff; color: #6d28d9; font-weight: bold;">2 : Vers le CHAMP (Protège rail)</button>
+    <button onclick="validerToutPopup('voie')" style="background: #eff6ff; color: #1d4ed8; font-weight: bold;">3 : Vers la VOIE</button>
+    
+    <button onclick="document.getElementById('divExtensionModal').style.display='none';" style="background: #fee2e2; color: #dc2626; margin-top: 10px; font-size: 0.8em; padding: 6px;">❌ Annuler</button>
+  </div>
+</div>
+
+<div id="divEchantillonModal" class="custom-modal">
+  <div class="custom-modal-content" style="background: white; padding: 15px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
+    <p style="font-weight: bold; font-size:1em; margin-bottom: 12px; color: #333;">Sélectionner le Profilé (Échantillon)</p>    
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px;">
+      <button onclick="validerEchantillonPopup('180', '171', '180')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEA180</button>
+      <button onclick="validerEchantillonPopup('200', '190', '200')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEA200</button>
+      <button onclick="validerEchantillonPopup('220', '210', '220')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEA220</button>
+      <button onclick="validerEchantillonPopup('240', '230', '240')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEA240</button>
+      <button onclick="validerEchantillonPopup('300', '290', '300')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEA300</button>
+      <button onclick="validerEchantillonPopup('300', '310', '300')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEA320</button>
+      <button onclick="validerEchantillonPopup('220', '220', '220')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEB220</button>
+      <button onclick="validerEchantillonPopup('240', '240', '240')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEB240</button>
+      <button onclick="validerEchantillonPopup('260', '260', '260')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEB260</button>
+      <button onclick="validerEchantillonPopup('300', '300', '300')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEB300</button>
+      <button onclick="validerEchantillonPopup('320', '320', '320')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">HEB320</button>
+      <button onclick="validerEchantillonPopup('280', '710', '270')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHEA280</button>
+      <button onclick="validerEchantillonPopup('320', '610', '310')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHEA320</button>
+      <button onclick="validerEchantillonPopup('280', '710', '280')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHEB280</button>
+      <button onclick="validerEchantillonPopup('320', '610', '320')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">JHEB320</button>
+      <button onclick="validerEchantillonPopup('Epingle', '0', '0')" style="background:#f3f4f6; padding: 10px 0; margin:0; font-weight: bold;">Epingle</button>    
+    </div>    
+    <button onclick="validerEchantillonPopup('manuel', '0', 'Autre...')" style="background:#f5f3ff; color:#6d28d9; width:100%; padding: 10px 0; margin: 0 0 10px 0; font-weight: bold;">Autre...</button>    
+    <button onclick="document.getElementById('divEchantillonModal').style.display='none';" style="background: #fee2e2; color: #dc2626; width:100%; margin:0; font-size: 0.8em; padding: 6px;">❌ Annuler</button>
+  </div>
+</div>
+
 <div id="divRJModal" class="custom-modal">
   <div class="custom-modal-content" style="background: white; padding: 18px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
     <p style="font-weight: bold; font-size:1em; margin-bottom: 6px; color: #333;">🌙 Nuit de travail</p>
-    <p style="font-size: 0.8em; color: #666; margin-bottom: 14px;">Indique le numéro RJ pour cette nuit.</p>
+    <p style="font-size: 0.8em; color: #666; margin-bottom: 14px;">Indique le numéro RJ pour cette nuit. Il sera conservé automatiquement jusqu'à 8h.</p>
     <input type="text" id="rjInput" placeholder="Numéro RJ" style="width:100%; margin-bottom:12px; padding:8px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; text-align:center; font-weight:bold;">
     <button onclick="validerRJPopup()" style="background:#7C2270; color:white; width:100%; padding: 10px 0; margin: 0; font-weight: bold;">✅ Valider</button>
   </div>
 </div>
 
-<!-- MODALE AMÉLIORATION -->
+<!-- NOUVELLE MODALE POUR LES AMÉLIORATIONS -->
 <div id="divAmeliorationModal" class="custom-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
   <div class="custom-modal-content" style="background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
     <p style="font-weight: bold; font-size:1.1em; margin-bottom: 8px; color: #7C2270;">🚀 Proposer une amélioration</p>
+    <p style="font-size: 0.8em; color: #666; margin-bottom: 14px;">Votre suggestion sera enregistrée pour faire évoluer l'outil.</p>
+    
     <textarea id="inputTexteAmelioration" placeholder="Décrivez votre idée ou anomalie constatée..." rows="4" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; margin-bottom:12px; font-family:inherit; resize:vertical;"></textarea>
+    
     <button onclick="envoyerAmeliorationSupabase()" style="background: #16a34a; color: white; width: 100%; padding: 10px 0; margin-bottom: 8px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">Envoyer la suggestion</button>
     <button onclick="document.getElementById('divAmeliorationModal').style.display='none';" style="background: #fee2e2; color: #dc2626; width: 100%; padding: 8px 0; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">❌ Annuler</button>
   </div>
 </div>
 
-</div> <!-- Fin box -->
-</div> <!-- Fin fbmPage -->
+</div> <!-- Fin de la box -->
+</div> <!-- Fin de fbmPage -->
 
 <!-- PAGE ADMINISTRATION -->
 <div id="adminPage" style="display:none;">
   <div class="box">
+    <!-- Bouton pour revenir en arrière ou fermer l'admin -->
     <button onclick="ouvrirOnglet('fbm')" style="background:#6c757d; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold; margin-bottom:10px;">← Retour</button>
     <h2>⚙️ Administration</h2>
+    <p>Bienvenue dans la zone réservée.</p>
+    <button id="btnRecapPdf" onclick="exporterRecapPDF()" style="background:#7C2270; color:white; width:100%; padding:10px; font-weight:bold; border-radius:8px; margin-bottom:12px;">📲 Partager PDF récap</button>
+    <h3 style="color:#7C2270;">📊 Récapitulatif chantiers</h3>
     <div id="recap-content-admin" style="padding: 4px 0;">
       <p style="color:#999;">Chargement en cours...</p>
     </div>
@@ -345,6 +567,7 @@
 <script src="js/ui-events.js"></script>
 <script src="js/identite.js"></script>
 <script src="js/ainm.js"></script>    
+<!-- CDN jsQR (fallback) -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
   if ("serviceWorker" in navigator) {
@@ -353,66 +576,65 @@
     });
   }
 
-  // Fonction combinée mise à jour : Récupère explicitement les valeurs nom et prénom pour les injecter dans la synchronisation Supabase
-  async function enregistrerComplet() {
-      // 1. Récupération des valeurs saisies dans l'UI
-      const nomInput = document.getElementById('nomRedacteur');
-      const prenomInput = document.getElementById('prenomRedacteur');
-
-      const nomVal = nomInput ? nomInput.value.trim() : "";
-      const prenomVal = prenomInput ? prenomInput.value.trim() : "";
-
-      // Si une fonction globale de sync existe, on lui passe les valeurs ou on met à jour l'état partagé si nécessaire
-      if (typeof window.setNomPrenomActuel === 'function') {
-          window.setNomPrenomActuel(nomVal, prenomVal);
-      }
-
-      // 2. Lancer la sauvegarde vers Supabase
-      if (typeof sauvegarderSupabase === 'function') {
-          try {
-              await sauvegarderSupabase();
-          } catch (e) {
-              console.error("Erreur lors de la sauvegarde Supabase :", e);
-          }
-      } else if (typeof window.sauvegarderVersSupabase === 'function') {
-          try {
-              await window.sauvegarderVersSupabase();
-          } catch (e) {
-              console.error("Erreur lors de la sauvegarde Supabase :", e);
-          }
-      }
-
-      // 3. Lancer l'export et le téléchargement du PDF
-      if (typeof exporterPDF === 'function') {
-          exporterPDF();
-      } else {
-          alert("Fonction d'export PDF introuvable.");
-      }
-  }
-
+  // Fonctions pour gérer le menu latéral et les boutons
   function basculerMenuParametres() {
       const menu = document.getElementById('menuParametres');
-      menu.style.width = (menu.style.width === "250px") ? "0" : "250px";
+      if (menu.style.width === "250px") {
+          menu.style.width = "0";
+      } else {
+          menu.style.width = "250px";
+      }
   }
 
   function actionEnregistrerDepuisMenu() {
-      basculerMenuParametres();
-      enregistrerComplet();
-  }
-
-  function ouvrirOngletAdminDepuisMenu() {
-      basculerMenuParametres();
-      if (typeof ouvrirOnglet === 'function') {
-          ouvrirOnglet('admin');
+      basculerMenuParametres(); // Ferme le menu
+      if (typeof exporterPDF === 'function') {
+          exporterPDF(); // Lance votre fonction d'enregistrement existante
       }
   }
 
+  function ouvrirOngletAdminDepuisMenu() {
+      basculerMenuParametres(); // Ferme le menu
+      if (typeof ouvrirOnglet === 'function') {
+          ouvrirOnglet('admin'); // Utilise votre fonction existante de gestion d'onglets
+      }
+  }
+
+  // Ouvre la modale d'amélioration
   function gererAmelioration() {
       basculerMenuParametres();
       document.getElementById('inputTexteAmelioration').value = '';
       document.getElementById('divAmeliorationModal').style.display = 'flex';
   }
 
+  // === GESTION DU GLISSER / SWIPE TACTILE ===
+  let touchStartX = 0;
+  let touchEndX = 0;
+  const minSwipeDistance = 50;
+
+  document.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+  }, false);
+
+  document.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      gererSwipe();
+  }, false);
+
+  function gererSwipe() {
+      const menu = document.getElementById('menuParametres');
+      const diff = touchEndX - touchStartX;
+
+      if (touchStartX < 50 && diff > minSwipeDistance) {
+          menu.style.width = "250px";
+      }
+      
+      if (menu.style.width === "250px" && diff < -minSwipeDistance) {
+          menu.style.width = "0";
+      }
+  }
+
+  // Fonction pour envoyer la suggestion avec les colonnes nom et prenom
   async function envoyerAmeliorationSupabase() {
       const texte = document.getElementById('inputTexteAmelioration').value.trim();
       if (!texte) {
@@ -421,6 +643,7 @@
       }
 
       let client = window._supabaseClient || window.supabase;
+
       if (!client || typeof client.from !== 'function') {
           if (window.supabase && typeof window.supabase.createClient === 'function' && typeof SUPABASE_URL !== 'undefined') {
               client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -428,20 +651,31 @@
       }
 
       if (!client || typeof client.from !== 'function') {
+          console.error("Objet client trouvé mais invalide :", client);
           alert("❌ Erreur technique : L'objet Supabase n'est pas initialisé correctement.");
           return;
       }
 
-      const nomRedacteur = document.getElementById('nomRedacteur')?.value.trim() || "ANONYME";
-      const prenomRedacteur = document.getElementById('prenomRedacteur')?.value.trim() || "";
+      let nomRedacteur = "";
+      let prenomRedacteur = "";
+
+      const champNom = document.getElementById('nomRedacteur');
+      if (champNom && champNom.value.trim()) {
+          nomRedacteur = champNom.value.trim();
+      }
+
+      const champPrenom = document.getElementById('prenomRedacteur');
+      if (champPrenom && champPrenom.value.trim()) {
+          prenomRedacteur = champPrenom.value.trim();
+      }
 
       try {
           const { error } = await client
               .from('remarques')
               .insert([{ 
                   app: 'Outil_FBM_2',
-                  nom: nomRedacteur,
-                  prenom: prenomRedacteur, 
+                  nom: nomRedacteur || "ANONYME",
+                  prenom: prenomRedacteur || "", 
                   remarque: texte
               }]);
 
