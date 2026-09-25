@@ -632,22 +632,30 @@
   }
 
   // Fonction unifiée pour envoyer la suggestion dans la table "remarques" de Supabase
-  async function envoyerAmeliorationSupabase() {
+async function envoyerAmeliorationSupabase() {
       const texte = document.getElementById('inputTexteAmelioration').value.trim();
       if (!texte) {
           alert("Veuillez saisir une description pour votre amélioration.");
           return;
       }
 
-      // Vérification sécurisée du client Supabase
-      const clientSupabase = window._supabaseClient || window.supabase;
-      if (!clientSupabase) {
-          console.error("Client Supabase introuvable.");
-          alert("❌ Erreur technique : Client Supabase non initialisé.");
+      // Tentative de récupération ou d'initialisation de secours
+      let client = window._supabaseClient || window.supabase;
+
+      // Si .from n'existe pas, essayons de voir si le client est stocké sous un autre format ou recréons-le si l'URL et la clé globale existent
+      if (!client || typeof client.from !== 'function') {
+          // Si vous utilisez le CDN officiel et que window.supabase.createClient est disponible :
+          if (window.supabase && typeof window.supabase.createClient === 'function' && typeof SUPABASE_URL !== 'undefined') {
+              client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          }
+      }
+
+      if (!client || typeof client.from !== 'function') {
+          console.error("Objet client trouvé mais invalide :", client);
+          alert("❌ Erreur technique : L'objet Supabase n'est pas initialisé correctement (pas de méthode .from). Vérifiez votre fichier js/supabase-sync.js.");
           return;
       }
 
-      // Récupération du nom du rédacteur s'il existe
       let nomRedacteur = "";
       const champNom = document.getElementById('nomRedacteur');
       if (champNom && champNom.value.trim()) {
@@ -655,8 +663,8 @@
       }
 
       try {
-          const { error } = await clientSupabase
-              .from('remarques') // Nom exact de votre table
+          const { error } = await client
+              .from('remarques')
               .insert([{ 
                   app: 'Outil_FBM_2',
                   nom: nomRedacteur || "ANONYME",
@@ -666,12 +674,12 @@
 
           if (error) throw error;
 
-          alert("✅ Merci ! Votre suggestion a bien été enregistrée dans la table remarques.");
+          alert("✅ Merci ! Votre suggestion a bien été enregistrée.");
           document.getElementById('divAmeliorationModal').style.display = 'none';
           document.getElementById('inputTexteAmelioration').value = '';
       } catch (err) {
           console.error("Erreur lors de l'enregistrement :", err);
-          alert("❌ Erreur lors de l'envoi : " + (err.message || "Vérifiez votre connexion."));
+          alert("❌ Erreur lors de l'envoi : " + (err.message || "Erreur de base de données."));
       }
   }
 </script>
