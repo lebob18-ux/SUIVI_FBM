@@ -587,21 +587,49 @@
       }
   }
 
-  async function actionEnregistrerDepuisMenu() {
+async function actionEnregistrerDepuisMenu() {
       basculerMenuParametres(); // Ferme le menu
+      
+      // 1. Sauvegarde dans Supabase
       if (typeof sauvegarderSupabase === 'function') {
-          await sauvegarderSupabase(); // Met à jour la table
+          await sauvegarderSupabase(); 
       }
-      if (typeof exporterPDF === 'function') {
-          exporterPDF(); // Enregistre le PDF et rien d'autre
-      }
-  }
+      
+      // 2. Déclenchement du PDF avec un léger délai
+      setTimeout(() => {
+          if (typeof exporterPDF === 'function') {
+              exporterPDF(); 
+          } else {
+              console.error("La fonction exporterPDF n'est pas définie.");
+          }
+      }, 300);
 
-  function ouvrirOngletAdminDepuisMenu() {
-      basculerMenuParametres(); // Ferme le menu
-      if (typeof ouvrirOnglet === 'function') {
-          ouvrirOnglet('admin'); // Utilise votre fonction existante de gestion d'onglets
-      }
+      // 3. Reset des données de l'interface après l'enregistrement
+      setTimeout(() => {
+          // Réinitialisation des champs de saisie principaux
+          if (document.getElementById('selectSupport')) {
+              document.getElementById('selectSupport').value = "";
+          }
+          if (document.getElementById('bl_beton')) document.getElementById('bl_beton').value = "";
+          if (document.getElementById('bl-input')) document.getElementById('bl-input').value = "";
+          if (document.getElementById('slump-input')) document.getElementById('slump-input').value = "";
+          if (document.getElementById('bl-liste')) document.getElementById('bl-liste').innerHTML = "";
+          
+          // Décocher les étapes
+          ['check_fouille', 'check_beton', 'check_matage', 'check_hors_p1', 'carotte', 'blindageCheck'].forEach(id => {
+              const el = document.getElementById(id);
+              if (el) el.checked = false;
+          });
+
+          // Appel de la fonction de réinitialisation globale si elle existe dans ton code
+          if (typeof resetSupportCourant === 'function') {
+              resetSupportCourant();
+          } else if (typeof calculer === 'function') {
+              calculer();
+          }
+          
+          console.log("Interface réinitialisée après enregistrement.");
+      }, 1000);
   }
 
   // Ouvre la modale d'amélioration
