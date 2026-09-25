@@ -602,39 +602,6 @@
       document.getElementById('divAmeliorationModal').style.display = 'flex';
   }
 
-  // Fonction pour envoyer la suggestion dans la nouvelle table Supabase
-  async function envoyerAmeliorationSupabase() {
-      const texte = document.getElementById('inputTexteAmelioration').value.trim();
-      if (!texte) {
-          alert("Veuillez saisir une description pour votre amélioration.");
-          return;
-      }
-
-      // Récupération automatique du rédacteur si présent dans l'interface, sinon valeurs par défaut
-      const nom = document.getElementById('nomRedacteur') ? document.getElementById('nomRedacteur').value.trim() : "ANONYME";
-      const email = document.getElementById('emailRedacteur') ? document.getElementById('emailRedacteur').value.trim() : "";
-
-      try {
-          // Utilise l'instance client Supabase globale (définie dans vos scripts de sync)
-          const { error } = await window._supabaseClient
-              .from('ameliorations') // Nom de la table dans Supabase
-              .insert([{ 
-                  redacteur: nom || "ANONYME", 
-                  email: email, 
-                  description: texte,
-                  statut: 'En attente'
-              }]);
-
-          if (error) throw error;
-
-          alert("✅ Merci ! Votre suggestion d'amélioration a bien été enregistrée.");
-          document.getElementById('divAmeliorationModal').style.display = 'none';
-      } catch (err) {
-          console.error("Erreur lors de l'enregistrement de l'amélioration :", err);
-          alert("❌ Erreur lors de l'envoi de l'amélioration. Vérifiez votre connexion.");
-      }
-  }
-
   // === GESTION DU GLISSER / SWIPE TACTILE ===
   let touchStartX = 0;
   let touchEndX = 0;
@@ -663,7 +630,8 @@
           menu.style.width = "0";
       }
   }
-    // Fonction pour envoyer la suggestion dans la table "remarques" de Supabase
+
+  // Fonction unifiée pour envoyer la suggestion dans la table "remarques" de Supabase
   async function envoyerAmeliorationSupabase() {
       const texte = document.getElementById('inputTexteAmelioration').value.trim();
       if (!texte) {
@@ -671,23 +639,28 @@
           return;
       }
 
-      // Tentative de récupération du nom et prénom depuis le bloc rédacteur s'il existe
+      // Vérification sécurisée du client Supabase
+      const clientSupabase = window._supabaseClient || window.supabase;
+      if (!clientSupabase) {
+          console.error("Client Supabase introuvable.");
+          alert("❌ Erreur technique : Client Supabase non initialisé.");
+          return;
+      }
+
+      // Récupération du nom du rédacteur s'il existe
       let nomRedacteur = "";
-      let prenomRedacteur = "";
-      
       const champNom = document.getElementById('nomRedacteur');
       if (champNom && champNom.value.trim()) {
-          // Si vous avez un champ unique, on peut le séparer ou l'adapter
           nomRedacteur = champNom.value.trim();
       }
 
       try {
-          const { error } = await window._supabaseClient
+          const { error } = await clientSupabase
               .from('remarques') // Nom exact de votre table
               .insert([{ 
                   app: 'Outil_FBM_2',
                   nom: nomRedacteur || "ANONYME",
-                  prenom: "", // Vous pouvez adapter si vous avez un champ prénom séparé
+                  prenom: "", 
                   remarque: texte
               }]);
 
@@ -695,9 +668,10 @@
 
           alert("✅ Merci ! Votre suggestion a bien été enregistrée dans la table remarques.");
           document.getElementById('divAmeliorationModal').style.display = 'none';
+          document.getElementById('inputTexteAmelioration').value = '';
       } catch (err) {
           console.error("Erreur lors de l'enregistrement :", err);
-          alert("❌ Erreur lors de l'envoi. Vérifiez votre connexion.");
+          alert("❌ Erreur lors de l'envoi : " + (err.message || "Vérifiez votre connexion."));
       }
   }
 </script>
