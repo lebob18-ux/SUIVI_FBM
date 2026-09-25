@@ -6,28 +6,28 @@ const RECAP_EMAILS_AUTORISES = [
   "robert.lavignon@reseau.sncf.fr"
 ];
 
-// Injection automatique du conteneur de la modale (Popup) s'il n'existe pas
+// Injection automatique du conteneur de la modale (Popup)
 function initialiserPopupSupport() {
   if (document.getElementById("modalDetailSupport")) return;
 
   const modalHtml = `
-    <div id="modalDetailSupport" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; padding:15px;">
-      <div style="background:#fff; width:100%; max-width:420px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.3); overflow:hidden; animation: fadeInModal 0.2s ease-in-out;">
+    <div id="modalDetailSupport" onclick="if(event.target === this) fermerPopupSupport()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; padding:15px;">
+      <div style="background:#fff; width:100%; max-width:330px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.3); overflow:hidden; animation: fadeInModal 0.2s ease-in-out;">
         
         <!-- En-tête de la popup -->
-        <div style="background:#7C2270; color:#fff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
-          <h3 id="modalTitreSupport" style="margin:0; font-size:1em;">Détail du support</h3>
+        <div style="background:#7C2270; color:#fff; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+          <h3 id="modalTitreSupport" style="margin:0; font-size:0.95em;">Détail du support</h3>
           <button onclick="fermerPopupSupport()" style="background:none; border:none; color:#fff; font-size:1.2em; cursor:pointer; font-weight:bold;">&times;</button>
         </div>
 
         <!-- Corps de la popup avec les informations -->
-        <div id="modalCorpsSupport" style="padding:16px; font-size:0.85em; color:#333; max-height:70vh; overflow-y:auto;">
+        <div id="modalCorpsSupport" style="padding:14px; font-size:0.85em; color:#333; max-height:70vh; overflow-y:auto;">
           <!-- Injecté dynamiquement -->
         </div>
 
         <!-- Pied de page de la popup -->
-        <div style="background:#f5f5f5; padding:10px 16px; text-align:right; border-top:1px solid #ddd;">
-          <button onclick="fermerPopupSupport()" style="background:#7C2270; color:#fff; border:none; padding:6px 14px; border-radius:5px; cursor:pointer; font-size:0.85em;">Fermer</button>
+        <div style="background:#f5f5f5; padding:8px 14px; text-align:right; border-top:1px solid #ddd;">
+          <button onclick="fermerPopupSupport()" style="background:#7C2270; color:#fff; border:none; padding:5px 12px; border-radius:5px; cursor:pointer; font-size:0.85em;">Fermer</button>
         </div>
 
       </div>
@@ -54,51 +54,52 @@ window.ouvrirPopupSupport = function(supportJsonStr) {
     const bReel = s.b_reel !== undefined && s.b_reel !== null && s.b_reel !== "" ? s.b_reel : "-";
     const hReel = s.h_reel !== undefined && s.h_reel !== null && s.h_reel !== "" ? s.h_reel : "-";
 
-    const aPrevu = s.a_prevu !== undefined && s.a_prevu !== null && s.a_prevu !== "" ? s.a_prevu : "-";
-    const bPrevu = s.b_prevu !== undefined && s.b_prevu !== null && s.b_prevu !== "" ? s.b_prevu : "-";
-    const hPrevu = s.h_prevu !== undefined && s.h_prevu !== null && s.h_prevu !== "" ? s.h_prevu : "-";
+    // Récupération des cotes prévues depuis les colonnes af, b, h
+    const aPrevuVal = s.af !== undefined && s.af !== null && s.af !== "" ? s.af : "-";
+    const bPrevuVal = s.b !== undefined && s.b !== null && s.b !== "" ? s.b : "-";
+    const hPrevuVal = s.h !== undefined && s.h !== null && s.h !== "" ? s.h : "-";
 
     const corpsHtml = `
-      <div style="margin-bottom: 12px; background:#fdfbfd; padding:10px; border-radius:6px; border:1px solid #f0e6ef;">
-        <p style="margin:4px 0;"><strong>Chantier :</strong> ${chantierVal}</p>
-        <p style="margin:4px 0;"><strong>Point Kilométrique (FKT) :</strong> <span style="color:#7C2270; font-weight:bold;">${fktVal}</span></p>
-        <p style="margin:4px 0;"><strong>Date béton :</strong> ${dateBeton}</p>
+      <div style="margin-bottom: 10px; background:#fdfbfd; padding:8px; border-radius:6px; border:1px solid #f0e6ef;">
+        <p style="margin:3px 0;"><strong>Chantier :</strong> ${chantierVal}</p>
+        <p style="margin:3px 0;"><strong>FKTN° :</strong> <span style="color:#7C2270; font-weight:bold;">${fktVal}</span></p>
+        <p style="margin:3px 0;"><strong>Date béton :</strong> ${dateBeton}</p>
       </div>
 
-      <div style="display:flex; gap:10px; margin-bottom:12px;">
-        <div style="flex:1; background:#f5f5f5; padding:8px; border-radius:6px; text-align:center;">
-          <div style="font-size:0.75em; color:#666;">Volume Prévu</div>
-          <div style="font-weight:bold; font-size:1.1em; color:#333;">${prevuM3} m³</div>
+      <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <div style="flex:1; background:#f5f5f5; padding:6px; border-radius:6px; text-align:center;">
+          <div style="font-size:0.7em; color:#666;">Volume Prévu</div>
+          <div style="font-weight:bold; font-size:1em; color:#333;">${prevuM3} m³</div>
         </div>
-        <div style="flex:1; background:#f5f5f5; padding:8px; border-radius:6px; text-align:center;">
-          <div style="font-size:0.75em; color:#666;">Volume Réel</div>
-          <div style="font-weight:bold; font-size:1.1em; color:#7C2270;">${reelM3} m³</div>
+        <div style="flex:1; background:#f5f5f5; padding:6px; border-radius:6px; text-align:center;">
+          <div style="font-size:0.7em; color:#666;">Volume Réel</div>
+          <div style="font-weight:bold; font-size:1em; color:#7C2270;">${reelM3} m³</div>
         </div>
       </div>
 
-      <table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:0.9em;">
+      <table style="width:100%; border-collapse:collapse; margin-top:6px; font-size:0.85em;">
         <thead>
           <tr style="background:#f5f5f5;">
-            <th style="border:1px solid #ddd; padding:6px; text-align:left;">Cotes</th>
-            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Prévues</th>
-            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Réelles</th>
+            <th style="border:1px solid #ddd; padding:5px; text-align:left;">Cotes</th>
+            <th style="border:1px solid #ddd; padding:5px; text-align:center;">Prévues</th>
+            <th style="border:1px solid #ddd; padding:5px; text-align:center;">Réelles</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style="border:1px solid #ddd; padding:6px; font-weight:bold;">A</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${aPrevu}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center; color:#7C2270; font-weight:bold;">${aReel}</td>
+            <td style="border:1px solid #ddd; padding:5px; font-weight:bold;">A</td>
+            <td style="border:1px solid #ddd; padding:5px; text-align:center;">${aPrevuVal}</td>
+            <td style="border:1px solid #ddd; padding:5px; text-align:center; color:#7C2270; font-weight:bold;">${aReel}</td>
           </tr>
           <tr>
-            <td style="border:1px solid #ddd; padding:6px; font-weight:bold;">B</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${bPrevu}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center; color:#7C2270; font-weight:bold;">${bReel}</td>
+            <td style="border:1px solid #ddd; padding:5px; font-weight:bold;">B</td>
+            <td style="border:1px solid #ddd; padding:5px; text-align:center;">${bPrevuVal}</td>
+            <td style="border:1px solid #ddd; padding:5px; text-align:center; color:#7C2270; font-weight:bold;">${bReel}</td>
           </tr>
           <tr>
-            <td style="border:1px solid #ddd; padding:6px; font-weight:bold;">H</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${hPrevu}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center; color:#7C2270; font-weight:bold;">${hReel}</td>
+            <td style="border:1px solid #ddd; padding:5px; font-weight:bold;">H</td>
+            <td style="border:1px solid #ddd; padding:5px; text-align:center;">${hPrevuVal}</td>
+            <td style="border:1px solid #ddd; padding:5px; text-align:center; color:#7C2270; font-weight:bold;">${hReel}</td>
           </tr>
         </tbody>
       </table>
@@ -169,7 +170,7 @@ async function genererRecap(containerId) {
           effectues: 0, 
           m3TotalPrevu: 0,    
           m3PrevuEffectue: 0, 
-          m3ReelTotal: 0       
+          m3ReelTotal: 0        
         };
       }
       
@@ -204,7 +205,15 @@ async function genererRecap(containerId) {
       const couleurEcart = ecart > 0 ? "#dc2626" : "#16a34a";
 
       const idDetail = `detail-chantier-${nom.replace(/[^a-zA-Z0-9]/g, '_')}`;
-      const supportsDuChantier = dataBlindage.filter(row => (row.chantier ? String(row.chantier).trim().toUpperCase() : "INCONNU") === nom);
+      
+      // Filtrage et tri croissant des supports par nom
+      const supportsDuChantier = dataBlindage
+        .filter(row => (row.chantier ? String(row.chantier).trim().toUpperCase() : "INCONNU") === nom)
+        .sort((a, b) => {
+          const supA = String(a.support || "");
+          const supB = String(b.support || "");
+          return supA.localeCompare(supB, undefined, { numeric: true, sensitivity: 'base' });
+        });
 
       let htmlLignesDetails = "";
       supportsDuChantier.forEach((s) => {
