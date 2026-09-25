@@ -225,11 +225,7 @@ async function genererRecap(containerId) {
           <tr style="border-bottom:1px solid #eee;">
             <td style="padding:5px 6px; border:1px solid #ddd; text-align:left; font-weight:bold;">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                  <span>${nomSupport}</span>
-                  <span style="font-size:0.8em; color:#666; font-weight:normal; margin-left:6px;">(FKT: ${fktVal})</span>
-                </div>
-                <button onclick="ouvrirPopupSupport('${supportJsonEncoded}')" style="background:#7C2270; color:#fff; border:none; border-radius:3px; padding:3px 6px; font-size:0.7em; cursor:pointer;" title="Voir les détails complets">🔍 Détails</button>
+                <button onclick="ouvrirPopupSupport('${supportJsonEncoded}')" style="background:#7C2270; color:#fff; border:none; border-radius:3px; padding:3px 6px; font-size:0.7em; cursor:pointer;" title="Voir les détails complets">🔍 ${nomSupport}</button>
               </div>
             </td>
             <td style="padding:5px 6px; border:1px solid #ddd; text-align:center;">${prevu}</td>
@@ -243,7 +239,7 @@ async function genererRecap(containerId) {
       <div style="margin-bottom:12px; border:1px solid #e5e5e5; border-radius:8px; overflow:hidden; background:#fff;">
         <!-- En-tête cliquable -->
         <div onclick="basculerDetailChantier('${idDetail}')" style="background:linear-gradient(to right,#f7f0f6,#f5f5f5); padding:8px 10px; font-weight:bold; font-size:0.82em; color:#7C2270; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" title="Cliquer pour afficher/masquer le détail fouille par fouille">
-          <span>📁 ${nom} <span style="font-size:0.8em; color:#666; font-weight:normal;">(Cliquer pour le détail)</span></span>
+          <span>📁 ${nom} </span>
           <span style="font-size:0.95em; color:#333;">Total chantier : <strong>${c.m3TotalPrevu.toFixed(2)} m³</strong></span>
         </div>
         
