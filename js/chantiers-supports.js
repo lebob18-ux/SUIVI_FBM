@@ -87,6 +87,39 @@ function initChantiers() {
     opt.textContent = c;
     select.appendChild(opt);
   });
+
+  // Met à jour automatiquement les boutons dans la sidebar
+  if (typeof peuplerChantiersSidebar === 'function') {
+      peuplerChantiersSidebar();
+  }
+}
+
+function peuplerChantiersSidebar() {
+    const selectOriginal = document.getElementById('selectChantier');
+    const conteneurSidebar = document.getElementById('listeChantiersSidebar');
+    
+    if (!selectOriginal || !conteneurSidebar) return;
+    
+    conteneurSidebar.innerHTML = '';
+    
+    for (let i = 1; i < selectOriginal.options.length; i++) {
+        const option = selectOriginal.options[i];
+        const valeurChantier = option.value;
+        const texteChantier = option.text;
+        
+        const btn = document.createElement('button');
+        btn.textContent = "📍 " + texteChantier;
+        btn.style.fontSize = "16px";
+        btn.style.padding = "10px 20px";
+        
+        btn.onclick = function() {
+            selectOriginal.value = valeurChantier;
+            selectOriginal.dispatchEvent(new Event('change'));
+            basculerMenuParametres();
+        };
+        
+        conteneurSidebar.appendChild(btn);
+    }
 }
 
 function resetSaisieAvantSupport() {
@@ -184,11 +217,10 @@ function chargerSupport() {
     const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
     const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
 
-    // 1. ON VIDE LES CHAMPS DE SAISIE ACTIVE (sauf AF qu'on pré-remplit avec sa référence)
     setVal("valF", "");
     setVal("valSUP", "");
     setVal("I", "");
-    setVal("AF", valOuVide(data.AF !== undefined ? data.AF : data.A)); // <-- Remet la valeur de référence dans le champ modifiable A
+    setVal("AF", valOuVide(data.AF !== undefined ? data.AF : data.A));
     setVal("B_Fouille", "");
     setVal("H_Fouille", "");
     setVal("AR", "");
@@ -196,7 +228,6 @@ function chargerSupport() {
     setVal("valP_N", "");
     setVal("valP_S", "");
 
-    // 2. ON CONSERVE ET AFFICHE LES VALEURS DE REFERENCE POUR INFORMATION
     setTxt("F_ref", valOuVide(data.F));
     setTxt("SUP_ref", valOuVide(data.SUP));
     setTxt("I_ref", valOuVide(data.I));
@@ -224,7 +255,6 @@ function chargerSupport() {
         if (blocS) blocS.style.display = "none";
     }
 
-    // 3. ON LAISSE L'ÉCHANTILLON ACTIF COMME DEMANDÉ
     if (typeof appliquerEchantillon === "function") {
         appliquerEchantillon(data.ECH);
     }
