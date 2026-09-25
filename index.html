@@ -587,10 +587,13 @@
       }
   }
 
-  function actionEnregistrerDepuisMenu() {
+  async function actionEnregistrerDepuisMenu() {
       basculerMenuParametres(); // Ferme le menu
+      if (typeof sauvegarderSupabase === 'function') {
+          await sauvegarderSupabase(); // Met à jour la table
+      }
       if (typeof exporterPDF === 'function') {
-          exporterPDF(); // Lance votre fonction d'enregistrement existante
+          exporterPDF(); // Enregistre le PDF et rien d'autre
       }
   }
 
