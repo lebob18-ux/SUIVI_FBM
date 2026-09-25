@@ -663,6 +663,43 @@
           menu.style.width = "0";
       }
   }
+    // Fonction pour envoyer la suggestion dans la table "remarques" de Supabase
+  async function envoyerAmeliorationSupabase() {
+      const texte = document.getElementById('inputTexteAmelioration').value.trim();
+      if (!texte) {
+          alert("Veuillez saisir une description pour votre amélioration.");
+          return;
+      }
+
+      // Tentative de récupération du nom et prénom depuis le bloc rédacteur s'il existe
+      let nomRedacteur = "";
+      let prenomRedacteur = "";
+      
+      const champNom = document.getElementById('nomRedacteur');
+      if (champNom && champNom.value.trim()) {
+          // Si vous avez un champ unique, on peut le séparer ou l'adapter
+          nomRedacteur = champNom.value.trim();
+      }
+
+      try {
+          const { error } = await window._supabaseClient
+              .from('remarques') // Nom exact de votre table
+              .insert([{ 
+                  app: 'Outil_FBM_2',
+                  nom: nomRedacteur || "ANONYME",
+                  prenom: "", // Vous pouvez adapter si vous avez un champ prénom séparé
+                  remarque: texte
+              }]);
+
+          if (error) throw error;
+
+          alert("✅ Merci ! Votre suggestion a bien été enregistrée dans la table remarques.");
+          document.getElementById('divAmeliorationModal').style.display = 'none';
+      } catch (err) {
+          console.error("Erreur lors de l'enregistrement :", err);
+          alert("❌ Erreur lors de l'envoi. Vérifiez votre connexion.");
+      }
+  }
 </script>
 </body>
 </html>
