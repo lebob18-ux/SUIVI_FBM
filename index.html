@@ -642,9 +642,7 @@ async function envoyerAmeliorationSupabase() {
       // Tentative de récupération ou d'initialisation de secours
       let client = window._supabaseClient || window.supabase;
 
-      // Si .from n'existe pas, essayons de voir si le client est stocké sous un autre format ou recréons-le si l'URL et la clé globale existent
       if (!client || typeof client.from !== 'function') {
-          // Si vous utilisez le CDN officiel et que window.supabase.createClient est disponible :
           if (window.supabase && typeof window.supabase.createClient === 'function' && typeof SUPABASE_URL !== 'undefined') {
               client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
           }
@@ -652,14 +650,22 @@ async function envoyerAmeliorationSupabase() {
 
       if (!client || typeof client.from !== 'function') {
           console.error("Objet client trouvé mais invalide :", client);
-          alert("❌ Erreur technique : L'objet Supabase n'est pas initialisé correctement (pas de méthode .from). Vérifiez votre fichier js/supabase-sync.js.");
+          alert("❌ Erreur technique : L'objet Supabase n'est pas initialisé correctement.");
           return;
       }
 
+      // Récupération séparée du nom et du prénom depuis vos champs existants
       let nomRedacteur = "";
+      let prenomRedacteur = "";
+
       const champNom = document.getElementById('nomRedacteur');
       if (champNom && champNom.value.trim()) {
           nomRedacteur = champNom.value.trim();
+      }
+
+      const champPrenom = document.getElementById('prenomRedacteur');
+      if (champPrenom && champPrenom.value.trim()) {
+          prenomRedacteur = champPrenom.value.trim();
       }
 
       try {
@@ -668,7 +674,7 @@ async function envoyerAmeliorationSupabase() {
               .insert([{ 
                   app: 'Outil_FBM_2',
                   nom: nomRedacteur || "ANONYME",
-                  prenom: "", 
+                  prenom: prenomRedacteur || "", 
                   remarque: texte
               }]);
 
