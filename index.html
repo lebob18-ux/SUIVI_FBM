@@ -657,18 +657,9 @@
           return;
       }
 
-      let nomRedacteur = "";
-      let prenomRedacteur = "";
-
-      const champNom = document.getElementById('nomRedacteur');
-      if (champNom && champNom.value.trim()) {
-          nomRedacteur = champNom.value.trim();
-      }
-
-      const champPrenom = document.getElementById('prenomRedacteur');
-      if (champPrenom && champPrenom.value.trim()) {
-          prenomRedacteur = champPrenom.value.trim();
-      }
+      const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur") || "{}");
+      const nomRedacteur = identite.nom || "ANONYME";
+      const prenomRedacteur = identite.prenom || "";
 
       try {
           const { error } = await client
