@@ -52,9 +52,14 @@ async function synchroniserSupportActuel() {
     const matageCoche = document.getElementById('check_matage')?.checked || false;
 
     // 6. Requête de mise à jour vers Supabase
+    const nom = localStorage.getItem("nom") || "ANONYME";
+    const prenom = localStorage.getItem("prenom") || "";
+
     const { error } = await supabaseClient
       .from('blindage')
       .update({
+        nom: nom,
+        prenom: prenom,
         i_reel: iReel ? parseFloat(iReel) : null,
         ech_reel: echValeur ? String(echValeur).trim() : null,
         ar_reel: arReel ? parseFloat(arReel) : null,
