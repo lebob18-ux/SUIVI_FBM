@@ -122,9 +122,6 @@ function logoSVGversPNG(largeurPx, hauteurPx) {
 /* ============================================================
    EXPORT PDF — document structuré (pas une capture d'écran)
    ============================================================ */
-/* ============================================================
-   EXPORT PDF — document structuré (pas une capture d'écran)
-   ============================================================ */
 async function exporterPDF() {
   const numSupportInput = document.getElementById("selectSupport").value.trim();
 
@@ -167,21 +164,21 @@ async function exporterPDF() {
   }
   // ------------------------------------------------
 
-  // --- 2. CONTRÔLE DES CHAMPS Vides (Vérifié après les coches des 3 phases) ---
+  // --- 2. CONTRÔLE DES CHAMPS VIDES ---
   const erreursSaisies = validerSaisiesFBM();
   if (erreursSaisies.length > 0) {
     const texteErreurs = erreursSaisies.map(e => e.replace(/\*\*/g, "")).join("\n• ");
     alert("❌ Impossible d'enregistrer !\n\nVeuillez corriger les éléments suivants :\n\n• " + texteErreurs);
-    return; // Bloque l'export si les champs obligatoires des 3 phases fraîchement cochées sont vides
+    return;
   }
   // ------------------------------------------------
 
-  // 🟢 Appel de notre fonction dédiée à la mise à jour Supabase
-  await synchroniserSupportActuel();
   const btnPdf = document.getElementById("btnExportPdf");
-  const btnOriginalHTML = btnPdf.innerHTML;
-  btnPdf.innerHTML = "⏳...";
-  btnPdf.disabled = true;
+  const btnOriginalHTML = btnPdf ? btnPdf.innerHTML : "";
+  if (btnPdf) {
+    btnPdf.innerHTML = "⏳...";
+    btnPdf.disabled = true;
+  }
 
   try {
     const g = (id) => document.getElementById(id);
@@ -208,18 +205,18 @@ async function exporterPDF() {
     }
 
     const chantierSelect = g("selectChantier");
-    const nomChantier = (chantierSelect.selectedIndex >= 0 && chantierSelect.options[chantierSelect.selectedIndex])
+    const nomChantier = (chantierSelect && chantierSelect.selectedIndex >= 0 && chantierSelect.options[chantierSelect.selectedIndex])
       ? chantierSelect.options[chantierSelect.selectedIndex].text
       : "";
 
     const typeSupport = clean(txt("display_type")).replace(/^Type\s*:\s*/i, "");
     const dateStr = new Date().toLocaleString("fr-FR");
-    const supportData = baseSupports.find(s => s.support === numSupportInput);
+    const supportData = typeof baseSupports !== "undefined" ? baseSupports.find(s => s.support === numSupportInput) : null;
     const idSupport = supportData?.ID || "";
 
-    const verifVoie = g("verifVoie").checked;
-    const verifCarotte = g("carotte").checked;
-    const verifBlindage = g("blindageCheck").checked;
+    const verifVoie = g("verifVoie")?.checked || false;
+    const verifCarotte = g("carotte")?.checked || false;
+    const verifBlindage = g("blindageCheck")?.checked || false;
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
@@ -328,7 +325,7 @@ async function exporterPDF() {
       y += 6.2 + 5;
     }
 
-    // ---------- Section 1 : paramètres de fouille ----------
+    // Section 1 : paramètres de fouille
     titreSection("PARAMETRES DE FOUILLE", violet);
 
     const echValeur = (() => {
@@ -370,7 +367,7 @@ async function exporterPDF() {
     });
     y = doc.lastAutoTable.finalY + 5;
 
-    // ---------- Section 2 : configuration ----------
+    // Section 2 : configuration
     titreSection("CONFIGURATION", [90, 90, 90]);
     doc.autoTable({
       startY: y,
@@ -388,7 +385,7 @@ async function exporterPDF() {
     });
     y = doc.lastAutoTable.finalY + 5;
 
-    // ---------- Section 3 (option) : carottage ----------
+    // Section 3 : carottage
     if (verifCarotte) {
       titreSection("CAROTTAGE", [217, 119, 6]);
       const rowsCarotte = [
@@ -417,7 +414,7 @@ async function exporterPDF() {
       y = doc.lastAutoTable.finalY + 5;
     }
 
-    // ---------- Section 4 (option) : blindage ----------
+    // Section 4 : blindage
     if (verifBlindage) {
       titreSection("BLINDAGE", [3, 105, 161]);
       const rowsBlindage = [
@@ -450,7 +447,7 @@ async function exporterPDF() {
       }
     }
 
-    // ---------- Section 5 : volumes ----------
+    // Section 5 : volumes
     titreSection("VOLUMES", violet);
     const volCarotteVisible = g("display_vol_carotte") && g("display_vol_carotte").style.display !== "none";
     const headVolumes = ["Volume theorique", "Volume reel"];
@@ -471,7 +468,7 @@ async function exporterPDF() {
     });
     y = doc.lastAutoTable.finalY + 5;
 
-    // ---------- Section BL-BÉTON ----------
+    // Section BL-BÉTON
     if (typeof blsActuels !== "undefined" && blsActuels.length > 0) {
       titreSection("BONS DE LIVRAISON BÉTON", violet);
       const rowsBL = blsActuels.map((item, i) => [
@@ -496,7 +493,7 @@ async function exporterPDF() {
       y = doc.lastAutoTable.finalY + 5;
     }
 
-    // ---------- Section 6 : résultat blindage / LTV ----------
+    // Section 6 : résultat blindage / LTV
     titreSection("RESULTAT", rouge);
 
     const lignesTbf = lignesColorees("tbf");
@@ -523,7 +520,7 @@ async function exporterPDF() {
     }
     y += 2;
 
-    // ---------- Section 7 : seuils réglementaires ----------
+    // Section 7 : seuils réglementaires
     doc.autoTable({
       startY: y,
       margin: { left: marge, right: marge, bottom: footerReserve },
@@ -540,16 +537,24 @@ async function exporterPDF() {
     });
     y = doc.lastAutoTable.finalY + 8;
 
-    // ---------- Rédacteur ----------
-    const nomRedacteur = val("nomRedacteur");
+    // ---------- Gestion Nom / Prénom / Email (avec colonnes Supabase 'nom' et 'prenom') ----------
+    const prenomRedacteur = val("prenom"); // ID de ton input HTML pour le prénom
+    const nomRedacteur = val("nom");       // ID de ton input HTML pour le nom
     const emailRedacteur = val("emailRedacteur");
+
+    // Mémorisation locale pour ne pas avoir à les retaper
+    localStorage.setItem("fbm_prenom", prenomRedacteur);
+    localStorage.setItem("fbm_nom", nomRedacteur);
+    if (emailRedacteur) localStorage.setItem("fbm_email", emailRedacteur);
+
+    const redacteurComplet = [prenomRedacteur, nomRedacteur].filter(Boolean).join(" ") || "-";
 
     assurerPlace(16);
     doc.setDrawColor(180, 180, 180);
     doc.setFontSize(7.8);
     doc.setTextColor(90, 90, 90);
     doc.setFont("helvetica", "bold");
-    doc.text("Rédigé par : " + (nomRedacteur || "-"), marge, y);
+    doc.text("Rédigé par : " + redacteurComplet, marge, y);
     y += 5;
     if (emailRedacteur) {
       doc.setFont("helvetica", "normal");
@@ -563,14 +568,22 @@ async function exporterPDF() {
       piedDePage(p, totalPages);
     }
 
+    // 1. DÉCLENCHEMENT IMMÉDIAT DU TÉLÉCHARGEMENT PDF (priorité utilisateur)
     const nomFichier = "FBM_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
     doc.save(nomFichier);
+
+    // 2. MISE À JOUR SUPABASE JUSTE APRÈS (en arrière-plan)
+    if (typeof synchroniserSupportActuel === "function") {
+      await synchroniserSupportActuel();
+    }
 
   } catch (err) {
     console.error(err);
     alert("⚠️ Erreur lors de la génération du PDF :\n" + err.message);
   } finally {
-    btnPdf.innerHTML = btnOriginalHTML;
-    btnPdf.disabled = false;
+    if (btnPdf) {
+      btnPdf.innerHTML = btnOriginalHTML;
+      btnPdf.disabled = false;
+    }
   }
 }
