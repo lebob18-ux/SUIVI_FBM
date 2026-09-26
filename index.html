@@ -117,10 +117,14 @@
 <div id="fbmPage">    
 <div class="box">
 
-<!-- En-tête avec Logo (cliquable pour ouvrir le menu), Titre et Badge RJ -->
+<!-- En-tête avec Logo, Nom du chantier actif, Titre et Badge RJ -->
 <div class="header-row">
-<div style="display:flex; justify-content:center; margin-bottom:8px;">
-<img id="logoSNCF" src="assets/ainm.svg" width="100" height="100" alt="Logo SNCF" onclick="basculerMenuParametres()" title="Ouvrir le menu">
+<div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px;">
+    <img id="logoSNCF" src="assets/ainm.svg" width="80" height="80" alt="Logo SNCF" onclick="basculerMenuParametres()" title="Ouvrir le menu">
+    <div style="text-align:left;">
+        <span style="font-size:0.7em; color:#666; display:block; font-weight:bold; text-transform:uppercase;">Chantier actif :</span>
+        <span id="labelChantierActif" onclick="basculerMenuParametres()" style="font-size:0.95em; font-weight:bold; color:#7C2270; background:#f5eaf3; padding:4px 8px; border-radius:6px; cursor:pointer; display:inline-block; border:1px dashed #d8b4e2;" title="Cliquer pour changer de chantier">Aucun chantier</span>
+    </div>
 </div>
 <h3 id="pageTitle"></h3>
 <div style="display:flex; justify-content:center; margin-bottom:6px;">
@@ -128,17 +132,13 @@
 </div>
 </div>
 
-<!-- Sélection des chantiers, supports, type et bouton poubelle -->
+<!-- Sélection des supports, type et bouton poubelle (le selectChantier a été retiré d'ici) -->
 <div class="header-row" style="display: flex; align-items: center; gap: 8px;">
-  <select id="selectChantier" onchange="filtrerSupports()" style="flex: 1;">
-    <option value="">-- choisir chantier --</option>
-  </select>
-    
   <select id="selectSupport" onchange="chargerSupport()" style="flex: 1;">
     <option value="">-- choisir support --</option>
   </select>
   <span id="display_type" style="font-size:0.85em; font-weight:bold; color:#7C2270; white-space:nowrap; background:#f5eaf3; padding:4px 8px; border-radius:4px;"></span>
-  <button type="button" onclick="resetSauvegardeSupport()" title="Effacer la sauvegarde locale de ce support" style="background:#fee2e2; color:#dc2626; font-size:0.75em; padding:5px 8px; margin:0;">🗑️</button>
+  <button type="button" onclick="resetSauvegardeSupport()" title="Effacer la sauvegarde locale de este support" style="background:#fee2e2; color:#dc2626; font-size:0.75em; padding:5px 8px; margin:0;">🗑️</button>
 </div>
 <div style="height: 5px;"></div>
 
@@ -524,7 +524,7 @@
   </div>
 </div>
 
-<!-- NOUVELLE MODALE POUR LES AMÉLIORATIONS -->
+<!-- MODALE POUR LES AMÉLIORATIONS -->
 <div id="divAmeliorationModal" class="custom-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
   <div class="custom-modal-content" style="background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
     <p style="font-weight: bold; font-size:1.1em; margin-bottom: 8px; color: #7C2270;">🚀 Proposer une amélioration</p>
@@ -593,12 +593,21 @@
   function mettreAJourBoutonsChantiersSidebar() {
       const mainSelect = document.getElementById('selectChantier');
       const container = document.getElementById('sidebarChantiersContainer');
-      if (!mainSelect || !container) return;
+      const labelActif = document.getElementById('labelChantierActif');
+      
+      if (!container) return;
 
+      // Si le select d'origine n'existe plus directement dans le DOM, on s'assure d'avoir une référence cachée ou globale si besoin, 
+      // mais ici il est bien géré par data.js / chantiers-supports.js en arrière-plan. 
+      // S'il existe toujours en interne, on le récupère :
+      const selectChantierElem = document.getElementById('selectChantier');
+      
       container.innerHTML = ''; // Nettoyer les anciens boutons
 
-      Array.from(mainSelect.options).forEach(opt => {
-          if (!opt.value) return; // Ignorer l'option vide "-- choisir chantier --"
+      if (!selectChantierElem) return;
+
+      Array.from(selectChantierElem.options).forEach(opt => {
+          if (!opt.value) return; // Ignorer l'option vide
 
           const btn = document.createElement('button');
           btn.type = 'button';
@@ -606,23 +615,29 @@
           btn.style.cssText = "padding: 8px 12px; font-size: 14px; background: #222; color: #ccc; border: 1px solid #444; border-radius: 4px; text-align: left; cursor: pointer; transition: 0.2s; width: 100%;";
           
           // Mettre en valeur le bouton si son chantier est actuellement sélectionné
-          if (mainSelect.value === opt.value) {
+          if (selectChantierElem.value === opt.value) {
               btn.style.backgroundColor = '#7C2270';
               btn.style.color = '#fff';
               btn.style.borderColor = '#9a338b';
               btn.style.fontWeight = 'bold';
+              if (labelActif) labelActif.innerText = opt.text;
           }
 
           btn.onmouseover = () => {
-              if (mainSelect.value !== opt.value) btn.style.backgroundColor = '#333';
+              if (selectChantierElem.value !== opt.value) btn.style.backgroundColor = '#333';
           };
           btn.onmouseout = () => {
-              if (mainSelect.value !== opt.value) btn.style.backgroundColor = '#222';
+              if (selectChantierElem.value !== opt.value) btn.style.backgroundColor = '#222';
           };
 
-          // Au clic : sélectionne le chantier dans la page principale, filtre et ferme le menu
+          // Au clic : sélectionne le chantier en cache/interne, met à jour le libellé, filtre et ferme le menu
           btn.onclick = () => {
-              mainSelect.value = opt.value;
+              selectChantierElem.value = opt.value;
+              // Déclenche l'événement change pour que le reste de l'app (chantiers-supports.js) réagisse
+              selectChantierElem.dispatchEvent(new Event('change'));
+              
+              if (labelActif) labelActif.innerText = opt.text;
+              
               if (typeof filtrerSupports === 'function') {
                   filtrerSupports();
               }
@@ -632,9 +647,24 @@
 
           container.appendChild(btn);
       });
+
+      // Si rien n'est sélectionné
+      if (!selectChantierElem.value && labelActif) {
+          labelActif.innerText = "Aucun chantier";
+      }
   }
 
   window.addEventListener('DOMContentLoaded', () => {
+      // On crée un élément <select> masqué pour que le code source existant (data.js / chantiers-supports.js) 
+      // qui cherche 'selectChantier' continue de fonctionner sans tout casser.
+      if (!document.getElementById('selectChantier')) {
+          const hiddenSelect = document.createElement('select');
+          hiddenSelect.id = 'selectChantier';
+          hiddenSelect.style.display = 'none';
+          hiddenSelect.onchange = () => { filtrerSupports(); };
+          document.body.appendChild(hiddenSelect);
+      }
+
       const mainSelect = document.getElementById('selectChantier');
       if (mainSelect) {
           mainSelect.addEventListener('change', mettreAJourBoutonsChantiersSidebar);
