@@ -54,7 +54,6 @@
         border: none;
         cursor: pointer;
     }
-    /* Style pour rendre le logo cliquable avec un effet visuel */
     #logoSNCF {
         cursor: pointer;
         transition: transform 0.2s ease, opacity 0.2s ease;
@@ -75,12 +74,9 @@
     <button class="sidebar-action-btn" onclick="ouvrirOngletAdminDepuisMenu()">⚙️ Admin</button>
     <button class="sidebar-action-btn" onclick="gererAmelioration()">🚀 Amélioration</button>
 
-    <!-- Section des boutons chantiers en dessous d'Amélioration -->
     <div style="padding: 15px 20px;">
         <label style="color: #aaa; font-size: 14px; display: block; margin-bottom: 8px; font-weight: bold;">🏗️ Choisir un chantier :</label>
-        <div id="sidebarChantiersContainer" style="display: flex; flex-direction: column; gap: 6px;">
-            <!-- Les boutons de chantiers seront injectés dynamiquement ici -->
-        </div>
+        <div id="sidebarChantiersContainer" style="display: flex; flex-direction: column; gap: 6px;"></div>
     </div>
 </div>
 
@@ -89,14 +85,12 @@
     <div style="background: white; padding: 30px; border-radius: 8px; width: 400px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
         <h2 style="margin-top: 0; color: #333;">Accès à l'application</h2>
         <p id="auth-message" style="color: #666; font-size: 14px; margin-bottom: 20px;">Veuillez renseigner vos informations pour demander l'accès.</p>     
-        <!-- Formulaire de demande -->
         <div id="form-demande">
             <input type="text" id="req-prenom" placeholder="Votre Prénom" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"><br>
             <input type="text" id="req-nom" placeholder="Votre Nom" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"><br>
             <input type="email" id="req-email" placeholder="Votre Email professionnel" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"><br>
             <button onclick="envoyerDemandeAcces()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold;">Demander l'accès</button>
         </div>
-        <!-- Message si déjà demandé mais en attente -->
         <div id="attente-validation" style="display: none;">
             <p style="color: #d9534f; font-weight: bold; margin-bottom: 10px;">Votre demande est en cours de validation par l'administrateur.</p>
             <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Revenez plus tard et cliquez sur le bouton ci-dessous pour vérifier.</p>
@@ -107,9 +101,7 @@
 
 <!-- NAVIGATION PAR ONGLETS -->
 <div id="tabs" class="tabs" style="display:none;">
-    <button id="tabFBM" class="tab active" onclick="ouvrirOnglet('fbm')">
-        📋 SUIVIE GC AINM
-    </button>
+    <button id="tabFBM" class="tab active" onclick="ouvrirOnglet('fbm')">📋 SUIVIE GC AINM</button>
     <button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">⚙️ Admin</button>
 </div>
 
@@ -117,7 +109,6 @@
 <div id="fbmPage">    
 <div class="box">
 
-<!-- En-tête avec Logo, Nom du chantier actif, Titre et Badge RJ -->
 <div class="header-row">
 <div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px;">
     <img id="logoSNCF" src="assets/ainm.svg" width="80" height="80" alt="Logo SNCF" onclick="basculerMenuParametres()" title="Ouvrir le menu">
@@ -132,17 +123,15 @@
 </div>
 </div>
 
-<!-- Sélection des supports, type et bouton poubelle (le selectChantier a été retiré d'ici) -->
 <div class="header-row" style="display: flex; align-items: center; gap: 8px;">
   <select id="selectSupport" onchange="chargerSupport()" style="flex: 1;">
     <option value="">-- choisir support --</option>
   </select>
   <span id="display_type" style="font-size:0.85em; font-weight:bold; color:#7C2270; white-space:nowrap; background:#f5eaf3; padding:4px 8px; border-radius:4px;"></span>
-  <button type="button" onclick="resetSauvegardeSupport()" title="Effacer la sauvegarde locale de este support" style="background:#fee2e2; color:#dc2626; font-size:0.75em; padding:5px 8px; margin:0;">🗑️</button>
+  <button type="button" onclick="resetSauvegardeSupport()" title="Effacer la sauvegarde locale de ce support" style="background:#fee2e2; color:#dc2626; font-size:0.75em; padding:5px 8px; margin:0;">🗑️</button>
 </div>
 <div style="height: 5px;"></div>
 
-<!-- Options globales de saisie (Voie, Carotte, Blindage) -->
 <div class="single-field" style="margin-left: 5px; margin-bottom: 5px;">  
   <div style="display: flex; flex-direction: row; gap: 15px; align-items: center; width: 100%;">
     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold;">  
@@ -152,7 +141,7 @@
       <input type="checkbox" id="carotte" onchange="calculer();"> 🥕CAROTTE  
     </label>
     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; color: #dc3545;">  
-      <input type="checkbox" id="blindageCheck" onchange="calculer();"> 🛡️BLINDAGE  
+      <input type="checkbox" id="blindageCheck" onchange="gererVisibiliteBlindageCase(); calculer();"> 🛡️BLINDAGE  
     </label>
   </div>
 </div> 
@@ -161,13 +150,13 @@
 <div class="single-field" style="margin-left: 5px; margin-bottom: 10px;">  
   <div style="display: flex; flex-direction: row; gap: 12px; align-items: center; width: 100%; flex-wrap: wrap;">
     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; cursor: pointer;">  
-      <input type="checkbox" id="check_fouille" name="etapes_suivi" value="fouille"> 📐 FOUILLE  
+      <input type="checkbox" id="check_fouille" name="etapes_suivi" value="fouille" onchange="gererOuvertureBlocParCase('section-fouille-global-wrap', this.checked)"> 📐 FOUILLE  
     </label>  
     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; cursor: pointer;">  
-      <input type="checkbox" id="check_beton" name="etapes_suivi" value="beton"> 🧱 BÉTON  
+      <input type="checkbox" id="check_beton" name="etapes_suivi" value="beton" onchange="gererOuvertureBlocParCase('section-beton-wrap', this.checked)"> 🧱 BÉTON  
     </label>
     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; cursor: pointer;">  
-      <input type="checkbox" id="check_matage" name="etapes_suivi" value="matage"> 🔨 MATAGE  
+      <input type="checkbox" id="check_matage" name="etapes_suivi" value="matage" onchange="gererOuvertureBlocParCase('section-matage-wrap', this.checked)"> 🔨 MATAGE  
     </label>
     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; color: #dc3545; cursor: pointer;">  
       <input type="checkbox" id="check_hors_p1" name="options_suivi" value="hors_p1"> 🚀 HORS P1  
@@ -178,13 +167,12 @@
 <!-- ========================================== -->
 <!-- CHAPITRE 1 : FOUILLE (Fermé par défaut)     -->
 <!-- ========================================== -->
-<div class="section collapsed mb-2">
+<div class="section collapsed mb-2" id="section-fouille-global-wrap">
   <div class="section-title" onclick="toggleSection('sec-fouille-global')">
     <span>📐 FOUILLE</span>
     <span class="section-arrow" id="arrow-sec-fouille-global">▾</span>
   </div>
   <div class="section-content" id="sec-fouille-global">    
-    <!-- Sous-partie : Cotes Fouille (A / B / H) -->
     <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">📐 Cotes Fouille (A / B / H)</div>
     <table class="cotes-table" style="margin-bottom: 10px;">
       <thead>
@@ -211,41 +199,35 @@
       </tbody>
     </table>
 
-    <!-- Saisie Big-Bag de terre dans le chapitre Fouille -->
     <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; background: #fdf4ff; padding: 6px 8px; border-radius: 6px; border: 1px solid #f5d0fe;">
       <label for="nb_big_bag_terre" style="font-size: 0.8em; font-weight: bold; color: #7c2270;">📦 Nombre de Big-Bag de terre :</label>
       <input type="number" id="nb_big_bag_terre" min="0" step="1" value="0" style="width: 75px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; text-align: center;" oninput="calculer()">
     </div>
-
   </div>
 </div>
 
 <!-- ========================================== -->
 <!-- CHAPITRE 2 : BÉTON (Fermé par défaut)       -->
 <!-- ========================================== -->
-<div class="section collapsed mb-2">
+<div class="section collapsed mb-2" id="section-beton-wrap">
   <div class="section-title" onclick="toggleSection('sec-beton')">
     <span>🧾 BÉTON</span>
     <span class="section-arrow" id="arrow-sec-beton">▾</span>
   </div>
   <div class="section-content" id="sec-beton">
-    <!-- Saisie du Numéro de BL -->
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
       <input type="text" id="bl_beton" placeholder="N° de BL" style="flex:1; height:32px; font-size:0.85em; text-transform:uppercase;" oninput="this.value = this.value.toUpperCase();">
     </div>
-    <!-- Saisie du Type de Béton -->
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
       <input list="bl-datalist" id="bl-input" placeholder="Type Béton" style="flex:2; height:32px; font-size:0.85em;">
       <datalist id="bl-datalist"></datalist>
     </div>
-    <!-- Slump et Bouton Ajouter -->
     <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
       <input type="number" id="slump-input" placeholder="Slump (cm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0">
       <button type="button" onclick="ajouterBL()" style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">➕ Ajouter</button>
     </div>
     <div id="bl-liste"></div>
 
-    <!-- BLOC VOLUME INTÉGRÉ -->
     <div class="result" style="margin-top: 10px; padding: 8px; border: 1px dashed #bbb; border-radius: 8px; background: #fafafa;">
       <div style="display: flex; justify-content: space-between; margin-bottom: 4px; flex-wrap: wrap; gap: 5px;">
         <span>🧱 Th: <span id="vol_prevu" style="color: #008000; font-weight: bold;">0.00 m³</span></span>
@@ -259,13 +241,12 @@
 <!-- ========================================== -->
 <!-- CHAPITRE 3 : MATAGE (Fermé par défaut)      -->
 <!-- ========================================== -->
-<div class="section collapsed mb-2">
+<div class="section collapsed mb-2" id="section-matage-wrap">
   <div class="section-title" onclick="toggleSection('sec-matage')">
     <span>🔨 MATAGE</span>
     <span class="section-arrow" id="arrow-sec-matage">▾</span>
   </div>
   <div class="section-content" id="sec-matage">    
-    <!-- Sous-partie : Implantation / Échantillon / Arasement / Encastrement -->
     <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">📍 Implantation / Échantillon / Arasement / Encastrement</div>
     <table class="cotes-table" style="margin-bottom: 10px;">
       <thead>
@@ -298,7 +279,6 @@
       </tbody>
     </table>
 
-    <!-- Sous-partie : Références (FRUIT / Position longitudinale) -->
     <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">🔗 Références (FRUIT / Position longitudinale)</div>
     <table class="cotes-table">
       <thead>
@@ -332,20 +312,18 @@
         </tr>
       </tbody>
     </table>
-
   </div>
 </div>
 
 <!-- ========================================== -->
 <!-- CHAPITRE 4 : BLINDAGE (Fermé par défaut)    -->
 <!-- ========================================== -->
-<div class="section collapsed mb-2">
+<div class="section collapsed mb-2" id="section-blindage-wrap">
   <div class="section-title" onclick="toggleSection('sec-blindage')">
     <span>🛡️ BLINDAGE</span>
     <span class="section-arrow" id="arrow-sec-blindage">▾</span>
   </div>
   <div class="section-content" id="sec-blindage">
-    <!-- Bloc Blindage -->
     <div id="bloc_saisie_blindage" style="display: flex; background: #e0f2fe; padding: 6px 8px; border-radius: 8px; margin-top: 2px; border: 1px solid #93c5fd; width: 100% !important; flex-direction: column; gap: 4px; box-sizing: border-box;">  
       <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; width: 100%; gap: 6px;">
         <label style="color: #0369a1; font-weight: bold; font-size: 0.8em; white-space: nowrap; flex: 1;">Bord blindage bord rail (m)</label>
@@ -379,13 +357,11 @@
       <div id="alerte_blindage_bloc" style="margin-top: 2px; font-size: 0.85em; font-weight: bold; text-align: left;"></div>
     </div>
 
-    <!-- Saisie Big-Bag mignonette dans le chapitre Blindage -->
     <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: #f0fdf4; padding: 6px 8px; border-radius: 6px; border: 1px solid #bbf7d0;">
       <label for="nb_big_bag_mignonette" style="font-size: 0.8em; font-weight: bold; color: #16a34a;">📦 Nombre de Big-Bag mignonette :</label>
       <input type="number" id="nb_big_bag_mignonette" min="0" step="1" value="0" style="width: 75px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; text-align: center;" oninput="calculer()">
     </div>
 
-    <!-- Bloc Carotte -->
     <div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 8px; border: 1px solid #ffeba2; width: 100% !important; flex-direction: column; gap: 8px; box-sizing: border-box;">  
       <div class="row" style="display: flex; justify-content: space-between; width: 100%;">
         <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">A (cm)</label><input type="number" id="A_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
@@ -429,7 +405,6 @@
   </div>
 </div>
 
-<!-- Ligne de résultats généraux -->
 <div class="result">  
   <div class="result-line" id="bdLine">  
     <span id="bf"></span>  
@@ -439,7 +414,6 @@
   </div>   
 </div>  
 
-<!-- Bloc rédacteur -->
 <div id="bloc-redacteur" style="display: none;">
   <div class="section collapsed">
     <div class="section-title" onclick="toggleSection('sec-signature')">
@@ -462,29 +436,22 @@
     <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
                 width:200px; height:200px; border:3px solid #7C2270; border-radius:10px;
                 box-shadow:0 0 0 9999px rgba(0,0,0,0.45);"></div>
-    <p style="color:white; text-align:center; font-size:0.8em; margin:8px 0; position:relative; z-index:2;">
-      Cadre le QR code dans le carré
-    </p>
-    <button onclick="arreterScan()" style="width:100%; background:#dc2626; color:white;
-            padding:10px; margin:0; font-weight:bold; border-radius:0;">❌ Annuler</button>
+    <p style="color:white; text-align:center; font-size:0.8em; margin:8px 0; position:relative; z-index:2;">Cadre le QR code dans le carré</p>
+    <button onclick="arreterScan()" style="width:100%; background:#dc2626; color:white; padding:10px; margin:0; font-weight:bold; border-radius:0;">❌ Annuler</button>
   </div>
 </div>
 
 <div id="divExtensionModal" class="custom-modal">
   <div class="custom-modal-content" style="background: white; padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; text-align: center;">
     <p style="font-weight: bold; font-size:1em; margin-bottom: 15px; color: #333;">Configuration de la Cote A</p>
-    
     <div style="margin-bottom: 18px; text-align: left;">
       <label style="font-size: 0.85em; font-weight: bold; display: block; margin-bottom: 5px; text-align: left; color: #4b5563;">Nouvelle valeur pour A :</label>
       <input type="number" id="modal_saisie_A" step="any" placeholder="Saisir la valeur..." style="width: 100%; height: 36px; font-size: 1.1em; border: 1px solid #3b82f6; border-radius: 6px; text-align: center;" onclick="this.select()">
     </div>
-
     <p style="font-weight: bold; font-size:0.85em; margin-bottom: 8px; text-align: left; color: #4b5563;">Type d'élargissement :</p>
-    
     <button onclick="validerToutPopup('centre')" style="background: #f3f4f6; color: #1f2937; font-weight: bold;">1 : Les 2 côtés (Centré)</button>
     <button onclick="validerToutPopup('champ')" style="background: #f5f3ff; color: #6d28d9; font-weight: bold;">2 : Vers le CHAMP (Protège rail)</button>
     <button onclick="validerToutPopup('voie')" style="background: #eff6ff; color: #1d4ed8; font-weight: bold;">3 : Vers la VOIE</button>
-    
     <button onclick="document.getElementById('divExtensionModal').style.display='none';" style="background: #fee2e2; color: #dc2626; margin-top: 10px; font-size: 0.8em; padding: 6px;">❌ Annuler</button>
   </div>
 </div>
@@ -524,26 +491,21 @@
   </div>
 </div>
 
-<!-- MODALE POUR LES AMÉLIORATIONS -->
 <div id="divAmeliorationModal" class="custom-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
   <div class="custom-modal-content" style="background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
     <p style="font-weight: bold; font-size:1.1em; margin-bottom: 8px; color: #7C2270;">🚀 Proposer une amélioration</p>
     <p style="font-size: 0.8em; color: #666; margin-bottom: 14px;">Votre suggestion sera enregistrée pour faire évoluer l'outil.</p>
-    
     <textarea id="inputTexteAmelioration" placeholder="Décrivez votre idée ou anomalie constatée..." rows="4" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; margin-bottom:12px; font-family:inherit; resize:vertical;"></textarea>
-    
     <button onclick="envoyerAmeliorationSupabase()" style="background: #16a34a; color: white; width: 100%; padding: 10px 0; margin-bottom: 8px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">Envoyer la suggestion</button>
     <button onclick="document.getElementById('divAmeliorationModal').style.display='none';" style="background: #fee2e2; color: #dc2626; width: 100%; padding: 8px 0; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">❌ Annuler</button>
   </div>
 </div>
 
-</div> <!-- Fin de la box -->
-</div> <!-- Fin de fbmPage -->
+</div></div>
 
 <!-- PAGE ADMINISTRATION -->
 <div id="adminPage" style="display:none;">
   <div class="box">
-    <!-- Bouton pour revenir en arrière ou fermer l'admin -->
     <button onclick="ouvrirOnglet('fbm')" style="background:#6c757d; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold; margin-bottom:10px;">← Retour</button>
     <h2>⚙️ Administration</h2>
     <p>Bienvenue dans la zone réservée.</p>
@@ -566,7 +528,6 @@
 <script src="js/ui-sections.js"></script>
 <script src="js/echantillon-modal.js"></script>
 <script src="js/calculs.js"></script>
-<!-- (partage.js supprimé) -->
 <script src="js/supabase-sync.js"></script>
 <script src="js/pdf-export.js"></script>
 <script src="js/pdf-recap.js"></script>
@@ -576,7 +537,6 @@
 <script src="js/ui-events.js"></script>
 <script src="js/identite.js"></script>
 <script src="js/ainm.js"></script>    
-<!-- CDN jsQR (fallback) -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
   if ("serviceWorker" in navigator) {
@@ -585,36 +545,173 @@
     });
   }
 
-  // Synchronisation automatique et génération dynamique des boutons de chantiers dans la sidebar
+  // --- FONCTION POUR OUVRIR/FERMER AUTOMATIQUEMENT LES BLOCS SELON LES CASES ---
+  function gererOuvertureBlocParCase(idSection, estCoche) {
+      const sectionElem = document.getElementById(idSection);
+      if (!sectionElem) return;
+
+      const arrowId = 'arrow-' + sectionElem.id.replace('-wrap', '');
+      const arrowElem = document.getElementById(arrowId);
+
+      if (estCoche) {
+          // Ouvre le bloc
+          sectionElem.classList.remove('collapsed');
+          if (arrowElem) arrowElem.innerText = '▴';
+      } else {
+          // Ferme le bloc
+          sectionElem.classList.add('collapsed');
+          if (arrowElem) arrowElem.innerText = '▾';
+      }
+  }
+
+  function gererVisibiliteBlindageCase() {
+      const blindageCheck = document.getElementById('blindageCheck');
+      const sectionBlindage = document.getElementById('section-blindage-wrap');
+      if (!blindageCheck || !sectionBlindage) return;
+
+      const arrowElem = document.getElementById('arrow-sec-blindage');
+      if (blindageCheck.checked) {
+          sectionBlindage.classList.remove('collapsed');
+          if (arrowElem) arrowElem.innerText = '▴';
+      } else {
+          sectionBlindage.classList.add('collapsed');
+          if (arrowElem) arrowElem.innerText = '▾';
+      }
+  }
+
+  // --- FONCTION INTELLIGENTE LORS DE L'ENREGISTREMENT ---
+  function fermerBlocsSaufIncompletsOuAlertes() {
+      // 1. Vérification Fouille (si cochée mais données manquantes, par ex A/B/H)
+      const checkFouille = document.getElementById('check_fouille');
+      const hFouille = document.getElementById('H_Fouille');
+      let fouilleIncomplete = checkFouille && checkFouille.checked && (!hFouille || !hFouille.value);
+      
+      // 2. Vérification Béton (si cochée mais aucun BL ou volume vide)
+      const checkBeton = document.getElementById('check_beton');
+      const blListe = document.getElementById('bl-liste');
+      let betonIncomplet = checkBeton && checkBeton.checked && blListe && blListe.children.length === 0;
+
+      // 3. Vérification Matage (si cochée mais Implantation ou Arasement vide)
+      const checkMatage = document.getElementById('check_matage');
+      const valI = document.getElementById('I');
+      const valAR = document.getElementById('AR');
+      let matageIncomplet = checkMatage && checkMatage.checked && ((valI && !valI.value) || (valAR && !valAR.value));
+
+      // 4. Vérification Blindage (si case cochée ou alerte active / non conforme)
+      const blindageCheck = document.getElementById('blindageCheck');
+      const alerteBlindageElem = document.getElementById('alerte_blindage_bloc');
+      let hasAlerteBlindage = alerteBlindageElem && alerteBlindageElem.innerText.trim().length > 0;
+      let blindageActif = (blindageCheck && blindageCheck.checked) || hasAlerteBlindage;
+
+      // 5. Vérification Alertes générales (présence de texte dans les blocs d'alerte)
+      const tbf = document.getElementById('tbf');
+      const ltv = document.getElementById('ltv');
+      let hasAlertesGenerales = (tbf && tbf.innerText.trim().length > 0) || (ltv && ltv.innerText.trim().length > 0);
+
+      // --- APPLICATION DE L'ÉTAT (Fermé par défaut, ouvert uniquement si incomplet ou alerte) ---
+      
+      // FOUILLE
+      const secFouille = document.getElementById('section-fouille-global-wrap');
+      const arrowFouille = document.getElementById('arrow-sec-fouille-global');
+      if (secFouille) {
+          if (fouilleIncomplete) {
+              secFouille.classList.remove('collapsed');
+              if (arrowFouille) arrowFouille.innerText = '▴';
+          } else {
+              secFouille.classList.add('collapsed');
+              if (arrowFouille) arrowFouille.innerText = '▾';
+          }
+      }
+
+      // BÉTON
+      const secBeton = document.getElementById('section-beton-wrap');
+      const arrowBeton = document.getElementById('arrow-sec-beton');
+      if (secBeton) {
+          if (betonIncomplet) {
+              secBeton.classList.remove('collapsed');
+              if (arrowBeton) arrowBeton.innerText = '▴';
+          } else {
+              secBeton.classList.add('collapsed');
+              if (arrowBeton) arrowBeton.innerText = '▾';
+          }
+      }
+
+      // MATAGE
+      const secMatage = document.getElementById('section-matage-wrap');
+      const arrowMatage = document.getElementById('arrow-sec-matage');
+      if (secMatage) {
+          if (matageIncomplet) {
+              secMatage.classList.remove('collapsed');
+              if (arrowMatage) arrowMatage.innerText = '▴';
+          } else {
+              secMatage.classList.add('collapsed');
+              if (arrowMatage) arrowMatage.innerText = '▾';
+          }
+      }
+
+      // BLINDAGE
+      const secBlindage = document.getElementById('section-blindage-wrap');
+      const arrowBlindage = document.getElementById('arrow-sec-blindage');
+      if (secBlindage) {
+          if (blindageActif) {
+              secBlindage.classList.remove('collapsed');
+              if (arrowBlindage) arrowBlindage.innerText = '▴';
+          } else {
+              secBlindage.classList.add('collapsed');
+              if (arrowBlindage) arrowBlindage.innerText = '▾';
+          }
+      }
+
+      // ALERTES
+      const secAlertes = document.getElementById('sec-alertes-wrap');
+      const arrowAlertes = document.getElementById('arrow-sec-alertes');
+      if (secAlertes) {
+          if (hasAlertesGenerales) {
+              secAlertes.classList.remove('collapsed');
+              if (arrowAlertes) arrowAlertes.innerText = '▴';
+          } else {
+              secAlertes.classList.add('collapsed');
+              if (arrowAlertes) arrowAlertes.innerText = '▾';
+          }
+      }
+  }
+
+  // Modification de l'action d'enregistrement pour inclure le nettoyage/fermeture auto des blocs valides
+  function actionEnregistrerDepuisMenu() {
+      basculerMenuParametres();
+      
+      // Exécute la logique de fermeture automatique des blocs OK
+      fermerBlocsSaufIncompletsOuAlertes();
+
+      if (typeof exporterPDF === 'function') {
+          exporterPDF();
+      }
+  }
+
+  // Synchronisation automatique des boutons de chantiers dans la sidebar
   const observerChantiers = new MutationObserver(() => {
       mettreAJourBoutonsChantiersSidebar();
   });
 
   function mettreAJourBoutonsChantiersSidebar() {
-      const mainSelect = document.getElementById('selectChantier');
       const container = document.getElementById('sidebarChantiersContainer');
       const labelActif = document.getElementById('labelChantierActif');
       
       if (!container) return;
 
-      // Si le select d'origine n'existe plus directement dans le DOM, on s'assure d'avoir une référence cachée ou globale si besoin, 
-      // mais ici il est bien géré par data.js / chantiers-supports.js en arrière-plan. 
-      // S'il existe toujours en interne, on le récupère :
       const selectChantierElem = document.getElementById('selectChantier');
-      
-      container.innerHTML = ''; // Nettoyer les anciens boutons
+      container.innerHTML = ''; 
 
       if (!selectChantierElem) return;
 
       Array.from(selectChantierElem.options).forEach(opt => {
-          if (!opt.value) return; // Ignorer l'option vide
+          if (!opt.value) return; 
 
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.innerText = opt.text;
           btn.style.cssText = "padding: 8px 12px; font-size: 14px; background: #222; color: #ccc; border: 1px solid #444; border-radius: 4px; text-align: left; cursor: pointer; transition: 0.2s; width: 100%;";
           
-          // Mettre en valeur le bouton si son chantier est actuellement sélectionné
           if (selectChantierElem.value === opt.value) {
               btn.style.backgroundColor = '#7C2270';
               btn.style.color = '#fff';
@@ -623,24 +720,14 @@
               if (labelActif) labelActif.innerText = opt.text;
           }
 
-          btn.onmouseover = () => {
-              if (selectChantierElem.value !== opt.value) btn.style.backgroundColor = '#333';
-          };
-          btn.onmouseout = () => {
-              if (selectChantierElem.value !== opt.value) btn.style.backgroundColor = '#222';
-          };
+          btn.onmouseover = () => { if (selectChantierElem.value !== opt.value) btn.style.backgroundColor = '#333'; };
+          btn.onmouseout = () => { if (selectChantierElem.value !== opt.value) btn.style.backgroundColor = '#222'; };
 
-          // Au clic : sélectionne le chantier en cache/interne, met à jour le libellé, filtre et ferme le menu
           btn.onclick = () => {
               selectChantierElem.value = opt.value;
-              // Déclenche l'événement change pour que le reste de l'app (chantiers-supports.js) réagisse
               selectChantierElem.dispatchEvent(new Event('change'));
-              
               if (labelActif) labelActif.innerText = opt.text;
-              
-              if (typeof filtrerSupports === 'function') {
-                  filtrerSupports();
-              }
+              if (typeof filtrerSupports === 'function') filtrerSupports();
               mettreAJourBoutonsChantiersSidebar();
               basculerMenuParametres();
           };
@@ -648,15 +735,12 @@
           container.appendChild(btn);
       });
 
-      // Si rien n'est sélectionné
       if (!selectChantierElem.value && labelActif) {
           labelActif.innerText = "Aucun chantier";
       }
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-      // On crée un élément <select> masqué pour que le code source existant (data.js / chantiers-supports.js) 
-      // qui cherche 'selectChantier' continue de fonctionner sans tout casser.
       if (!document.getElementById('selectChantier')) {
           const hiddenSelect = document.createElement('select');
           hiddenSelect.id = 'selectChantier';
@@ -673,110 +757,61 @@
       }
   });
 
-  // Fonctions pour gérer le menu latéral et les boutons
   function basculerMenuParametres() {
       const menu = document.getElementById('menuParametres');
-      if (menu.style.width === "250px") {
-          menu.style.width = "0";
-      } else {
-          menu.style.width = "250px";
-      }
-  }
-
-  function actionEnregistrerDepuisMenu() {
-      basculerMenuParametres(); // Ferme le menu
-      if (typeof exporterPDF === 'function') {
-          exporterPDF(); // Lance votre fonction d'enregistrement existante
-      }
+      menu.style.width = (menu.style.width === "250px") ? "0" : "250px";
   }
 
   function ouvrirOngletAdminDepuisMenu() {
-      basculerMenuParametres(); // Ferme le menu
-      if (typeof ouvrirOnglet === 'function') {
-          ouvrirOnglet('admin'); // Utilise votre fonction existante de gestion d'onglets
-      }
+      basculerMenuParametres();
+      if (typeof ouvrirOnglet === 'function') ouvrirOnglet('admin');
   }
 
-  // Ouvre la modale d'amélioration
   function gererAmelioration() {
       basculerMenuParametres();
-      document.getElementById('inputTexteAmelioration').value = ''; // Réinitialise le champ
+      document.getElementById('inputTexteAmelioration').value = '';
       document.getElementById('divAmeliorationModal').style.display = 'flex';
   }
 
-  // === GESTION DU GLISSER / SWIPE TACTILE ===
   let touchStartX = 0;
   let touchEndX = 0;
   const minSwipeDistance = 50;
 
-  document.addEventListener('touchstart', e => {
-      touchStartX = e.changedTouches[0].screenX;
-  }, false);
-
+  document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
   document.addEventListener('touchend', e => {
       touchEndX = e.changedTouches[0].screenX;
-      gererSwipe();
-  }, false);
-
-  function gererSwipe() {
       const menu = document.getElementById('menuParametres');
       const diff = touchEndX - touchStartX;
+      if (touchStartX < 50 && diff > minSwipeDistance) menu.style.width = "250px";
+      if (menu.style.width === "250px" && diff < -minSwipeDistance) menu.style.width = "0";
+  }, false);
 
-      if (touchStartX < 50 && diff > minSwipeDistance) {
-          menu.style.width = "250px";
-      }
-      if (menu.style.width === "250px" && diff < -minSwipeDistance) {
-          menu.style.width = "0";
-      }
-  }
-
-  // Fonction unifiée pour envoyer la suggestion dans la table "remarques" de Supabase
   async function envoyerAmeliorationSupabase() {
       const texte = document.getElementById('inputTexteAmelioration').value.trim();
-      if (!texte) {
-          alert("Veuillez saisir une description pour votre amélioration.");
-          return;
-      }
+      if (!texte) { alert("Veuillez saisir une description pour votre amélioration."); return; }
 
       let client = window._supabaseClient || window.supabase;
-
       if (!client || typeof client.from !== 'function') {
           if (window.supabase && typeof window.supabase.createClient === 'function' && typeof SUPABASE_URL !== 'undefined') {
               client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
           }
       }
-
       if (!client || typeof client.from !== 'function') {
-          console.error("Objet client trouvé mais invalide :", client);
           alert("❌ Erreur technique : L'objet Supabase n'est pas initialisé correctement.");
           return;
       }
 
-      let nomRedacteur = "";
-      let prenomRedacteur = "";
-
-      const champNom = document.getElementById('nomRedacteur');
-      if (champNom && champNom.value.trim()) {
-          nomRedacteur = champNom.value.trim();
-      }
-
-      const champPrenom = document.getElementById('prenomRedacteur');
-      if (champPrenom && champPrenom.value.trim()) {
-          prenomRedacteur = champPrenom.value.trim();
-      }
+      let nomRedacteur = document.getElementById('nomRedacteur')?.value.trim() || "ANONYME";
+      let prenomRedacteur = document.getElementById('prenomRedacteur')?.value.trim() || "";
 
       try {
-          const { error } = await client
-              .from('remarques')
-              .insert([{ 
-                  app: 'Outil_FBM_2',
-                  nom: nomRedacteur || "ANONYME",
-                  prenom: prenomRedacteur || "", 
-                  remarque: texte
-              }]);
-
+          const { error } = await client.from('remarques').insert([{ 
+              app: 'Outil_FBM_2',
+              nom: nomRedacteur,
+              prenom: prenomRedacteur, 
+              remarque: texte
+          }]);
           if (error) throw error;
-
           alert("✅ Merci ! Votre suggestion a bien été enregistrée.");
           document.getElementById('divAmeliorationModal').style.display = 'none';
           document.getElementById('inputTexteAmelioration').value = '';
