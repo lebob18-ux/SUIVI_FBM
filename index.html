@@ -920,19 +920,41 @@
   }
 
   function filtrerListeSupportsDroite() {
-      const filtre = document.getElementById('filtreSupportInput').value.toLowerCase();
+      const input = document.getElementById('filtreSupportInput');
+      if (!input) return;
+      
+      const normalizeStr = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const filtre = normalizeStr(input.value);
+      
       const container = document.getElementById('sidebarSupportsContainer');
       if (!container) return;
       const boutons = container.getElementsByClassName('support-sidebar-item');
 
+      let visibleCount = 0;
+
       Array.from(boutons).forEach(btn => {
-          const texte = btn.innerText.toLowerCase();
+          const texte = normalizeStr(btn.innerText);
           if (texte.includes(filtre)) {
               btn.style.display = 'block';
+              visibleCount++;
           } else {
               btn.style.display = 'none';
           }
       });
+
+      let aucunResMsg = document.getElementById('noResultSupportMsg');
+      if (visibleCount === 0 && filtre.length > 0) {
+          if (!aucunResMsg) {
+              aucunResMsg = document.createElement('div');
+              aucunResMsg.id = 'noResultSupportMsg';
+              aucunResMsg.style.cssText = "color: #888; font-size: 13px; text-align: center; padding: 15px;";
+              aucunResMsg.innerText = "Aucun support trouvé.";
+              container.appendChild(aucunResMsg);
+          }
+          aucunResMsg.style.display = 'block';
+      } else if (aucunResMsg) {
+          aucunResMsg.style.display = 'none';
+      }
   }
 
   window.addEventListener('DOMContentLoaded', () => {
