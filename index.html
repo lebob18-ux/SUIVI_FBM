@@ -11,7 +11,23 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="FBM">
 <style>
-    /* Styles pour le menu latéral (sidebar) */
+    /* Fond semi-transparent derrière les sidebars lorsqu'elles sont ouvertes */
+    .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+        z-index: 999;
+        transition: background-color 0.3s ease;
+    }
+    .sidebar-backdrop.active {
+        display: block;
+    }
+
+    /* Styles pour le menu latéral gauche (paramètres) */
     .sidebar {
         height: 100%;
         width: 0;
@@ -24,6 +40,7 @@
         overflow-y: auto;
         transition: 0.3s;
         padding-top: 60px;
+        padding-bottom: 70px; /* Espace pour le bouton fixe en bas */
         box-shadow: 2px 0 5px rgba(0,0,0,0.5);
     }
     .sidebar button.sidebar-action-btn, .sidebar a {
@@ -54,6 +71,62 @@
         border: none;
         cursor: pointer;
     }
+
+    /* Styles pour le menu latéral DROIT (Supports) */
+    .sidebar-right {
+        height: 100%;
+        width: 0;
+        position: fixed;
+        z-index: 1000;
+        top: 0;
+        right: 0;
+        background-color: #111;
+        overflow-x: hidden;
+        overflow-y: auto;
+        transition: 0.3s;
+        padding-top: 60px;
+        padding-bottom: 70px; /* Espace pour le bouton fixe en bas */
+        box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+    }
+    .sidebar-right .btn-fermer-droit {
+        position: absolute;
+        top: 15px;
+        left: 20px;
+        font-size: 30px;
+        width: auto;
+        color: #818181;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    /* Bouton d'enregistrement fixe en bas des deux sidebars */
+    .sidebar-fixed-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #1a1a1a;
+        padding: 12px 15px;
+        box-sizing: border-box;
+        border-top: 1px solid #333;
+    }
+    .sidebar-fixed-footer button {
+        width: 100%;
+        background-color: #7C2270;
+        color: white;
+        border: none;
+        padding: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .sidebar-fixed-footer button:hover {
+        background-color: #9a338b;
+    }
+
     #logoSNCF {
         cursor: pointer;
         transition: transform 0.2s ease, opacity 0.2s ease;
@@ -66,17 +139,41 @@
 </head>
 <body>
 
-<!-- MENU LATÉRAL (SIDEBAR) -->
+<!-- FOND ASSOMBRI CLIQUABLE POUR FERMER LES MENUS -->
+<div id="sidebarBackdrop" class="sidebar-backdrop" onclick="fermerToutesSidebars()"></div>
+
+<!-- MENU LATÉRAL GAUCHE (PARAMÈTRES / CHANTIERS) -->
 <div id="menuParametres" class="sidebar">
     <button class="btn-fermer" onclick="basculerMenuParametres()">&times;</button>
     
-    <button class="sidebar-action-btn" onclick="actionEnregistrerDepuisMenu()">💾 Enregistrer</button>
     <button class="sidebar-action-btn" onclick="ouvrirOngletAdminDepuisMenu()">⚙️ Admin</button>
     <button class="sidebar-action-btn" onclick="gererAmelioration()">🚀 Amélioration</button>
 
     <div style="padding: 15px 20px;">
         <label style="color: #aaa; font-size: 14px; display: block; margin-bottom: 8px; font-weight: bold;">🏗️ Choisir un chantier :</label>
         <div id="sidebarChantiersContainer" style="display: flex; flex-direction: column; gap: 6px;"></div>
+    </div>
+
+    <!-- BOUTON ENREGISTRER FIXE EN BAS (GAUCHE) -->
+    <div class="sidebar-fixed-footer">
+        <button onclick="actionEnregistrerDepuisMenu()">💾 Enregistrer</button>
+    </div>
+</div>
+
+<!-- MENU LATÉRAL DROIT (LISTE DES SUPPORTS) -->
+<div id="menuSupportsDroit" class="sidebar-right">
+    <button class="btn-fermer-droit" onclick="basculerMenuSupportsDroit()">&times;</button>
+    <div style="padding: 15px 20px;">
+        <h3 style="color: #fff; margin-top: 0; font-size: 1.1em; border-bottom: 1px solid #333; padding-bottom: 8px;">📍 Liste des Supports</h3>
+        <div style="margin-bottom: 12px;">
+            <input type="text" id="filtreSupportInput" placeholder="Rechercher un support..." oninput="filtrerListeSupportsDroite()" style="width: 100%; padding: 8px; box-sizing: border-box; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;">
+        </div>
+        <div id="sidebarSupportsContainer" style="display: flex; flex-direction: column; gap: 6px;"></div>
+    </div>
+
+    <!-- BOUTON ENREGISTRER FIXE EN BAS (DROIT) -->
+    <div class="sidebar-fixed-footer">
+        <button onclick="actionEnregistrerDepuisMenu()">💾 Enregistrer</button>
     </div>
 </div>
 
@@ -124,9 +221,12 @@
 </div>
 
 <div class="header-row" style="display: flex; align-items: center; gap: 8px;">
-  <select id="selectSupport" onchange="chargerSupport()" style="flex: 1;">
-    <option value="">-- choisir support --</option>
-  </select>
+  <select id="selectSupport" onchange="chargerSupport()" style="flex: 1; display:none;"></select>
+  <!-- Bouton affichant le support actuel et permettant d'ouvrir la slidebar droite -->
+  <button type="button" onclick="basculerMenuSupportsDroit()" id="btnOuvrirSupportDroit" style="flex: 1; background: #f5eaf3; color: #7C2270; border: 1px solid #d8b4e2; font-weight: bold; border-radius: 6px; padding: 6px 10px; font-size: 0.9em; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+      <span id="labelSupportActif">-- Choisir support --</span>
+      <span style="font-size: 0.8em;">📍 ▾</span>
+  </button>
   <span id="display_type" style="font-size:0.85em; font-weight:bold; color:#7C2270; white-space:nowrap; background:#f5eaf3; padding:4px 8px; border-radius:4px;"></span>
   <button type="button" onclick="resetSauvegardeSupport()" title="Effacer la sauvegarde locale de ce support" style="background:#fee2e2; color:#dc2626; font-size:0.75em; padding:5px 8px; margin:0;">🗑️</button>
 </div>
@@ -545,7 +645,48 @@
     });
   }
 
-  // --- FONCTION POUR OUVRIR/FERMER AUTOMATIQUEMENT LES BLOCS SELON LES CASES ---
+  // --- GESTION DE L'OUVERTURE ET FERMETURE DES SIDEBARS AVEC BACKDROP ---
+  function verifierEtatBackdrop() {
+      const menuGauche = document.getElementById('menuParametres');
+      const menuDroit = document.getElementById('menuSupportsDroit');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      
+      if (menuGauche.style.width === "250px" || menuDroit.style.width === "280px") {
+          backdrop.classList.add('active');
+      } else {
+          backdrop.classList.remove('active');
+      }
+  }
+
+  function fermerToutesSidebars() {
+      document.getElementById('menuParametres').style.width = "0";
+      document.getElementById('menuSupportsDroit').style.width = "0";
+      verifierEtatBackdrop();
+  }
+
+  function basculerMenuParametres() {
+      const menu = document.getElementById('menuParametres');
+      document.getElementById('menuSupportsDroit').style.width = "0"; // Ferme l'autre
+      menu.style.width = (menu.style.width === "250px") ? "0" : "250px";
+      verifierEtatBackdrop();
+  }
+
+  function basculerMenuSupportsDroit() {
+      const menu = document.getElementById('menuSupportsDroit');
+      document.getElementById('menuParametres').style.width = "0"; // Ferme l'autre
+      
+      if (menu.style.width === "280px") {
+          menu.style.width = "0";
+      } else {
+          menu.style.width = "280px";
+          mettreAJourBoutonsSupportsSidebar();
+          document.getElementById('filtreSupportInput').value = '';
+          filtrerListeSupportsDroite();
+      }
+      verifierEtatBackdrop();
+  }
+
+  // --- OUVERTURE/FERMER BLOCS SELON LES CASES ---
   function gererOuvertureBlocParCase(idSection, estCoche) {
       const sectionElem = document.getElementById(idSection);
       if (!sectionElem) return;
@@ -554,11 +695,9 @@
       const arrowElem = document.getElementById(arrowId);
 
       if (estCoche) {
-          // Ouvre le bloc
           sectionElem.classList.remove('collapsed');
           if (arrowElem) arrowElem.innerText = '▴';
       } else {
-          // Ferme le bloc
           sectionElem.classList.add('collapsed');
           if (arrowElem) arrowElem.innerText = '▾';
       }
@@ -579,37 +718,30 @@
       }
   }
 
-  // --- FONCTION INTELLIGENTE LORS DE L'ENREGISTREMENT ---
+  // --- FERMETURE INTELLIGENTE LORS DE L'ENREGISTREMENT ---
   function fermerBlocsSaufIncompletsOuAlertes() {
-      // 1. Vérification Fouille (si cochée mais données manquantes, par ex A/B/H)
       const checkFouille = document.getElementById('check_fouille');
       const hFouille = document.getElementById('H_Fouille');
       let fouilleIncomplete = checkFouille && checkFouille.checked && (!hFouille || !hFouille.value);
       
-      // 2. Vérification Béton (si cochée mais aucun BL ou volume vide)
       const checkBeton = document.getElementById('check_beton');
       const blListe = document.getElementById('bl-liste');
       let betonIncomplet = checkBeton && checkBeton.checked && blListe && blListe.children.length === 0;
 
-      // 3. Vérification Matage (si cochée mais Implantation ou Arasement vide)
       const checkMatage = document.getElementById('check_matage');
       const valI = document.getElementById('I');
       const valAR = document.getElementById('AR');
       let matageIncomplet = checkMatage && checkMatage.checked && ((valI && !valI.value) || (valAR && !valAR.value));
 
-      // 4. Vérification Blindage (si case cochée ou alerte active / non conforme)
       const blindageCheck = document.getElementById('blindageCheck');
       const alerteBlindageElem = document.getElementById('alerte_blindage_bloc');
       let hasAlerteBlindage = alerteBlindageElem && alerteBlindageElem.innerText.trim().length > 0;
       let blindageActif = (blindageCheck && blindageCheck.checked) || hasAlerteBlindage;
 
-      // 5. Vérification Alertes générales (présence de texte dans les blocs d'alerte)
       const tbf = document.getElementById('tbf');
       const ltv = document.getElementById('ltv');
       let hasAlertesGenerales = (tbf && tbf.innerText.trim().length > 0) || (ltv && ltv.innerText.trim().length > 0);
 
-      // --- APPLICATION DE L'ÉTAT (Fermé par défaut, ouvert uniquement si incomplet ou alerte) ---
-      
       // FOUILLE
       const secFouille = document.getElementById('section-fouille-global-wrap');
       const arrowFouille = document.getElementById('arrow-sec-fouille-global');
@@ -676,19 +808,13 @@
       }
   }
 
-  // Modification de l'action d'enregistrement pour inclure le nettoyage/fermeture auto des blocs valides
   function actionEnregistrerDepuisMenu() {
-      basculerMenuParametres();
-      
-      // Exécute la logique de fermeture automatique des blocs OK
+      fermerToutesSidebars();
       fermerBlocsSaufIncompletsOuAlertes();
-
-      if (typeof exporterPDF === 'function') {
-          exporterPDF();
-      }
+      if (typeof exporterPDF === 'function') exporterPDF();
   }
 
-  // Synchronisation automatique des boutons de chantiers dans la sidebar
+  // --- GESTION DE LA SLIDEBAR GAUCHE (Paramètres / Chantiers) ---
   const observerChantiers = new MutationObserver(() => {
       mettreAJourBoutonsChantiersSidebar();
   });
@@ -696,12 +822,10 @@
   function mettreAJourBoutonsChantiersSidebar() {
       const container = document.getElementById('sidebarChantiersContainer');
       const labelActif = document.getElementById('labelChantierActif');
-      
       if (!container) return;
 
       const selectChantierElem = document.getElementById('selectChantier');
       container.innerHTML = ''; 
-
       if (!selectChantierElem) return;
 
       Array.from(selectChantierElem.options).forEach(opt => {
@@ -720,24 +844,80 @@
               if (labelActif) labelActif.innerText = opt.text;
           }
 
-          btn.onmouseover = () => { if (selectChantierElem.value !== opt.value) btn.style.backgroundColor = '#333'; };
-          btn.onmouseout = () => { if (selectChantierElem.value !== opt.value) btn.style.backgroundColor = '#222'; };
-
           btn.onclick = () => {
               selectChantierElem.value = opt.value;
               selectChantierElem.dispatchEvent(new Event('change'));
               if (labelActif) labelActif.innerText = opt.text;
               if (typeof filtrerSupports === 'function') filtrerSupports();
               mettreAJourBoutonsChantiersSidebar();
-              basculerMenuParametres();
+              mettreAJourBoutonsSupportsSidebar();
+              fermerToutesSidebars();
           };
-
           container.appendChild(btn);
       });
 
       if (!selectChantierElem.value && labelActif) {
           labelActif.innerText = "Aucun chantier";
       }
+  }
+
+  function mettreAJourBoutonsSupportsSidebar() {
+      const container = document.getElementById('sidebarSupportsContainer');
+      const labelSupportActif = document.getElementById('labelSupportActif');
+      if (!container) return;
+
+      const selectSupportElem = document.getElementById('selectSupport');
+      container.innerHTML = '';
+      if (!selectSupportElem) return;
+
+      let supportActifTexte = "-- Choisir support --";
+
+      Array.from(selectSupportElem.options).forEach(opt => {
+          if (!opt.value) return;
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'support-sidebar-item';
+          btn.innerText = opt.text;
+          btn.style.cssText = "padding: 8px 12px; font-size: 14px; background: #222; color: #ccc; border: 1px solid #444; border-radius: 4px; text-align: left; cursor: pointer; transition: 0.2s; width: 100%;";
+          
+          if (selectSupportElem.value === opt.value) {
+              btn.style.backgroundColor = '#7C2270';
+              btn.style.color = '#fff';
+              btn.style.borderColor = '#9a338b';
+              btn.style.fontWeight = 'bold';
+              supportActifTexte = opt.text;
+          }
+
+          btn.onclick = () => {
+              selectSupportElem.value = opt.value;
+              selectSupportElem.dispatchEvent(new Event('change'));
+              if (labelSupportActif) labelSupportActif.innerText = opt.text;
+              mettreAJourBoutonsSupportsSidebar();
+              fermerToutesSidebars();
+          };
+          container.appendChild(btn);
+      });
+
+      if (labelSupportActif) {
+          labelSupportActif.innerText = supportActifTexte;
+      }
+  }
+
+  function filtrerListeSupportsDroite() {
+      const filtre = document.getElementById('filtreSupportInput').value.toLowerCase();
+      const container = document.getElementById('sidebarSupportsContainer');
+      if (!container) return;
+      const boutons = container.getElementsByClassName('support-sidebar-item');
+
+      Array.from(boutons).forEach(btn => {
+          const texte = btn.innerText.toLowerCase();
+          if (texte.includes(filtre)) {
+              btn.style.display = 'block';
+          } else {
+              btn.style.display = 'none';
+          }
+      });
   }
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -751,24 +931,29 @@
 
       const mainSelect = document.getElementById('selectChantier');
       if (mainSelect) {
-          mainSelect.addEventListener('change', mettreAJourBoutonsChantiersSidebar);
+          mainSelect.addEventListener('change', () => {
+              mettreAJourBoutonsChantiersSidebar();
+              mettreAJourBoutonsSupportsSidebar();
+          });
           observerChantiers.observe(mainSelect, { childList: true, subtree: true, attributes: true });
           setTimeout(mettreAJourBoutonsChantiersSidebar, 400);
       }
+
+      const supportSelect = document.getElementById('selectSupport');
+      if (supportSelect) {
+          supportSelect.addEventListener('change', mettreAJourBoutonsSupportsSidebar);
+          observerSupports.observe(supportSelect, { childList: true, subtree: true, attributes: true });
+          setTimeout(mettreAJourBoutonsSupportsSidebar, 500);
+      }
   });
 
-  function basculerMenuParametres() {
-      const menu = document.getElementById('menuParametres');
-      menu.style.width = (menu.style.width === "250px") ? "0" : "250px";
-  }
-
   function ouvrirOngletAdminDepuisMenu() {
-      basculerMenuParametres();
+      fermerToutesSidebars();
       if (typeof ouvrirOnglet === 'function') ouvrirOnglet('admin');
   }
 
   function gererAmelioration() {
-      basculerMenuParametres();
+      fermerToutesSidebars();
       document.getElementById('inputTexteAmelioration').value = '';
       document.getElementById('divAmeliorationModal').style.display = 'flex';
   }
@@ -780,10 +965,27 @@
   document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
   document.addEventListener('touchend', e => {
       touchEndX = e.changedTouches[0].screenX;
-      const menu = document.getElementById('menuParametres');
+      const menuGauche = document.getElementById('menuParametres');
+      const menuDroit = document.getElementById('menuSupportsDroit');
       const diff = touchEndX - touchStartX;
-      if (touchStartX < 50 && diff > minSwipeDistance) menu.style.width = "250px";
-      if (menu.style.width === "250px" && diff < -minSwipeDistance) menu.style.width = "0";
+      
+      // Swipe gauche/droite pour les sidebars
+      if (touchStartX < 50 && diff > minSwipeDistance) {
+          menuGauche.style.width = "250px";
+          verifierEtatBackdrop();
+      }
+      if (menuGauche.style.width === "250px" && diff < -minSwipeDistance) {
+          fermerToutesSidebars();
+      }
+
+      if (touchStartX > window.innerWidth - 50 && diff < -minSwipeDistance) {
+          menuDroit.style.width = "280px";
+          mettreAJourBoutonsSupportsSidebar();
+          verifierEtatBackdrop();
+      }
+      if (menuDroit.style.width === "280px" && diff > minSwipeDistance) {
+          fermerToutesSidebars();
+      }
   }, false);
 
   async function envoyerAmeliorationSupabase() {
