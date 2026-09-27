@@ -102,26 +102,29 @@
 
     /* Bouton d'enregistrement fixe en bas des deux sidebars */
     .sidebar-fixed-footer {
-        position: absolute;
+        position: fixed;
         bottom: 0;
-        left: 0;
-        width: 100%;
+        width: 0;
+        overflow: hidden;
         background-color: #1a1a1a;
-        padding: 12px 15px;
         box-sizing: border-box;
         border-top: 1px solid #333;
+        transition: width 0.3s;
+        z-index: 1001;
     }
+    #footerGauche { left: 0; }
+    #footerDroit  { right: 0; }
     .sidebar-fixed-footer button {
         width: 100%;
         background-color: #7C2270;
         color: white;
         border: none;
-        padding: 10px;
+        padding: 12px 15px;
         font-size: 16px;
         font-weight: bold;
-        border-radius: 6px;
         cursor: pointer;
         transition: background-color 0.2s;
+        white-space: nowrap;
     }
     .sidebar-fixed-footer button:hover {
         background-color: #9a338b;
@@ -155,7 +158,7 @@
     </div>
 
     <!-- BOUTON ENREGISTRER FIXE EN BAS (GAUCHE) -->
-    <div class="sidebar-fixed-footer">
+    <div id="footerGauche" class="sidebar-fixed-footer">
         <button onclick="actionEnregistrerDepuisMenu()">💾 Enregistrer</button>
     </div>
 </div>
@@ -172,7 +175,7 @@
     </div>
 
     <!-- BOUTON ENREGISTRER FIXE EN BAS (DROIT) -->
-    <div class="sidebar-fixed-footer">
+    <div id="footerDroit" class="sidebar-fixed-footer">
         <button onclick="actionEnregistrerDepuisMenu()">💾 Enregistrer</button>
     </div>
 </div>
@@ -658,22 +661,33 @@
       }
   }
 
+  function syncFooters() {
+      const wG = document.getElementById('menuParametres').style.width;
+      const wD = document.getElementById('menuSupportsDroit').style.width;
+      const fG = document.getElementById('footerGauche');
+      const fD = document.getElementById('footerDroit');
+      if (fG) fG.style.width = (wG && wG !== "0" && wG !== "0px") ? wG : "0";
+      if (fD) fD.style.width = (wD && wD !== "0" && wD !== "0px") ? wD : "0";
+  }
+
   function fermerToutesSidebars() {
       document.getElementById('menuParametres').style.width = "0";
       document.getElementById('menuSupportsDroit').style.width = "0";
+      syncFooters();
       verifierEtatBackdrop();
   }
 
   function basculerMenuParametres() {
       const menu = document.getElementById('menuParametres');
-      document.getElementById('menuSupportsDroit').style.width = "0"; // Ferme l'autre
+      document.getElementById('menuSupportsDroit').style.width = "0";
       menu.style.width = (menu.style.width === "250px") ? "0" : "250px";
+      syncFooters();
       verifierEtatBackdrop();
   }
 
   function basculerMenuSupportsDroit() {
       const menu = document.getElementById('menuSupportsDroit');
-      document.getElementById('menuParametres').style.width = "0"; // Ferme l'autre
+      document.getElementById('menuParametres').style.width = "0";
       
       if (menu.style.width === "280px") {
           menu.style.width = "0";
@@ -683,6 +697,7 @@
           document.getElementById('filtreSupportInput').value = '';
           filtrerListeSupportsDroite();
       }
+      syncFooters();
       verifierEtatBackdrop();
   }
 
@@ -972,6 +987,7 @@
       // Swipe gauche/droite pour les sidebars
       if (touchStartX < 50 && diff > minSwipeDistance) {
           menuGauche.style.width = "250px";
+          syncFooters();
           verifierEtatBackdrop();
       }
       if (menuGauche.style.width === "250px" && diff < -minSwipeDistance) {
@@ -981,6 +997,7 @@
       if (touchStartX > window.innerWidth - 50 && diff < -minSwipeDistance) {
           menuDroit.style.width = "280px";
           mettreAJourBoutonsSupportsSidebar();
+          syncFooters();
           verifierEtatBackdrop();
       }
       if (menuDroit.style.width === "280px" && diff > minSwipeDistance) {
