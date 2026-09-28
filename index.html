@@ -143,7 +143,7 @@
 <!-- Dépendances SUTx intégrées -->
 <script>
 tailwind = window.tailwind || {};
-tailwind.config = { corePlugins: { preflight: false } };
+tailwind.config = { prefix: 'sutx-', corePlugins: { preflight: false } };
 </script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -170,7 +170,7 @@ tailwind.config = { corePlugins: { preflight: false } };
 <!-- BOUTON ENREGISTRER FIXE EN BAS (GAUCHE) -->
     <div id="footerGauche" class="sidebar-fixed-footer">
         <button onclick="actionEnregistrerDepuisMenu()">💾 Enregistrer</button>
-        <button id="btn-tx-cat" class="btn-extra" onclick="ouvrirTxCat()">🌐 Tx_CAT</button>
+        <button id="btn-tx-cat" class="btn-extra" onclick="basculerFBMSUTx()">🌐 Tx_CAT</button>
         <button id="btn-qr-code" class="btn-extra" onclick="scannerQRCode()">📷 QR-CODE</button>
     </div>
 </div>
@@ -1136,8 +1136,7 @@ tailwind.config = { corePlugins: { preflight: false } };
 <!-- ONGLET SUTx : intégré dans le même fichier HTML          -->
 <!-- ========================================================= -->
 <div id="sutxPage" style="display:none;">
-    
-        
+    <div id="sutx-main-app" class="sutx-max-w-4xl sutx-mx-auto sutx-bg-white sutx-rounded-xl sutx-shadow-md sutx-p-6">
         <!-- Barre des onglets de navigation -->
         <div class="sutx-flex sutx-gap-2 sutx-mb-6 sutx-border-b sutx-pb-4">
             <button id="sutx-tabPage1" onclick="sutx_changerOnglet(1)" class="sutx-flex-1 sutx-py-2 sutx-px-4 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-bg-blue-600 sutx-text-white sutx-shadow sutx-transition">
@@ -1212,8 +1211,8 @@ tailwind.config = { corePlugins: { preflight: false } };
                 <p class="sutx-text-gray-500 sutx-text-sm sutx-italic sutx-text-center sutx-py-4">Chargement de l'avancement...</p>
             </div>
         </div>
+    </div>
 
-    
     <!-- Modale RJ -->
     <div id="sutx-divRJModal" class="sutx-hidden sutx-fixed sutx-inset-0 sutx-bg-black sutx-bg-opacity-50 sutx-flex sutx-items-center sutx-justify-center sutx-z-50">
         <div class="sutx-bg-white sutx-p-6 sutx-rounded-xl sutx-shadow-lg sutx-w-85 sutx-max-w-sm sutx-text-center">
@@ -1244,6 +1243,25 @@ tailwind.config = { corePlugins: { preflight: false } };
 
 <script>
 /* ===================== NAVIGATION GLOBALE FBM / SUTx ===================== */
+function mettreAJourBoutonFBMSUTx(page) {
+    const btn = document.getElementById('btn-tx-cat');
+    if (!btn) return;
+
+    if (page === 'sutx') {
+        btn.innerHTML = '📋 FBM';
+        btn.setAttribute('title', 'Revenir à FBM');
+    } else {
+        btn.innerHTML = '🌐 Tx_CAT';
+        btn.setAttribute('title', 'Ouvrir SUTx');
+    }
+}
+
+function basculerFBMSUTx() {
+    const sutxPage = document.getElementById('sutxPage');
+    const sutxVisible = sutxPage && sutxPage.style.display !== 'none';
+    ouvrirOngletGlobal(sutxVisible ? 'fbm' : 'sutx');
+}
+
 function ouvrirOngletGlobal(page) {
     const fbmPage = document.getElementById('fbmPage');
     const adminPage = document.getElementById('adminPage');
@@ -1259,6 +1277,8 @@ function ouvrirOngletGlobal(page) {
     if (tabFBM) tabFBM.classList.toggle('active', page === 'fbm');
     if (tabSUTX) tabSUTX.classList.toggle('active', page === 'sutx');
     if (tabAdmin) tabAdmin.classList.toggle('active', page === 'admin');
+
+    mettreAJourBoutonFBMSUTx(page);
 
     // On conserve le comportement de l'administration FBM.
     if (page === 'admin' && typeof ouvrirOnglet === 'function') {
