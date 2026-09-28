@@ -170,7 +170,7 @@ tailwind.config = { corePlugins: { preflight: false } };
 <!-- BOUTON ENREGISTRER FIXE EN BAS (GAUCHE) -->
     <div id="footerGauche" class="sidebar-fixed-footer">
         <button onclick="actionEnregistrerDepuisMenu()">💾 Enregistrer</button>
-        <button id="btn-tx-cat" class="btn-extra" onclick="ouvrirTxCat()">🌐 Tx_CAT</button>
+        <button id="btn-tx-cat" class="btn-extra" onclick="basculerFBMSUTx()">🌐 Tx_CAT</button>
         <button id="btn-qr-code" class="btn-extra" onclick="scannerQRCode()">📷 QR-CODE</button>
     </div>
 </div>
@@ -226,7 +226,7 @@ tailwind.config = { corePlugins: { preflight: false } };
 <div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px;">
     <img id="logoSNCF" src="assets/ainm.svg" width="80" height="80" alt="Logo SNCF" onclick="basculerMenuParametres()" title="Ouvrir le menu">
     <div style="text-align:left;">
-        <span style="font-size:0.7em; color:#666; display:block; font-weight:bold; text-transform:uppercase;">Chantier actif BOB:</span>
+        <span style="font-size:0.7em; color:#666; display:block; font-weight:bold; text-transform:uppercase;">Chantier actif :</span>
         <span id="labelChantierActif" onclick="basculerMenuParametres()" style="font-size:0.95em; font-weight:bold; color:#7C2270; background:#f5eaf3; padding:4px 8px; border-radius:6px; cursor:pointer; display:inline-block; border:1px dashed #d8b4e2;" title="Cliquer pour changer de chantier">Aucun chantier</span>
     </div>
 </div>
@@ -1244,6 +1244,25 @@ tailwind.config = { corePlugins: { preflight: false } };
 
 <script>
 /* ===================== NAVIGATION GLOBALE FBM / SUTx ===================== */
+function mettreAJourBoutonFBMSUTx(page) {
+    const btn = document.getElementById('btn-tx-cat');
+    if (!btn) return;
+
+    if (page === 'sutx') {
+        btn.innerHTML = '📋 FBM';
+        btn.setAttribute('title', 'Revenir à FBM');
+    } else {
+        btn.innerHTML = '🌐 Tx_CAT';
+        btn.setAttribute('title', 'Ouvrir SUTx');
+    }
+}
+
+function basculerFBMSUTx() {
+    const sutxPage = document.getElementById('sutxPage');
+    const sutxVisible = sutxPage && sutxPage.style.display !== 'none';
+    ouvrirOngletGlobal(sutxVisible ? 'fbm' : 'sutx');
+}
+
 function ouvrirOngletGlobal(page) {
     const fbmPage = document.getElementById('fbmPage');
     const adminPage = document.getElementById('adminPage');
@@ -1259,6 +1278,8 @@ function ouvrirOngletGlobal(page) {
     if (tabFBM) tabFBM.classList.toggle('active', page === 'fbm');
     if (tabSUTX) tabSUTX.classList.toggle('active', page === 'sutx');
     if (tabAdmin) tabAdmin.classList.toggle('active', page === 'admin');
+
+    mettreAJourBoutonFBMSUTx(page);
 
     // On conserve le comportement de l'administration FBM.
     if (page === 'admin' && typeof ouvrirOnglet === 'function') {
