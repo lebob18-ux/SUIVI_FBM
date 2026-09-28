@@ -139,6 +139,16 @@
         opacity: 0.9;
     }
 </style>
+
+<!-- Dépendances SUTx intégrées -->
+<script>
+tailwind = window.tailwind || {};
+tailwind.config = { corePlugins: { preflight: false } };
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
 </head>
 <body>
 
@@ -203,8 +213,9 @@
 
 <!-- NAVIGATION PAR ONGLETS -->
 <div id="tabs" class="tabs" style="display:none;">
-    <button id="tabFBM" class="tab active" onclick="ouvrirOnglet('fbm')">📋 SUIVIE GC AINM</button>
-    <button id="tabAdmin" class="tab" onclick="ouvrirOnglet('admin')" style="display:none;">⚙️ Admin</button>
+    <button id="tabFBM" class="tab active" onclick="ouvrirOngletGlobal('fbm')">📋 SUIVIE GC AINM</button>
+     <button id="tabSUTX" class="tab" onclick="ouvrirOngletGlobal('sutx')">🚧 SUIVI TRAVAUX SUTx</button>
+    <button id="tabAdmin" class="tab" onclick="ouvrirOngletGlobal('admin')" style="display:none;">⚙️ Admin</button>
 </div>
 
 <!-- PAGE PRINCIPALE FBM -->
@@ -989,7 +1000,7 @@
 
   function ouvrirOngletAdminDepuisMenu() {
       fermerToutesSidebars();
-      if (typeof ouvrirOnglet === 'function') ouvrirOnglet('admin');
+      if (typeof ouvrirOngletGlobal === 'function') ouvrirOngletGlobal('admin');
   }
 
   function gererAmelioration() {
@@ -1120,5 +1131,704 @@
     });
   })();
 </script>
+
+<!-- ========================================================= -->
+<!-- ONGLET SUTx : intégré dans le même fichier HTML          -->
+<!-- ========================================================= -->
+<div id="sutxPage" style="display:none;">
+    
+        
+        <!-- Barre des onglets de navigation -->
+        <div class="sutx-flex sutx-gap-2 sutx-mb-6 sutx-border-b sutx-pb-4">
+            <button id="sutx-tabPage1" onclick="sutx_changerOnglet(1)" class="sutx-flex-1 sutx-py-2 sutx-px-4 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-bg-blue-600 sutx-text-white sutx-shadow sutx-transition">
+                📋 Saisie & Suivi
+            </button>
+            <button id="sutx-tabPage2" onclick="sutx_changerOnglet(2)" class="sutx-flex-1 sutx-py-2 sutx-px-4 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-bg-gray-200 sutx-text-gray-700 sutx-hover:bg-gray-300 sutx-transition sutx-hidden">
+                📊 Avancement Chantiers
+            </button>
+        </div>
+
+        <!-- ================= PAGE 1 : SAISIE ================= -->
+        <div id="sutx-page1">
+            <div class="sutx-flex sutx-flex-wrap sutx-justify-between sutx-items-center sutx-mb-2 sutx-border-b sutx-pb-4 sutx-gap-2">
+                <h1 class="sutx-text-xl sutx-font-bold sutx-text-gray-800">📋 Suivi des Travaux</h1>
+                <div id="sutx-containerActions" class="sutx-hidden sutx-flex sutx-gap-2">
+                    <button id="sutx-btnCopier" onclick="sutx_copierTravaux()" class="sutx-bg-gray-800 sutx-hover:bg-gray-900 sutx-text-white sutx-px-3 sutx-py-2 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-shadow sutx-transition sutx-flex sutx-items-center sutx-gap-1.5">
+                        <span>📋</span> Copier
+                    </button>
+                    <button id="sutx-btnSharePDF" class="sutx-bg-red-600 sutx-hover:bg-red-700 sutx-text-white sutx-px-3 sutx-py-2 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-shadow sutx-transition sutx-flex sutx-items-center sutx-gap-1.5">
+                        <span>📄</span> Partager PDF
+                    </button>
+                </div>
+            </div>
+            
+            <div id="sutx-headerInfo" class="sutx-text-sm sutx-text-blue-700 sutx-mb-6 sutx-font-semibold sutx-bg-blue-50 sutx-p-2.5 sutx-rounded-lg sutx-border sutx-border-blue-100"></div>
+            
+            <div class="sutx-grid sutx-grid-cols-2 sutx-gap-4 sutx-mb-4">
+                <div>
+                    <label class="sutx-block sutx-text-xs sutx-font-bold sutx-uppercase sutx-text-gray-600 sutx-mb-1">Chantier :</label>
+                    <select id="sutx-selectChantier" class="sutx-w-full sutx-p-2.5 sutx-border sutx-rounded-lg sutx-bg-gray-50 sutx-focus:ring-2 sutx-focus:ring-blue-500">
+                        <option value="">Choisir...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="sutx-block sutx-text-xs sutx-font-bold sutx-uppercase sutx-text-gray-600 sutx-mb-1">Support :</label>
+                    <select id="sutx-selectSupport" class="sutx-w-full sutx-p-2.5 sutx-border sutx-rounded-lg sutx-bg-gray-50 sutx-focus:ring-2 sutx-focus:ring-blue-500" disabled>
+                        <option value="">Choisir...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Boutons globaux pour cocher / décocher rapidement toutes les tâches du support -->
+            <div id="sutx-sectionActionsRapides" class="sutx-hidden sutx-flex sutx-gap-2 sutx-mb-4">
+                <button onclick="sutx_cocherToutSupport(true)" class="sutx-bg-blue-100 sutx-hover:bg-blue-200 sutx-text-blue-800 sutx-px-3 sutx-py-1.5 sutx-rounded-lg sutx-text-xs sutx-font-bold sutx-transition sutx-flex sutx-items-center sutx-gap-1">
+                    <span>✅</span> Tout cocher sur ce support
+                </button>
+                <button onclick="sutx_cocherToutSupport(false)" class="sutx-bg-gray-200 sutx-hover:bg-gray-300 sutx-text-gray-700 sutx-px-3 sutx-py-1.5 sutx-rounded-lg sutx-text-xs sutx-font-bold sutx-transition sutx-flex sutx-items-center sutx-gap-1">
+                    <span>❌</span> Tout décocher sur ce support
+                </button>
+            </div>
+
+            <div id="sutx-sectionTachesSupport" class="sutx-hidden sutx-space-y-3">
+                <div class="sutx-flex sutx-justify-between sutx-items-center sutx-pt-2">
+                    <h3 class="sutx-font-bold sutx-text-sm sutx-text-gray-700">Liste des tâches :</h3>
+                    <button onclick="sutx_ouvrirModalAjoutTache()" class="sutx-bg-green-600 sutx-hover:bg-green-700 sutx-text-white sutx-px-3 sutx-py-1.5 sutx-rounded-lg sutx-text-xs sutx-font-bold sutx-shadow sutx-transition sutx-flex sutx-items-center sutx-gap-1">
+                        <span>➕</span> Ajouter un travail non prévu
+                    </button>
+                </div>
+                <div id="sutx-containerTaches" class="sutx-space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 2 : AVANCEMENT CHANTIERS ================= -->
+        <div id="sutx-page2" class="sutx-hidden">
+            <div class="sutx-flex sutx-justify-between sutx-items-center sutx-mb-4 sutx-border-b sutx-pb-4">
+                <h2 class="sutx-text-xl sutx-font-bold sutx-text-gray-800">📊 Avancement Global des Chantiers</h2>
+                <button onclick="sutx_partagerPDFAvancement()" class="sutx-bg-blue-600 sutx-hover:bg-blue-700 sutx-text-white sutx-px-4 sutx-py-2 sutx-rounded-lg sutx-font-bold sutx-shadow sutx-transition sutx-flex sutx-items-center sutx-gap-2 sutx-text-sm">
+                    <span>📲</span> Partager PDF Avancement
+                </button>
+            </div>
+            <div id="sutx-conteneurAvancement" class="sutx-space-y-4">
+                <p class="sutx-text-gray-500 sutx-text-sm sutx-italic sutx-text-center sutx-py-4">Chargement de l'avancement...</p>
+            </div>
+        </div>
+
+    
+    <!-- Modale RJ -->
+    <div id="sutx-divRJModal" class="sutx-hidden sutx-fixed sutx-inset-0 sutx-bg-black sutx-bg-opacity-50 sutx-flex sutx-items-center sutx-justify-center sutx-z-50">
+        <div class="sutx-bg-white sutx-p-6 sutx-rounded-xl sutx-shadow-lg sutx-w-85 sutx-max-w-sm sutx-text-center">
+            <p class="sutx-font-bold sutx-text-lg sutx-mb-2 sutx-text-gray-800">🌙 Numéro RJ requis</p>
+            <p class="sutx-text-xs sutx-text-gray-600 sutx-mb-4">Veuillez indiquer le numéro RJ pour valider cette action :</p>
+            <input type="text" id="sutx-rjInput" placeholder="Numéro RJ" class="sutx-w-full sutx-p-2 sutx-border sutx-rounded-lg sutx-mb-4 sutx-text-center sutx-font-bold sutx-focus:ring-2 sutx-focus:ring-blue-500">
+            <div class="sutx-flex sutx-gap-2">
+                <button onclick="sutx_executerActionEnAttente()" class="sutx-flex-1 sutx-bg-blue-600 sutx-hover:bg-blue-700 sutx-text-white sutx-p-2 sutx-rounded-lg sutx-font-bold sutx-text-sm">✅ Valider</button>
+                <button onclick="document.getElementById('divRJModal').classList.add('sutx-hidden')" class="sutx-flex1 sutx-bg-gray-200 sutx-hover:bg-gray-300 sutx-text-gray-800 sutx-p-2 sutx-rounded-lg sutx-font-bold sutx-text-sm">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modale Ajout Tâche -->
+    <div id="sutx-divAjoutTacheModal" class="sutx-hidden sutx-fixed sutx-inset-0 sutx-bg-black sutx-bg-opacity-50 sutx-flex sutx-items-center sutx-justify-center sutx-z-50">
+        <div class="sutx-bg-white sutx-p-6 sutx-rounded-xl sutx-shadow-lg sutx-w-90 sutx-max-w-sm">
+            <p class="sutx-font-bold sutx-text-lg sutx-mb-2 sutx-text-gray-800 sutx-text-center">➕ Ajouter un travail non prévu</p>
+            <p class="sutx-text-xs sutx-text-gray-600 sutx-mb-4 sutx-text-center">Ce travail sera enregistré directement dans Supabase.</p>
+            <label class="sutx-block sutx-text-xs sutx-font-bold sutx-uppercase sutx-text-gray-600 sutx-mb-1">Intitulé de la tâche :</label>
+            <input type="text" id="sutx-inputNouvelleTache" placeholder="Ex: Reprise fondation spécifique..." class="sutx-w-full sutx-p-2.5 sutx-border sutx-rounded-lg sutx-mb-4 sutx-text-sm sutx-focus:ring-2 sutx-focus:ring-blue-500">
+            <div class="sutx-flex sutx-gap-2">
+                <button onclick="sutx_validerAjoutTacheManuelle()" class="sutx-flex-1 sutx-bg-green-600 sutx-hover:bg-green-700 sutx-text-white sutx-p-2 sutx-rounded-lg sutx-font-bold sutx-text-sm">✅ Ajouter</button>
+                <button onclick="document.getElementById('divAjoutTacheModal').classList.add('sutx-hidden')" class="sutx-flex-1 sutx-bg-gray-200 sutx-hover:bg-gray-300 sutx-text-gray-800 sutx-p-2 sutx-rounded-lg sutx-font-bold sutx-text-sm">❌ Annuler</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ===================== NAVIGATION GLOBALE FBM / SUTx ===================== */
+function ouvrirOngletGlobal(page) {
+    const fbmPage = document.getElementById('fbmPage');
+    const adminPage = document.getElementById('adminPage');
+    const sutxPage = document.getElementById('sutxPage');
+    const tabFBM = document.getElementById('tabFBM');
+    const tabSUTX = document.getElementById('tabSUTX');
+    const tabAdmin = document.getElementById('tabAdmin');
+
+    if (fbmPage) fbmPage.style.display = page === 'fbm' ? '' : 'none';
+    if (adminPage) adminPage.style.display = page === 'admin' ? '' : 'none';
+    if (sutxPage) sutxPage.style.display = page === 'sutx' ? '' : 'none';
+
+    if (tabFBM) tabFBM.classList.toggle('active', page === 'fbm');
+    if (tabSUTX) tabSUTX.classList.toggle('active', page === 'sutx');
+    if (tabAdmin) tabAdmin.classList.toggle('active', page === 'admin');
+
+    // On conserve le comportement de l'administration FBM.
+    if (page === 'admin' && typeof ouvrirOnglet === 'function') {
+        try { ouvrirOnglet('admin'); } catch(e) { console.warn(e); }
+    }
+}
+</script>
+
+<script>
+/* ===================== CODE SUTx ISOLÉ ===================== */
+
+        /* ================= CONFIGURATION SUPABASE ================= */
+const sutx_SUPABASE_URL = "https://thbqkeugjvsxbryfnzuo.supabase.co";
+const sutx_SUPABASE_ANON_KEY = "sb_publishable_2-Ij-nrTPeK6rB-kSD-QTg_b42zNakq";
+
+        const sutx_supabaseClient = supabase.createClient(sutx_SUPABASE_URL, sutx_SUPABASE_ANON_KEY);
+
+        let sutx_rawData = [];
+        let sutx_sessionRJ = "";
+        let sutx_userEmail = localStorage.getItem('emailSutx') || "";
+        let sutx_userName = localStorage.getItem('nomSutx') || "";
+        let sutx_userPrenom = localStorage.getItem('prenomSutx') || "";
+        let sutx_userAdmin = false;
+        let sutx_actionEnCours = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(console.error);
+            }
+
+            if (sutx_userEmail && sutx_userName) {
+                document.getElementById('auth-nom').value = sutx_userName;
+                document.getElementById('auth-prenom').value = sutx_userPrenom;
+                document.getElementById('auth-email').value = sutx_userEmail;
+                sutx_verifierAccesEtLancer();
+            }
+        });
+
+        async function sutx_enregistrerConnexion() {
+            const nomInput = document.getElementById('auth-nom').value.trim();
+            const prenomInput = document.getElementById('auth-prenom').value.trim();
+            const emailInput = document.getElementById('auth-email').value.trim().toLowerCase();
+            const errorEl = document.getElementById('auth-error');
+
+            if (!nomInput || !prenomInput || !emailInput) {
+                errorEl.textContent = "Veuillez remplir tous les champs (Nom, Prénom, Email).";
+                errorEl.classList.remove('sutx-hidden');
+                return;
+            }
+
+            try {
+                // 1. Vérifier si l'utilisateur existe déjà dans app_bob
+                let { data: userRecord, error: searchError } = await sutx_supabaseClient
+                    .from('app_bob')
+                    .select('*')
+                    .eq('email', emailInput)
+                    .maybeSingle();
+
+                if (searchError) throw searchError;
+
+                // 2. Si l'utilisateur n'existe pas, on le crée avec les accès à false par défaut
+                if (!userRecord) {
+                    const { data: newRecord, error: insertError } = await sutx_supabaseClient
+                        .from('app_bob')
+                        .insert([
+                            { email: emailInput, nom: nomInput, prenom: prenomInput, sutx: false, admin: false }
+                        ])
+                        .select()
+                        .maybeSingle();
+
+                    if (insertError) throw insertError;
+                    userRecord = newRecord;
+                } else {
+                    // Mettre à jour le nom/prénom si besoin
+                    await sutx_supabaseClient
+                        .from('app_bob')
+                        .update({ nom: nomInput, prenom: prenomInput })
+                        .eq('email', emailInput);
+                }
+
+                // 3. Vérification de l'autorisation SUTX
+                if (!userRecord || userRecord.sutx !== true) {
+                    errorEl.textContent = "❌ Accès non autorisé. Veuillez contacter l'administrateur pour activer votre accès SUTX.";
+                    errorEl.classList.remove('sutx-hidden');
+                    return;
+                }
+
+                sutx_userName = nomInput;
+                sutx_userPrenom = prenomInput;
+                sutx_userEmail = emailInput;
+                sutx_userAdmin = userRecord.admin === true;
+
+                localStorage.setItem('nomSutx', sutx_userName);
+                localStorage.setItem('prenomSutx', sutx_userPrenom);
+                localStorage.setItem('emailSutx', sutx_userEmail);
+
+                sutx_lancerApplication();
+
+            } catch (err) {
+                console.error("Erreur de connexion :", err);
+                errorEl.textContent = `❌ Erreur : ${err.message || "Impossible de vérifier l'accès."}`;
+                errorEl.classList.remove('sutx-hidden');
+            }
+        }
+
+        async function sutx_verifierAccesEtLancer() {
+            try {
+                const { data: userRecord, error } = await sutx_supabaseClient
+                    .from('app_bob')
+                    .select('*')
+                    .eq('email', sutx_userEmail)
+                    .maybeSingle();
+
+                if (error || !userRecord || userRecord.sutx !== true) {
+                    // Accès révoqué ou utilisateur introuvable
+                    localStorage.clear();
+                    document.getElementById('auth-overlay').classList.remove('sutx-hidden');
+                    document.getElementById('main-app').classList.add('sutx-hidden');
+                    if (userRecord && userRecord.sutx !== true) {
+                        const errorEl = document.getElementById('auth-error');
+                        errorEl.textContent = "❌ Votre accès SUTX a été désactivé.";
+                        errorEl.classList.remove('sutx-hidden');
+                    }
+                    return;
+                }
+
+                sutx_userAdmin = userRecord.admin === true;
+                sutx_lancerApplication();
+            } catch (err) {
+                console.error("Erreur de vérification :", err);
+            }
+        }
+
+        function sutx_lancerApplication() {
+            document.getElementById('auth-overlay').classList.add('sutx-hidden');
+            document.getElementById('main-app').classList.remove('sutx-hidden');
+            document.getElementById('sutx-headerInfo').innerText = `👤 SUTX : ${sutx_userPrenom} ${sutx_userName}`;
+
+            // Afficher l'onglet d'avancement uniquement si admin est true
+            if (sutx_userAdmin) {
+                document.getElementById('sutx-tabPage2').classList.remove('sutx-hidden');
+            } else {
+                document.getElementById('sutx-tabPage2').classList.add('sutx-hidden');
+            }
+
+            sutx_chargerDonneesSupabase();
+        }
+
+        async function sutx_chargerDonneesSupabase() {
+            try {
+                const { data, error } = await sutx_supabaseClient
+                    .from('suivi_tx_cat')
+                    .select('*')
+                    .range(0, 9999);
+
+                if (error) throw error;
+
+                sutx_rawData = (data || []).map(r => ({ ...r, modifie: false, isCustom: false }));
+                
+                const chantiers = [...new Set(sutx_rawData.map(r => r.Chantier))].filter(Boolean);
+                const selectChantier = document.getElementById('sutx-selectChantier');
+                selectChantier.innerHTML = '<option value="">Choisir...</option>';
+                chantiers.forEach(c => selectChantier.add(new Option(c, c)));
+            } catch (err) {
+                console.error("Erreur de chargement des tâches :", err);
+                alert("Erreur lors du chargement des données de chantier.");
+            }
+        }
+
+        function sutx_changerOnglet(numPage) {
+            if (numPage === 2 && !sutx_userAdmin) {
+                alert("Accès réservé aux administrateurs.");
+                return;
+            }
+
+            const page1 = document.getElementById('sutx-page1');
+            const page2 = document.getElementById('sutx-page2');
+            const tab1 = document.getElementById('sutx-tabPage1');
+            const tab2 = document.getElementById('sutx-tabPage2');
+
+            if (numPage === 1) {
+                page1.classList.remove('sutx-hidden');
+                page2.classList.add('sutx-hidden');
+                tab1.className = "sutx-flex-1 sutx-py-2 sutx-px-4 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-bg-blue-600 sutx-text-white sutx-shadow sutx-transition";
+                tab2.className = "sutx-flex-1 sutx-py-2 sutx-px-4 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-bg-gray-200 sutx-text-gray-700 sutx-hover:bg-gray-300 sutx-transition";
+            } else {
+                page1.classList.add('sutx-hidden');
+                page2.classList.remove('sutx-hidden');
+                tab2.className = "sutx-flex-1 sutx-py-2 sutx-px-4 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-bg-blue-600 sutx-text-white sutx-shadow sutx-transition";
+                tab1.className = "sutx-flex-1 sutx-py-2 sutx-px-4 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-bg-gray-200 sutx-text-gray-700 sutx-hover:bg-gray-300 sutx-transition";
+                sutx_calculerEtAfficherAvancement();
+            }
+        }
+
+        function sutx_calculerEtAfficherAvancement() {
+            const conteneur = document.getElementById('sutx-conteneurAvancement');
+            conteneur.innerHTML = '';
+
+            const chantiers = [...new Set(sutx_rawData.map(r => r.Chantier))].filter(Boolean);
+
+            if (chantiers.length === 0) {
+                conteneur.innerHTML = '<p class="sutx-text-gray-500 sutx-text-sm sutx-text-center sutx-py-4">Aucune donnée disponible.</p>';
+                return;
+            }
+
+            chantiers.forEach(chantier => {
+                const lignesChantier = sutx_rawData.filter(r => r.Chantier === chantier);
+                const totalTaches = lignesChantier.length;
+                const tachesFaites = lignesChantier.filter(r => ['vrai', 'true', '1'].includes(String(r.Fait).toLowerCase().trim())).length;
+                const pourcentage = totalTaches > 0 ? Math.round((tachesFaites / totalTaches) * 100) : 0;
+
+                const divChantier = document.createElement('div');
+                divChantier.className = "sutx-bg-gray-50 p-4 sutx-border sutx-rounded-lg shadow-sm";
+                divChantier.innerHTML = `
+                    <div class="sutx-flex sutx-justify-between sutx-items-center sutx-mb-2">
+                        <span class="sutx-font-bold sutx-text-gray-800">${chantier}</span>
+                        <span class="sutx-text-sm sutx-font-semibold text-blue-600">${tachesFaites} / ${totalTaches} (${pourcentage}%)</span>
+                    </div>
+                    <div class="sutx-w-full sutx-bg-gray-200 rounded-full h-3">
+                        <div class="sutx-bg-blue-600 h-3 rounded-full transition-all duration-500" style="width: ${pourcentage}%"></div>
+                    </div>
+                `;
+                conteneur.appendChild(divChantier);
+            });
+        }
+
+        const selectChantier = document.getElementById('sutx-selectChantier');
+        const selectSupport = document.getElementById('sutx-selectSupport');
+        const containerTaches = document.getElementById('sutx-containerTaches');
+        const sectionTachesSupport = document.getElementById('sutx-sectionTachesSupport');
+        const sectionActionsRapides = document.getElementById('sutx-sectionActionsRapides');
+        const containerActions = document.getElementById('sutx-containerActions');
+
+        selectChantier.addEventListener('change', () => {
+            selectSupport.innerHTML = '<option value="">Choisir...</option>';
+            sectionTachesSupport.classList.add('sutx-hidden');
+            sectionActionsRapides.classList.add('sutx-hidden');
+            containerTaches.innerHTML = '';
+            const chantierChoisi = selectChantier.value;
+            if (!chantierChoisi) {
+                selectSupport.disabled = true;
+                return;
+            }
+            const supports = [...new Set(sutx_rawData.filter(r => r.Chantier === chantierChoisi).map(r => r.Support))].filter(Boolean);
+            supports.forEach(s => selectSupport.add(new Option(s, s)));
+            selectSupport.disabled = false;
+        });
+
+        selectSupport.addEventListener('change', () => {
+            sutx_rafraichirAffichageTaches();
+        });
+
+        function sutx_rafraichirAffichageTaches() {
+            containerTaches.innerHTML = '';
+            const chantierChoisi = selectChantier.value;
+            const supportChoisi = selectSupport.value;
+
+            if (!supportChoisi) {
+                sectionTachesSupport.classList.add('sutx-hidden');
+                sectionActionsRapides.classList.add('sutx-hidden');
+                containerActions.classList.add('sutx-hidden');
+                return;
+            }
+
+            const lignesFiltrees = sutx_rawData.filter(r => r.Chantier === chantierChoisi && r.Support === supportChoisi);
+
+            lignesFiltrees.forEach((item) => {
+                const indexGlobal = sutx_rawData.indexOf(item);
+                const isChecked = ['vrai', 'true', '1'].includes(String(item.Fait).toLowerCase().trim());
+                
+                const div = document.createElement('div');
+                div.className = `p-3 sutx-border sutx-rounded-lg sutx-flex sutx-items-center gap-3 ${item.isCustom ? 'bg-amber-50 border-amber-200' : 'sutx-bg-gray-50'}`;
+                div.innerHTML = `
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} 
+                        onchange="sutx_modifierLigne(${indexGlobal}, 'Fait', this.checked)" 
+                        class="w-6 h-6 text-blue-600 rounded cursor-pointer">
+                    <div class="sutx-flex-1 sutx-text-sm font-medium sutx-text-gray-800">
+                        ${item.Tache} ${item.isCustom ? '<span class="sutx-text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded sutx-font-bold ml-2">Ajout manuel</span>' : ''}
+                    </div>
+                    <input type="text" value="${item.Observation || ''}" placeholder="Observation..." 
+                        onchange="sutx_modifierLigne(${indexGlobal}, 'Observation', this.value)" 
+                        class="w-1/3 p-1.5 sutx-text-sm sutx-border rounded sutx-bg-white sutx-focus:ring-2 sutx-focus:ring-blue-500">
+                `;
+                containerTaches.appendChild(div);
+            });
+
+            sectionTachesSupport.classList.remove('sutx-hidden');
+            sectionActionsRapides.classList.remove('sutx-hidden');
+            containerActions.classList.remove('sutx-hidden');
+        }
+
+        async function sutx_cocherToutSupport(etatVoulu) {
+            const chantierChoisi = selectChantier.value;
+            const supportChoisi = selectSupport.value;
+
+            if (!chantierChoisi || !supportChoisi) return;
+
+            for (let i = 0; i < sutx_rawData.length; i++) {
+                if (sutx_rawData[i].Chantier === chantierChoisi && sutx_rawData[i].Support === supportChoisi) {
+                    sutx_rawData[i].Fait = etatVoulu;
+                    sutx_rawData[i].modifie = true;
+
+                    if (sutx_rawData[i].id) {
+                        try {
+                            await sutx_supabaseClient
+                                .from('suivi_tx_cat')
+                                .update({ Fait: etatVoulu })
+                                .eq('id', sutx_rawData[i].id);
+                        } catch (err) {
+                            console.error(`Erreur mise à jour ID ${sutx_rawData[i].id}:`, err);
+                        }
+                    }
+                }
+            }
+
+            sutx_rafraichirAffichageTaches();
+        }
+
+        async function sutx_modifierLigne(index, champ, valeur) {
+            sutx_rawData[index][champ] = valeur;
+            sutx_rawData[index].modifie = true;
+
+            const ligne = sutx_rawData[index];
+            if (!ligne.id) return;
+
+            try {
+                const updateData = {};
+                updateData[champ] = valeur;
+
+                const { error } = await sutx_supabaseClient
+                    .from('suivi_tx_cat')
+                    .update(updateData)
+                    .eq('id', ligne.id);
+
+                if (error) throw error;
+            } catch (err) {
+                console.error("Erreur de mise à jour Supabase :", err);
+                alert("❌ Erreur lors de l'enregistrement en base de données.");
+            }
+        }
+
+        function sutx_ouvrirModalAjoutTache() {
+            document.getElementById('sutx-inputNouvelleTache').value = '';
+            document.getElementById('sutx-divAjoutTacheModal').classList.remove('sutx-hidden');
+        }
+
+        async function sutx_validerAjoutTacheManuelle() {
+            const intitule = document.getElementById('sutx-inputNouvelleTache').value.trim();
+            const chantierChoisi = selectChantier.value;
+            const supportChoisi = selectSupport.value;
+
+            if (!intitule) {
+                alert("Veuillez saisir un intitulé pour ce travail.");
+                return;
+            }
+
+            try {
+                const nouvelleLigne = {
+                    Chantier: chantierChoisi,
+                    Support: supportChoisi,
+                    Tache: intitule,
+                    Fait: true,
+                    Observation: "Travail non prévu ajouté manuellement"
+                };
+
+                const { data, error } = await sutx_supabaseClient
+                    .from('suivi_tx_cat')
+                    .insert([nouvelleLigne])
+                    .select();
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    sutx_rawData.push({ ...data[0], modifie: true, isCustom: true });
+                }
+
+                document.getElementById('sutx-divAjoutTacheModal').classList.add('sutx-hidden');
+                sutx_rafraichirAffichageTaches();
+            } catch (err) {
+                console.error("Erreur d'insertion :", err);
+                alert("❌ Erreur lors de l'ajout de la tâche.");
+            }
+        }
+
+        document.getElementById('sutx-btnSharePDF').addEventListener('click', () => {
+            sutx_verifierModificationsEtDemanderRJ('pdf');
+        });
+
+        function sutx_copierTravaux() {
+            sutx_copierDansPressePapier();
+        }
+
+        function sutx_verifierModificationsEtDemanderRJ(typeAction) {
+            const elementsModifies = sutx_rawData.filter(r => r.modifie === true);
+
+            if (elementsModifies.length === 0) {
+                alert("Aucune modification n'a été effectuée pendant cette session.");
+                return;
+            }
+
+            sutx_actionEnCours = typeAction;
+            document.getElementById('sutx-rjInput').value = sutx_sessionRJ || "";
+            document.getElementById('sutx-divRJModal').classList.remove('sutx-hidden');
+        }
+
+        function sutx_executerActionEnAttente() {
+            const saisiRJ = document.getElementById('sutx-rjInput').value.trim();
+            if (!saisiRJ) {
+                alert("Veuillez entrer un numéro RJ valide.");
+                return;
+            }
+            sutx_sessionRJ = saisiRJ;
+            document.getElementById('sutx-divRJModal').classList.add('sutx-hidden');
+            document.getElementById('sutx-headerInfo').innerText = `👤 SUTX : ${sutx_userPrenom} ${sutx_userName} | 📌 RJ : ${sutx_sessionRJ}`;
+
+            if (sutx_actionEnCours === 'pdf') {
+                sutx_genererEtPartagerPDF();
+            }
+        }
+
+        async function sutx_copierDansPressePapier() {
+            const elementsFaites = sutx_rawData.filter(r => r.modifie === true && ['vrai', 'true', '1'].includes(String(r.Fait).toLowerCase().trim()));
+
+            if (elementsFaites.length === 0) {
+                alert("Aucun travail validé (coché fait) n'a été trouvé pour la copie.");
+                return;
+            }
+
+            const supportsGrouper = {};
+            elementsFaites.forEach(r => {
+                const support = r.Support || "Support inconnu";
+                if (!supportsGrouper[support]) {
+                    supportsGrouper[support] = [];
+                }
+                supportsGrouper[support].push({
+                    tache: r.Tache,
+                    observation: r.Observation ? r.Observation.trim() : ""
+                });
+            });
+
+            let texteFinal = "";
+            for (const [support, items] of Object.entries(supportsGrouper)) {
+                texteFinal += `Support : ${support}\n`;
+                items.forEach(item => {
+                    if (item.observation) {
+                        texteFinal += `- ${item.tache} (Obs: ${item.observation})\n`;
+                    } else {
+                        texteFinal += `- ${item.tache}\n`;
+                    }
+                });
+                texteFinal += `\n`;
+            }
+
+            try {
+                await navigator.clipboard.writeText(texteFinal.trim());
+                alert("✅ Récapitulatif copié dans le presse-papiers !");
+            } catch (err) {
+                console.error("Erreur de copie : ", err);
+                alert("Erreur lors de la copie automatique.");
+            }
+        }
+
+        async function sutx_genererEtPartagerPDF() {
+            const elementsModifies = sutx_rawData.filter(r => r.modifie === true);
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const dateEnvoi = new Date().toLocaleString();
+
+            doc.setFillColor(37, 99, 235);
+            doc.rect(0, 0, 210, 25, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.text("RAPPORT DE SUIVI - TRAVAUX", 14, 16);
+
+            doc.setTextColor(50, 50, 50);
+            doc.setFontSize(11);
+            doc.text(`Opérateur SUTX : ${sutx_userPrenom} ${sutx_userName}`, 14, 35);
+            doc.text(`Numéro RJ : ${sutx_sessionRJ}`, 14, 42);
+            doc.text(`Date d'envoi : ${dateEnvoi}`, 14, 49);
+
+            const tableColumns = ["ID", "Chantier", "Support", "Tache", "Fait", "Observation"];
+            const tableRows = elementsModifies.map(r => [
+                r.id || "SANS ID", r.Chantier, r.Support, r.Tache, r.Fait ? "Oui" : "Non", r.Observation
+            ]);
+
+            doc.autoTable({
+                startY: 55,
+                head: [tableColumns],
+                body: tableRows,
+                theme: 'sutx-grid',
+                headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255] },
+                styles: { fontSize: 9, cellPadding: 3 }
+            });
+
+            const pdfOutput = doc.output('blob');
+            const fileName = `Suivi_Modifications_RJ_${sutx_sessionRJ}.pdf`;
+            const file = new File([pdfOutput], fileName, { type: "application/pdf" });
+
+            try {
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Rapport Suivi Travaux',
+                        text: `Bonjour, voici le rapport de suivi des travaux pour le RJ ${sutx_sessionRJ}.\nOpérateur : ${sutx_userPrenom} ${sutx_userName}`
+                    });
+                    return;
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+            }
+
+            doc.save(fileName);
+        }
+
+        async function sutx_partagerPDFAvancement() {
+            if (!sutx_userAdmin) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const chantiers = [...new Set(sutx_rawData.map(r => r.Chantier))].filter(Boolean);
+
+            doc.setFillColor(37, 99, 235);
+            doc.rect(0, 0, 210, 25, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.text("BILAN D'AVANCEMENT DES CHANTIERS", 14, 16);
+
+            doc.setTextColor(50, 50, 50);
+            doc.setFontSize(11);
+            doc.text(`Opérateur : ${sutx_userPrenom} ${sutx_userName}`, 14, 35);
+
+            const tableColumns = ["Chantier", "Tâches Réalisées", "Total Tâches", "Avancement"];
+            const tableRows = chantiers.map(chantier => {
+                const lignes = sutx_rawData.filter(r => r.Chantier === chantier);
+                const total = lignes.length;
+                const faites = lignes.filter(r => ['vrai', 'true', '1'].includes(String(r.Fait).toLowerCase().trim())).length;
+                const pct = total > 0 ? Math.round((faites / total) * 100) : 0;
+                return [chantier, faites, total, `${pct}%`];
+            });
+
+            doc.autoTable({
+                startY: 45,
+                head: [tableColumns],
+                body: tableRows,
+                theme: 'sutx-grid',
+                headStyles: { fillColor: [37, 99, 235], textColor: [255, 255, 255] },
+                styles: { fontSize: 10, cellPadding: 4 }
+            });
+
+            const pdfOutput = doc.output('blob');
+            const fileName = `Avancement_Chantiers.pdf`;
+            const file = new File([pdfOutput], fileName, { type: "application/pdf" });
+
+            try {
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Avancement Chantiers',
+                        text: `Bonjour, voici le bilan d'avancement global des chantiers.\nOpérateur : ${sutx_userPrenom} ${sutx_userName}`
+                    });
+                    return;
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+            }
+
+            doc.save(fileName);
+        }
+    
+</script>
+
 </body>
 </html>
