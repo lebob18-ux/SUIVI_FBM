@@ -1064,6 +1064,61 @@
           alert("❌ Erreur lors de l'envoi : " + (err.message || "Erreur de base de données."));
       }
   }
+
+  // --- LANCEMENT PAR LIEN QR (?chantier=...&support=...) ---
+  (function () {
+    const params = new URLSearchParams(location.search);
+    const chantierParam = params.get('chantier');
+    const supportParam = params.get('support');
+    if (!chantierParam) return;
+
+    const norm = s => (s || '').toString().trim().toLowerCase();
+
+    function trouverOption(select, valeur) {
+      if (!select) return null;
+      const v = norm(valeur);
+      return Array.from(select.options).find(o =>
+        o.value && (norm(o.value) === v || norm(o.text) === v)) || null;
+    }
+
+    function attendre(condition, timeout = 8000) {
+      return new Promise(resolve => {
+        const debut = Date.now();
+        (function boucle() {
+          const r = condition();
+          if (r) return resolve(r);
+          if (Date.now() - debut > timeout) return resolve(null);
+          setTimeout(boucle, 150);
+        })();
+      });
+    }
+
+    window.addEventListener('load', async () => {
+      const selChantier = document.getElementById('selectChantier');
+      const optC = await attendre(() => trouverOption(selChantier, chantierParam));
+      if (!optC) return;
+
+      selChantier.value = optC.value;
+      selChantier.dispatchEvent(new Event('change'));
+      if (typeof filtrerSupports === 'function') filtrerSupports();
+
+      if (supportParam) {
+        const selSupport = document.getElementById('selectSupport');
+        const optS = await attendre(() => trouverOption(selSupport, supportParam));
+        if (optS) {
+          selSupport.value = optS.value;
+          selSupport.dispatchEvent(new Event('change'));
+          const lbl = document.getElementById('labelSupportActif');
+          if (lbl) lbl.innerText = optS.text;
+        }
+      }
+
+      if (typeof mettreAJourBoutonsChantiersSidebar === 'function') mettreAJourBoutonsChantiersSidebar();
+      if (typeof mettreAJourBoutonsSupportsSidebar === 'function') mettreAJourBoutonsSupportsSidebar();
+
+      history.replaceState(null, '', location.pathname);
+    });
+  })();
 </script>
 </body>
 </html>
