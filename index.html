@@ -143,7 +143,7 @@
 <!-- Dépendances SUTx intégrées -->
 <script>
 tailwind = window.tailwind || {};
-tailwind.config = { corePlugins: { preflight: false } };
+tailwind.config = { prefix: 'sutx-', corePlugins: { preflight: false } };
 </script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -1136,8 +1136,7 @@ tailwind.config = { corePlugins: { preflight: false } };
 <!-- ONGLET SUTx : intégré dans le même fichier HTML          -->
 <!-- ========================================================= -->
 <div id="sutxPage" style="display:none;">
-    
-        
+    <div id="sutx-main-app" class="sutx-max-w-4xl sutx-mx-auto sutx-bg-white sutx-rounded-xl sutx-shadow-md sutx-p-6">
         <!-- Barre des onglets de navigation -->
         <div class="sutx-flex sutx-gap-2 sutx-mb-6 sutx-border-b sutx-pb-4">
             <button id="sutx-tabPage1" onclick="sutx_changerOnglet(1)" class="sutx-flex-1 sutx-py-2 sutx-px-4 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-bg-blue-600 sutx-text-white sutx-shadow sutx-transition">
@@ -1212,8 +1211,8 @@ tailwind.config = { corePlugins: { preflight: false } };
                 <p class="sutx-text-gray-500 sutx-text-sm sutx-italic sutx-text-center sutx-py-4">Chargement de l'avancement...</p>
             </div>
         </div>
+    </div>
 
-    
     <!-- Modale RJ -->
     <div id="sutx-divRJModal" class="sutx-hidden sutx-fixed sutx-inset-0 sutx-bg-black sutx-bg-opacity-50 sutx-flex sutx-items-center sutx-justify-center sutx-z-50">
         <div class="sutx-bg-white sutx-p-6 sutx-rounded-xl sutx-shadow-lg sutx-w-85 sutx-max-w-sm sutx-text-center">
