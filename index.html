@@ -140,14 +140,6 @@
     }
 </style>
 
-<!-- Dépendances SUTx intégrées -->
-<script>
-tailwind = window.tailwind || {};
-tailwind.config = { prefix: 'sutx-', corePlugins: { preflight: false } };
-</script>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 </head>
 <body>
@@ -170,7 +162,6 @@ tailwind.config = { prefix: 'sutx-', corePlugins: { preflight: false } };
 <!-- BOUTON ENREGISTRER FIXE EN BAS (GAUCHE) -->
     <div id="footerGauche" class="sidebar-fixed-footer">
         <button onclick="actionEnregistrerDepuisMenu()">💾 Enregistrer</button>
-        <button id="btn-tx-cat" class="btn-extra" onclick="basculerFBMSUTx()">🌐 Tx_CAT</button>
         <button id="btn-qr-code" class="btn-extra" onclick="scannerQRCode()">📷 QR-CODE</button>
     </div>
 </div>
@@ -214,8 +205,12 @@ tailwind.config = { prefix: 'sutx-', corePlugins: { preflight: false } };
 <!-- NAVIGATION PAR ONGLETS -->
 <div id="tabs" class="tabs" style="display:none;">
     <button id="tabFBM" class="tab active" onclick="ouvrirOngletGlobal('fbm')">📋 SUIVIE GC AINM</button>
-     <button id="tabSUTX" class="tab" onclick="ouvrirOngletGlobal('sutx')">🚧 SUIVI TRAVAUX SUTx</button>
     <button id="tabAdmin" class="tab" onclick="ouvrirOngletGlobal('admin')" style="display:none;">⚙️ Admin</button>
+</div>
+
+<!-- INDICATEUR HORS-LIGNE / SYNCHRONISATION FBM UNIQUEMENT -->
+<div id="fbmOfflineStatus" style="position:fixed; bottom:8px; left:50%; transform:translateX(-50%); z-index:3000; display:none; padding:5px 10px; border-radius:12px; font-size:11px; font-weight:bold; box-shadow:0 2px 8px rgba(0,0,0,.18); background:#fff3cd; color:#856404; border:1px solid #ffe69c;">
+  📴 Hors réseau — sauvegarde locale FBM active
 </div>
 
 <!-- PAGE PRINCIPALE FBM -->
@@ -1132,163 +1127,205 @@ tailwind.config = { prefix: 'sutx-', corePlugins: { preflight: false } };
   })();
 </script>
 
-<!-- ========================================================= -->
-<!-- ONGLET SUTx : intégré dans le même fichier HTML          -->
-<!-- ========================================================= -->
-<div id="sutxPage" style="display:none;">
-    <div id="sutx-main-app" class="sutx-max-w-4xl sutx-mx-auto sutx-bg-white sutx-rounded-xl sutx-shadow-md sutx-p-6">
- 
-        <div id="sutx-network-status" style="display:none; padding:6px; border-radius:8px; font-size:12px; font-weight:bold; text-align:center; margin-bottom:10px;"></div>
-        <!-- Barre des onglets de navigation -->
-        <div class="sutx-flex sutx-gap-2 sutx-mb-6 sutx-border-b sutx-pb-4">
-            <button id="sutx-tabPage1" onclick="sutx_changerOnglet(1)" class="sutx-flex-1 sutx-py-2 sutx-px-4 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-bg-blue-600 sutx-text-white sutx-shadow sutx-transition">
-                📋 Saisie & Suivi
-            </button>
-            <button id="sutx-tabPage2" onclick="sutx_changerOnglet(2)" class="sutx-flex-1 sutx-py-2 sutx-px-4 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-bg-gray-200 sutx-text-gray-700 sutx-hover:bg-gray-300 sutx-transition sutx-hidden">
-                📊 Avancement Chantiers
-            </button>
-        </div>
 
-        <!-- ================= PAGE 1 : SAISIE ================= -->
-        <div id="sutx-page1">
-            <div class="sutx-flex sutx-flex-wrap sutx-justify-between sutx-items-center sutx-mb-2 sutx-border-b sutx-pb-4 sutx-gap-2">
-                <h1 class="sutx-text-xl sutx-font-bold sutx-text-gray-800">📋 Suivi des Travaux</h1>
-                <div id="sutx-containerActions" class="sutx-hidden sutx-flex sutx-gap-2">
-                    <button id="sutx-btnCopier" onclick="sutx_copierTravaux()" class="sutx-bg-gray-800 sutx-hover:bg-gray-900 sutx-text-white sutx-px-3 sutx-py-2 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-shadow sutx-transition sutx-flex sutx-items-center sutx-gap-1.5">
-                        <span>📋</span> Copier
-                    </button>
-                    <button id="sutx-btnSharePDF" class="sutx-bg-red-600 sutx-hover:bg-red-700 sutx-text-white sutx-px-3 sutx-py-2 sutx-rounded-lg sutx-font-bold sutx-text-sm sutx-shadow sutx-transition sutx-flex sutx-items-center sutx-gap-1.5">
-                        <span>📄</span> Partager PDF
-                    </button>
-                </div>
-            </div>
-            
-            <div id="sutx-headerInfo" class="sutx-text-sm sutx-text-blue-700 sutx-mb-6 sutx-font-semibold sutx-bg-blue-50 sutx-p-2.5 sutx-rounded-lg sutx-border sutx-border-blue-100"></div>
-            
-            <div class="sutx-grid sutx-grid-cols-2 sutx-gap-4 sutx-mb-4">
-                <div>
-                    <label class="sutx-block sutx-text-xs sutx-font-bold sutx-uppercase sutx-text-gray-600 sutx-mb-1">Chantier :</label>
-                    <select id="sutx-selectChantier" class="sutx-w-full sutx-p-2.5 sutx-border sutx-rounded-lg sutx-bg-gray-50 sutx-focus:ring-2 sutx-focus:ring-blue-500">
-                        <option value="">Choisir...</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="sutx-block sutx-text-xs sutx-font-bold sutx-uppercase sutx-text-gray-600 sutx-mb-1">Support :</label>
-                    <select id="sutx-selectSupport" class="sutx-w-full sutx-p-2.5 sutx-border sutx-rounded-lg sutx-bg-gray-50 sutx-focus:ring-2 sutx-focus:ring-blue-500" disabled>
-                        <option value="">Choisir...</option>
-                    </select>
-                </div>
-            </div>
 
-            <!-- Boutons globaux pour cocher / décocher rapidement toutes les tâches du support -->
-            <div id="sutx-sectionActionsRapides" class="sutx-hidden sutx-flex sutx-gap-2 sutx-mb-4">
-                <button onclick="sutx_cocherToutSupport(true)" class="sutx-bg-blue-100 sutx-hover:bg-blue-200 sutx-text-blue-800 sutx-px-3 sutx-py-1.5 sutx-rounded-lg sutx-text-xs sutx-font-bold sutx-transition sutx-flex sutx-items-center sutx-gap-1">
-                    <span>✅</span> Tout cocher sur ce support
-                </button>
-                <button onclick="sutx_cocherToutSupport(false)" class="sutx-bg-gray-200 sutx-hover:bg-gray-300 sutx-text-gray-700 sutx-px-3 sutx-py-1.5 sutx-rounded-lg sutx-text-xs sutx-font-bold sutx-transition sutx-flex sutx-items-center sutx-gap-1">
-                    <span>❌</span> Tout décocher sur ce support
-                </button>
-            </div>
-
-            <div id="sutx-sectionTachesSupport" class="sutx-hidden sutx-space-y-3">
-                <div class="sutx-flex sutx-justify-between sutx-items-center sutx-pt-2">
-                    <h3 class="sutx-font-bold sutx-text-sm sutx-text-gray-700">Liste des tâches :</h3>
-                    <button onclick="sutx_ouvrirModalAjoutTache()" class="sutx-bg-green-600 sutx-hover:bg-green-700 sutx-text-white sutx-px-3 sutx-py-1.5 sutx-rounded-lg sutx-text-xs sutx-font-bold sutx-shadow sutx-transition sutx-flex sutx-items-center sutx-gap-1">
-                        <span>➕</span> Ajouter un travail non prévu
-                    </button>
-                </div>
-                <div id="sutx-containerTaches" class="sutx-space-y-3"></div>
-            </div>
-        </div>
-
-        <!-- ================= PAGE 2 : AVANCEMENT CHANTIERS ================= -->
-        <div id="sutx-page2" class="sutx-hidden">
-            <div class="sutx-flex sutx-justify-between sutx-items-center sutx-mb-4 sutx-border-b sutx-pb-4">
-                <h2 class="sutx-text-xl sutx-font-bold sutx-text-gray-800">📊 Avancement Global des Chantiers</h2>
-                <button onclick="sutx_partagerPDFAvancement()" class="sutx-bg-blue-600 sutx-hover:bg-blue-700 sutx-text-white sutx-px-4 sutx-py-2 sutx-rounded-lg sutx-font-bold sutx-shadow sutx-transition sutx-flex sutx-items-center sutx-gap-2 sutx-text-sm">
-                    <span>📲</span> Partager PDF Avancement
-                </button>
-            </div>
-            <div id="sutx-conteneurAvancement" class="sutx-space-y-4">
-                <p class="sutx-text-gray-500 sutx-text-sm sutx-italic sutx-text-center sutx-py-4">Chargement de l'avancement...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale RJ -->
-    <div id="sutx-divRJModal" class="sutx-hidden sutx-fixed sutx-inset-0 sutx-bg-black sutx-bg-opacity-50 sutx-flex sutx-items-center sutx-justify-center sutx-z-50">
-        <div class="sutx-bg-white sutx-p-6 sutx-rounded-xl sutx-shadow-lg sutx-w-85 sutx-max-w-sm sutx-text-center">
-            <p class="sutx-font-bold sutx-text-lg sutx-mb-2 sutx-text-gray-800">🌙 Numéro RJ requis</p>
-            <p class="sutx-text-xs sutx-text-gray-600 sutx-mb-4">Veuillez indiquer le numéro RJ pour valider cette action :</p>
-            <input type="text" id="sutx-rjInput" placeholder="Numéro RJ" class="sutx-w-full sutx-p-2 sutx-border sutx-rounded-lg sutx-mb-4 sutx-text-center sutx-font-bold sutx-focus:ring-2 sutx-focus:ring-blue-500">
-            <div class="sutx-flex sutx-gap-2">
-                <button onclick="sutx_executerActionEnAttente()" class="sutx-flex-1 sutx-bg-blue-600 sutx-hover:bg-blue-700 sutx-text-white sutx-p-2 sutx-rounded-lg sutx-font-bold sutx-text-sm">✅ Valider</button>
-                <button onclick="document.getElementById('sutx-divRJModal').classList.add('sutx-hidden')" class="sutx-flex-1 sutx-bg-gray-200 sutx-hover:bg-gray-300 sutx-text-gray-800 sutx-p-2 sutx-rounded-lg sutx-font-bold sutx-text-sm">❌ Annuler</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modale Ajout Tâche -->
-    <div id="sutx-divAjoutTacheModal" class="sutx-hidden sutx-fixed sutx-inset-0 sutx-bg-black sutx-bg-opacity-50 sutx-flex sutx-items-center sutx-justify-center sutx-z-50">
-        <div class="sutx-bg-white sutx-p-6 sutx-rounded-xl sutx-shadow-lg sutx-w-90 sutx-max-w-sm">
-            <p class="sutx-font-bold sutx-text-lg sutx-mb-2 sutx-text-gray-800 sutx-text-center">➕ Ajouter un travail non prévu</p>
-            <p class="sutx-text-xs sutx-text-gray-600 sutx-mb-4 sutx-text-center">Ce travail sera enregistré directement dans Supabase.</p>
-            <label class="sutx-block sutx-text-xs sutx-font-bold sutx-uppercase sutx-text-gray-600 sutx-mb-1">Intitulé de la tâche :</label>
-            <input type="text" id="sutx-inputNouvelleTache" placeholder="Ex: Reprise fondation spécifique..." class="sutx-w-full sutx-p-2.5 sutx-border sutx-rounded-lg sutx-mb-4 sutx-text-sm sutx-focus:ring-2 sutx-focus:ring-blue-500">
-            <div class="sutx-flex sutx-gap-2">
-                <button onclick="sutx_validerAjoutTacheManuelle()" class="sutx-flex-1 sutx-bg-green-600 sutx-hover:bg-green-700 sutx-text-white sutx-p-2 sutx-rounded-lg sutx-font-bold sutx-text-sm">✅ Ajouter</button>
-                <button onclick="document.getElementById('sutx-divAjoutTacheModal').classList.add('sutx-hidden')" class="sutx-flex-1 sutx-bg-gray-200 sutx-hover:bg-gray-300 sutx-text-gray-800 sutx-p-2 sutx-rounded-lg sutx-font-bold sutx-text-sm">❌ Annuler</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script>
-/* ===================== NAVIGATION GLOBALE FBM / SUTx ===================== */
-function mettreAJourBoutonFBMSUTx(page) {
-    const btn = document.getElementById('btn-tx-cat');
-    if (!btn) return;
+/* ============================================================
+   FBM — NAVIGATION + CACHE LOCAL DÉDIÉ
+   Cette zone est volontairement indépendante des autres apps.
+   AUCUN localStorage.clear(), AUCUNE clé générique.
+   ============================================================ */
 
-    if (page === 'sutx') {
-        btn.innerHTML = '📋 FBM';
-        btn.setAttribute('title', 'Revenir à FBM');
-    } else {
-        btn.innerHTML = '🌐 Tx_CAT';
-        btn.setAttribute('title', 'Ouvrir SUTx');
-    }
-}
-
-function basculerFBMSUTx() {
-    const sutxPage = document.getElementById('sutxPage');
-    const sutxVisible = sutxPage && sutxPage.style.display !== 'none';
-    ouvrirOngletGlobal(sutxVisible ? 'fbm' : 'sutx');
-}
+const FBM_LOCAL_PREFIX = 'fbm_outil_2_';
+const FBM_LOCAL_STATE_KEY = FBM_LOCAL_PREFIX + 'etat_v1';
 
 function ouvrirOngletGlobal(page) {
     const fbmPage = document.getElementById('fbmPage');
     const adminPage = document.getElementById('adminPage');
-    const sutxPage = document.getElementById('sutxPage');
     const tabFBM = document.getElementById('tabFBM');
-    const tabSUTX = document.getElementById('tabSUTX');
     const tabAdmin = document.getElementById('tabAdmin');
 
     if (fbmPage) fbmPage.style.display = page === 'fbm' ? '' : 'none';
     if (adminPage) adminPage.style.display = page === 'admin' ? '' : 'none';
-    if (sutxPage) sutxPage.style.display = page === 'sutx' ? '' : 'none';
-
     if (tabFBM) tabFBM.classList.toggle('active', page === 'fbm');
-    if (tabSUTX) tabSUTX.classList.toggle('active', page === 'sutx');
     if (tabAdmin) tabAdmin.classList.toggle('active', page === 'admin');
 
-    mettreAJourBoutonFBMSUTx(page);
-
-    // On conserve le comportement de l'administration FBM.
     if (page === 'admin' && typeof ouvrirOnglet === 'function') {
-        try { ouvrirOnglet('admin'); } catch(e) { console.warn(e); }
+        try { ouvrirOnglet('admin'); } catch(e) {}
     }
 }
-</script>
 
+/* -------- Sauvegarde locale FBM dédiée -------- */
+function fbmLireEtatFormulaire() {
+    const page = document.getElementById('fbmPage');
+    if (!page) return null;
+
+    const champs = {};
+    page.querySelectorAll('input[id], select[id], textarea[id]').forEach(el => {
+        if (!el.id) return;
+        if (el.type === 'radio') {
+            if (el.checked) champs[el.id] = { type:'radio', value:el.value };
+        } else if (el.type === 'checkbox') {
+            champs[el.id] = { type:'checkbox', checked:el.checked };
+        } else {
+            champs[el.id] = { type:el.tagName.toLowerCase(), value:el.value };
+        }
+    });
+
+    return {
+        version: 1,
+        application: 'Outil_FBM_2',
+        chantier: document.getElementById('selectChantier')?.value || '',
+        chantierText: document.getElementById('selectChantier')?.selectedOptions?.[0]?.text || '',
+        support: document.getElementById('selectSupport')?.value || '',
+        supportText: document.getElementById('selectSupport')?.selectedOptions?.[0]?.text || '',
+        champs,
+        date: new Date().toISOString()
+    };
+}
+
+function fbmSauverEtatLocal() {
+    try {
+        const etat = fbmLireEtatFormulaire();
+        if (!etat) return;
+        localStorage.setItem(FBM_LOCAL_STATE_KEY, JSON.stringify(etat));
+        fbmMajStatut();
+    } catch (e) {
+        console.warn('FBM cache local :', e);
+    }
+}
+
+function fbmRestaurerEtatLocal() {
+    try {
+        const brut = localStorage.getItem(FBM_LOCAL_STATE_KEY);
+        if (!brut) return false;
+
+        const etat = JSON.parse(brut);
+        if (!etat || etat.application !== 'Outil_FBM_2') return false;
+
+        const appliquer = () => {
+            const selC = document.getElementById('selectChantier');
+            const selS = document.getElementById('selectSupport');
+
+            if (selC && etat.chantier) {
+                const opt = Array.from(selC.options).find(o => o.value === etat.chantier);
+                if (opt) {
+                    selC.value = etat.chantier;
+                    selC.dispatchEvent(new Event('change', {bubbles:true}));
+                }
+            }
+
+            if (selS && etat.support) {
+                const opt = Array.from(selS.options).find(o => o.value === etat.support);
+                if (opt) {
+                    selS.value = etat.support;
+                    selS.dispatchEvent(new Event('change', {bubbles:true}));
+                }
+            }
+
+            Object.entries(etat.champs || {}).forEach(([id, data]) => {
+                const el = document.getElementById(id);
+                if (!el || id === 'selectChantier' || id === 'selectSupport') return;
+
+                if (data.type === 'checkbox') {
+                    el.checked = !!data.checked;
+                } else if (data.type === 'radio') {
+                    el.checked = el.value === data.value;
+                } else if (data.value !== undefined) {
+                    el.value = data.value;
+                }
+            });
+
+            ['verifVoie','carotte','blindageCheck'].forEach(id => {
+                const el=document.getElementById(id);
+                if(el) el.dispatchEvent(new Event('change',{bubbles:true}));
+            });
+
+            if (typeof calculer === 'function') {
+                try { calculer(); } catch(e) {}
+            }
+            if (typeof mettreAJourBoutonsChantiersSidebar === 'function') {
+                mettreAJourBoutonsChantiersSidebar();
+            }
+            if (typeof mettreAJourBoutonsSupportsSidebar === 'function') {
+                mettreAJourBoutonsSupportsSidebar();
+            }
+        };
+
+        setTimeout(appliquer, 900);
+        return true;
+    } catch(e) {
+        console.warn('FBM restauration locale :', e);
+        return false;
+    }
+}
+
+/* Statut réseau sans modifier les données des autres applications */
+function fbmMajStatut() {
+    const badge = document.getElementById('fbmOfflineStatus');
+    if (!badge) return;
+
+    if (!navigator.onLine) {
+        badge.style.display = 'block';
+        badge.textContent = '📴 Hors réseau — sauvegarde locale FBM active';
+    } else {
+        badge.style.display = 'block';
+        badge.style.background = '#d1e7dd';
+        badge.style.color = '#0f5132';
+        badge.style.borderColor = '#a3cfbb';
+        badge.textContent = '🟢 Réseau disponible — synchronisation FBM';
+        setTimeout(() => { badge.style.display = 'none'; }, 2500);
+    }
+}
+
+/*
+ * Le cache local est volontairement séparé de l'autre application.
+ * La synchronisation Supabase des données métier reste déléguée à
+ * js/supabase-sync.js / js/autosave.js afin de conserver leur schéma
+ * et leurs fonctions actuelles sans les réécrire à l'aveugle.
+ */
+window.addEventListener('online', () => {
+    fbmMajStatut();
+
+    /* Relance les mécanismes de synchro existants s'ils sont présents. */
+    const nomsSync = [
+        'synchroniserSupabase',
+        'synchroniserAvecSupabase',
+        'syncSupabase',
+        'synchroniserDonnees',
+        'chargerDonneesSupabase'
+    ];
+
+    for (const nom of nomsSync) {
+        if (typeof window[nom] === 'function') {
+            try {
+                const r = window[nom]();
+                if (r && typeof r.catch === 'function') r.catch(()=>{});
+                break;
+            } catch(e) {}
+        }
+    }
+});
+
+window.addEventListener('offline', fbmMajStatut);
+
+document.addEventListener('input', (e) => {
+    if (e.target.closest('#fbmPage')) {
+        clearTimeout(window._fbmSaveTimer);
+        window._fbmSaveTimer = setTimeout(fbmSauverEtatLocal, 250);
+    }
+}, true);
+
+document.addEventListener('change', (e) => {
+    if (e.target.closest('#fbmPage')) fbmSauverEtatLocal();
+}, true);
+
+window.addEventListener('DOMContentLoaded', () => {
+    fbmMajStatut();
+    fbmRestaurerEtatLocal();
+});
+</script>
 
 </body>
 </html>
