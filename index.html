@@ -657,7 +657,17 @@ input[readonly]{
     </div>
   </div>
 </div>
-
+    <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: #fdf4ff; padding: 6px 8px; border-radius: 6px; border: 1px solid #f5d0fe;">
+      <label style="font-size: 0.8em; font-weight: bold; color: #7c2270;">🔨 Utilisation BRH :</label>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <label style="font-size: 0.8em; display: flex; align-items: center; gap: 4px; cursor: pointer; margin: 0;">
+          <input type="radio" name="brh" id="brh_oui" value="oui"> Oui
+        </label>
+        <label style="font-size: 0.8em; display: flex; align-items: center; gap: 4px; cursor: pointer; margin: 0;">
+          <input type="radio" name="brh" id="brh_non" value="non" checked> Non
+        </label>
+      </div>
+    </div>
 <!-- ========================================== -->
 <!-- CHAPITRE 2 : BÉTON (Fermé par défaut)       -->
 <!-- ========================================== -->
@@ -2696,6 +2706,7 @@ async function synchroniserSupportActuel() {
         m3_reel: volReelNum,
         effectue: 1,
         date_exec: dateJour,
+        brh: document.getElementById('brh_oui')?.checked || false,
         ...phases
       })
       .eq('chantier', nomChantier)
@@ -3106,11 +3117,12 @@ async function exporterPDF() {
     doc.autoTable({
       startY: y,
       margin: { left: marge, right: marge, bottom: footerReserve },
-      head: [["Voies annoncees / interceptees (TES.D)", "Carottage", "Blindage"]],
+      head: [["Voies annoncees / interceptees (TES.D)", "Carottage", "Blindage", "BRH"]],
       body: [[
         verifVoie ? "OUI" : "NON",
         verifCarotte ? "OUI" : "NON",
         verifBlindage ? "OUI" : "NON",
+        document.getElementById('brh_oui')?.checked ? "OUI" : "NON",
       ]],
       theme: 'grid',
       styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
