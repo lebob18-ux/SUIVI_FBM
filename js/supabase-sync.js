@@ -80,7 +80,8 @@ async function synchroniserSupportActuel() {
         // Supabase gère aussi l'option de ne l'envoyer que si elle change, mais ici on met la date du jour à la validation.
         date_fouille: fouilleCoche ? dateJour : null,
         date_beton: betonCoche ? dateJour : null,
-        date_matage: matageCoche ? dateJour : null
+        date_matage: matageCoche ? dateJour : null,
+        brh: document.getElementById('brh_oui')?.checked || false
       })
       .eq('chantier', nomChantier)
       .eq('support', numSupportInput);
