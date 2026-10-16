@@ -372,11 +372,12 @@ async function exporterPDF() {
     doc.autoTable({
       startY: y,
       margin: { left: marge, right: marge, bottom: footerReserve },
-      head: [["Voies annoncees / interceptees (TES.D)", "Carottage", "Blindage"]],
+      head: [["Voies annoncees / interceptees (TES.D)", "Carottage", "Blindage", "BRH"]],
       body: [[
         verifVoie ? "OUI" : "NON",
         verifCarotte ? "OUI" : "NON",
         verifBlindage ? "OUI" : "NON",
+        document.getElementById('brh_oui')?.checked ? "OUI" : "NON",
       ]],
       theme: 'grid',
       styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
