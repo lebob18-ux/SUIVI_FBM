@@ -2031,31 +2031,60 @@ window.addEventListener("load", () => {
 
 
   /*
-   * Entrée sur le slump
+   * Enregistrement automatique : dès que les 3 champs sont renseignés
+   * et que l'utilisateur termine une saisie (sortie du champ / validation).
+   * Le bouton Ajouter reste disponible en secours.
    */
-  if (slumpInput) {
-
-    slumpInput.addEventListener(
-      "keydown",
-      e => {
-
-        if (e.key === "Enter") {
-
-          e.preventDefault();
-
-          ajouterBL();
-
-        }
-
+  let minuterieAutoBL = null;
+  const verifierEnregistrementAutoBL = () => {
+    if (minuterieAutoBL) clearTimeout(minuterieAutoBL);
+    minuterieAutoBL = setTimeout(() => {
+      const numero = (blInput?.value || "").trim();
+      const type = (typeInput?.value || "").trim();
+      const slump = String(slumpInput?.value ?? "").trim();
+      if (numero && type && slump !== "" && Number.isFinite(Number(slump.replace(",", ".")))) {
+        ajouterBL();
       }
-    );
+    }, 180);
+  };
 
+  [blInput, typeInput, slumpInput].forEach(champ => {
+    if (!champ) return;
+    champ.addEventListener("change", verifierEnregistrementAutoBL);
+    champ.addEventListener("blur", verifierEnregistrementAutoBL);
+  });
+
+  /* Entrée sur le numéro BL : passer au type béton. */
+  if (blInput) {
+    blInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (typeInput) typeInput.focus();
+      }
+    });
   }
 
+  /* Entrée sur le type béton : passer au slump. */
+  if (typeInput) {
+    typeInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (slumpInput) slumpInput.focus();
+      }
+    });
+  }
 
-  /*
-   * Chargement initial.
-   */
+  /* Entrée ou validation du slump : enregistrer immédiatement. */
+  if (slumpInput) {
+    slumpInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        ajouterBL();
+      }
+    });
+  }
+
+  /* Chargement initial. */
   chargerBLs();
 
 });
