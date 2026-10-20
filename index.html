@@ -684,8 +684,10 @@ input[readonly]{
       <button type="button" onclick="scannerBLTelephone()" style="background:#7c2270; color:white; padding:6px 9px; margin:0; white-space:nowrap; font-size:0.82em;">📷 Scanner</button>
     </div>
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
-      <input list="bl-datalist" id="bl-input" placeholder="Type Béton" style="flex:2; height:32px; font-size:0.85em;">
+      <input list="bl-datalist" id="bl-input" placeholder="Type béton prévu au chantier" style="flex:1.5; min-width:0; height:32px; font-size:0.85em;">
       <datalist id="bl-datalist"></datalist>
+      <input type="number" id="quantite-beton-input" placeholder="Quantité (m³)" style="flex:1; min-width:0; height:32px; font-size:0.85em;" step="0.001" min="0">
+      <button type="button" onclick="ajouterTypeBetonChantier()" title="Ajouter un type de béton au chantier actif" style="background:#7c2270; color:white; padding:5px 9px; margin:0; font-weight:bold; font-size:0.9em;">＋ Type</button>
     </div>
     <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
       <input type="number" id="slump-input" placeholder="Slump (cm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0">
@@ -1328,6 +1330,58 @@ function cleAutosaveBL() {
 
 
 /* ============================================================
+   TYPES DE BÉTON PRÉVUS PAR CHANTIER
+   Les valeurs générales existantes sont conservées en complément.
+   ============================================================ */
+async function chargerTypesBetonChantier() {
+  const dl = document.getElementById("bl-datalist");
+  if (!dl) return;
+  const chantierSelect = document.getElementById("selectChantier");
+  const chantier = chantierSelect && chantierSelect.selectedIndex >= 0
+    ? String(chantierSelect.options[chantierSelect.selectedIndex]?.text || "").trim() : "";
+  const valeurs = new Set((typeof LISTE_BL !== "undefined" && Array.isArray(LISTE_BL) ? LISTE_BL : []).map(v => String(v || "").trim().toUpperCase()).filter(Boolean));
+  if (chantier && typeof supabaseClient !== "undefined" && supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.from("types_beton_chantier")
+        .select("type_beton").eq("chantier", chantier).eq("actif", true).order("type_beton");
+      if (error) throw error;
+      (data || []).forEach(row => { if (row.type_beton) valeurs.add(String(row.type_beton).trim().toUpperCase()); });
+    } catch (e) {
+      console.warn("Liste des types de béton du chantier indisponible :", e.message || e);
+    }
+  }
+  dl.innerHTML = Array.from(valeurs).sort().map(type => `<option value="${echapperHTML(type)}">`).join("");
+}
+
+async function ajouterTypeBetonChantier() {
+  const chantierSelect = document.getElementById("selectChantier");
+  const chantier = chantierSelect && chantierSelect.selectedIndex >= 0
+    ? String(chantierSelect.options[chantierSelect.selectedIndex]?.text || "").trim() : "";
+  if (!chantier || chantier.toLowerCase() === "aucun chantier") {
+    alert("Sélectionne d'abord le chantier concerné."); return;
+  }
+  const saisie = prompt("Nouveau type de béton à ajouter au chantier « " + chantier + " » :");
+  if (saisie === null) return;
+  const type = saisie.trim().toUpperCase();
+  if (!type) { alert("Le type de béton ne peut pas être vide."); return; }
+  if (typeof supabaseClient === "undefined" || !supabaseClient) {
+    alert("Connexion Supabase indisponible. Le type n'a pas été ajouté à la liste partagée."); return;
+  }
+  try {
+    const { error } = await supabaseClient.from("types_beton_chantier")
+      .upsert({ chantier, type_beton: type, actif: true }, { onConflict: "chantier,type_beton" });
+    if (error) throw error;
+    await chargerTypesBetonChantier();
+    const champ = document.getElementById("bl-input");
+    if (champ) champ.value = type;
+    alert("Type « " + type + " » ajouté au chantier « " + chantier + " ».");
+  } catch (e) {
+    console.error("Ajout du type béton impossible :", e);
+    alert("Impossible d'ajouter ce type dans Supabase. Vérifie que le SQL de création de types_beton_chantier a été exécuté.\n\n" + (e.message || e));
+  }
+}
+
+/* ============================================================
    SYNCHRONISATION DES BL BÉTON AVEC SUPABASE
    - La table blindage existante reste inchangée.
    - Les BL sont stockés dans blindage_beton_bl.
@@ -1348,6 +1402,8 @@ function normaliserBL(item) {
     type: String(item?.type || item?.type_beton || "").trim().toUpperCase(),
     slump: item?.slump !== undefined && item?.slump !== null && item?.slump !== ""
       ? Number(item.slump) : null,
+    quantite_beton: item?.quantite_beton !== undefined && item?.quantite_beton !== null && item?.quantite_beton !== ""
+      ? Number(item.quantite_beton) : null,
     _dbId: item?._dbId ?? item?.id ?? null,
     local_ref: item?.local_ref || item?._localRef || ""
   };
@@ -1362,7 +1418,7 @@ function lireBLsLocaux(cle) {
     donnees.forEach(item => {
       if (item && Array.isArray(item.slumps)) {
         item.slumps.forEach(slump => resultat.push(normaliserBL({
-          bl: item.bl, type: item.type, slump,
+          bl: item.bl, type: item.type, slump, quantite_beton: item.quantite_beton,
           local_ref: creerRefLocaleBL()
         })));
         if (item.slumps.length === 0 && item.bl) {
@@ -1419,6 +1475,7 @@ async function enregistrerBLDansSupabase(item, blindageId) {
     blindage_id: blindageId,
     numero_bl: item.bl,
     type_beton: item.type || null,
+    quantite_beton: item.quantite_beton,
     slump: item.slump,
     local_ref: item.local_ref
   };
@@ -1434,6 +1491,7 @@ async function enregistrerBLDansSupabase(item, blindageId) {
 }
 
 async function chargerBLs() {
+  await chargerTypesBetonChantier();
   const cle = cleAutosaveBL();
   const actuel = obtenirSupportBLActuel();
   let locaux = lireBLsLocaux(cle);
@@ -1450,7 +1508,7 @@ async function chargerBLs() {
 
     const { data: distants, error } = await supabaseClient
       .from("blindage_beton_bl")
-      .select("id, blindage_id, numero_bl, type_beton, slump, local_ref, date_creation")
+      .select("id, blindage_id, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation")
       .eq("blindage_id", blindageId)
       .order("id", { ascending: true });
     if (error) throw error;
@@ -1459,6 +1517,7 @@ async function chargerBLs() {
       id: row.id,
       bl: row.numero_bl,
       type: row.type_beton,
+      quantite_beton: row.quantite_beton,
       slump: row.slump,
       local_ref: row.local_ref || ("remote-" + row.id)
     }));
@@ -1528,13 +1587,19 @@ async function ajouterBL() {
   const blInput = document.getElementById("bl_beton");
   const typeInput = document.getElementById("bl-input");
   const slumpInput = document.getElementById("slump-input");
+  const quantiteInput = document.getElementById("quantite-beton-input");
   const blVal = (blInput?.value || "").trim().toUpperCase();
   const typeVal = (typeInput?.value || "").trim().toUpperCase();
   const slumpTexte = String(slumpInput?.value ?? "").trim();
   const slumpVal = slumpTexte !== "" ? Number(slumpTexte.replace(",", ".")) : null;
+  const quantiteTexte = String(quantiteInput?.value ?? "").trim();
+  const quantiteVal = quantiteTexte !== "" ? Number(quantiteTexte.replace(",", ".")) : null;
 
   if (!blVal) { alert("⚠️ Saisis ou scanne un numéro BL."); blInput?.focus(); return; }
   if (!typeVal) { alert("⚠️ Saisis le type de béton."); typeInput?.focus(); return; }
+  if (quantiteVal === null || !Number.isFinite(quantiteVal) || quantiteVal <= 0) {
+    alert("⚠️ Saisis une quantité de béton en m³ supérieure à zéro."); quantiteInput?.focus(); return;
+  }
   if (slumpVal === null || !Number.isFinite(slumpVal)) {
     alert("⚠️ Saisis une valeur de SLUMP."); slumpInput?.focus(); return;
   }
@@ -1542,7 +1607,7 @@ async function ajouterBL() {
     alert("⚠️ Sélectionne d'abord un chantier et une fouille."); return;
   }
 
-  const item = { bl: blVal, type: typeVal, slump: slumpVal, _dbId: null, local_ref: creerRefLocaleBL() };
+  const item = { bl: blVal, type: typeVal, quantite_beton: quantiteVal, slump: slumpVal, _dbId: null, local_ref: creerRefLocaleBL() };
   // Le numéro reste dans l'historique, même après changement de fouille.
   memoriserNumeroBL(blVal);
   blsActuels.push(item);
@@ -1551,6 +1616,7 @@ async function ajouterBL() {
 
   if (blInput) blInput.value = "";
   if (typeInput) typeInput.value = "";
+  if (quantiteInput) quantiteInput.value = "";
   if (slumpInput) slumpInput.value = "";
 
   try {
@@ -1572,6 +1638,7 @@ async function supprimerBL(index) {
   const item = blsActuels[index];
   if (!item) return;
   const texte = [item.bl || "BL sans numéro", item.type || "Type non renseigné",
+    item.quantite_beton !== null && item.quantite_beton !== undefined ? item.quantite_beton + " m³" : "Quantité non renseignée",
     item.slump !== null && item.slump !== undefined ? item.slump + " cm" : "Slump non renseigné"].join(" — ");
   if (!confirm("Supprimer cet enregistrement béton ?\n\n" + texte)) return;
 
@@ -1677,6 +1744,18 @@ function afficherBLs() {
               white-space:nowrap;
             ">
               ${echapperHTML(type)}
+            </span>
+
+            <span style="
+              color:#166534;
+              background:#dcfce7;
+              font-weight:bold;
+              padding:2px 6px;
+              border-radius:8px;
+              font-size:0.72em;
+              white-space:nowrap;
+            ">
+              ${item.quantite_beton !== null && item.quantite_beton !== undefined && !isNaN(item.quantite_beton) ? Number(item.quantite_beton).toLocaleString("fr-FR", { maximumFractionDigits: 3 }) + " m³" : "-- m³"}
             </span>
 
             <span style="
@@ -2000,7 +2079,9 @@ function rechargerBLsSupport() {
 window.addEventListener("load", () => {
 
   initBLDatalist();
-
+  chargerTypesBetonChantier();
+  const selectChantierTypes = document.getElementById("selectChantier");
+  if (selectChantierTypes) selectChantierTypes.addEventListener("change", chargerTypesBetonChantier);
 
   const blInput =
     document.getElementById("bl_beton");
@@ -2010,6 +2091,7 @@ window.addEventListener("load", () => {
 
   const slumpInput =
     document.getElementById("slump-input");
+  const quantiteInput = document.getElementById("quantite-beton-input");
 
 
   /*
@@ -2054,11 +2136,9 @@ window.addEventListener("load", () => {
 
           e.preventDefault();
 
-          /*
-           * On passe au slump.
-           */
-          if (slumpInput) {
-            slumpInput.focus();
+          /* On passe à la quantité de béton. */
+          if (quantiteInput) {
+            quantiteInput.focus();
           }
 
         }
@@ -2068,6 +2148,16 @@ window.addEventListener("load", () => {
 
   }
 
+
+  /* Entrée sur la quantité : passe au slump sans enregistrer. */
+  if (quantiteInput) {
+    quantiteInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (slumpInput) slumpInput.focus();
+      }
+    });
+  }
 
   /* Aucun enregistrement automatique : l'agent valide volontairement avec le bouton. */
   /* Entrée sur le slump : déclenche l'enregistrement volontaire, comme le bouton. */
