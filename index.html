@@ -679,7 +679,8 @@ input[readonly]{
   </div>
   <div class="section-content" id="sec-beton">
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
-      <input type="text" id="bl_beton" placeholder="N° de BL (saisie ou scan)" autocomplete="off" style="flex:1; min-width:0; height:32px; font-size:0.85em; text-transform:uppercase;" oninput="this.value = this.value.toUpperCase();">
+      <input type="text" id="bl_beton" list="bl-numeros-historique" placeholder="N° de BL (saisie ou scan)" autocomplete="off" style="flex:1; min-width:0; height:32px; font-size:0.85em; text-transform:uppercase;" oninput="this.value = this.value.toUpperCase();">
+      <datalist id="bl-numeros-historique"></datalist>
       <button type="button" onclick="scannerBLTelephone()" style="background:#7c2270; color:white; padding:6px 9px; margin:0; white-space:nowrap; font-size:0.82em;">📷 Scanner</button>
     </div>
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
@@ -688,7 +689,7 @@ input[readonly]{
     </div>
     <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
       <input type="number" id="slump-input" placeholder="Slump (cm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0">
-      <button type="button" onclick="ajouterBL()" style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">➕ Ajouter</button>
+      <button type="button" onclick="ajouterBL()" style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">💾 Enregistrer BL</button>
     </div>
     <div id="bl-liste"></div>
 
@@ -1280,6 +1281,39 @@ Structure actuelle :
 */
 
 /* ============================================================
+   HISTORIQUE DES NUMÉROS DE BL
+   Liste commune à toutes les fouilles sur cet appareil :
+   facilite la réutilisation d'un même BL sur plusieurs FBM.
+   ============================================================ */
+const CLE_HISTORIQUE_NUMEROS_BL = "fbm_historique_numeros_bl";
+
+function lireHistoriqueNumerosBL() {
+  try {
+    const liste = JSON.parse(localStorage.getItem(CLE_HISTORIQUE_NUMEROS_BL) || "[]");
+    return Array.isArray(liste) ? liste.filter(v => typeof v === "string") : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function memoriserNumeroBL(numero) {
+  const valeur = String(numero || "").trim().toUpperCase();
+  if (!valeur) return;
+  const liste = lireHistoriqueNumerosBL().filter(v => v !== valeur);
+  liste.unshift(valeur);
+  localStorage.setItem(CLE_HISTORIQUE_NUMEROS_BL, JSON.stringify(liste.slice(0, 100)));
+  afficherHistoriqueNumerosBL();
+}
+
+function afficherHistoriqueNumerosBL() {
+  const dl = document.getElementById("bl-numeros-historique");
+  if (!dl) return;
+  dl.innerHTML = lireHistoriqueNumerosBL()
+    .map(v => `<option value="${echapperHTML(v)}">`)
+    .join("");
+}
+
+/* ============================================================
    CLÉ LOCALSTORAGE
    ============================================================ */
 
@@ -1405,6 +1439,8 @@ async function chargerBLs() {
   let locaux = lireBLsLocaux(cle);
   blsActuels = locaux;
   afficherBLs();
+  afficherHistoriqueNumerosBL();
+  locaux.forEach(item => { if (item.bl) memoriserNumeroBL(item.bl); });
   if (!cle || !actuel) return;
 
   try {
@@ -1462,6 +1498,7 @@ async function chargerBLs() {
 
     if (cleAutosaveBL() !== cle) return;
     blsActuels = union;
+    union.forEach(item => { if (item.bl) memoriserNumeroBL(item.bl); });
     sauvegarderBLs();
     afficherBLs();
   } catch (e) {
@@ -1506,6 +1543,8 @@ async function ajouterBL() {
   }
 
   const item = { bl: blVal, type: typeVal, slump: slumpVal, _dbId: null, local_ref: creerRefLocaleBL() };
+  // Le numéro reste dans l'historique, même après changement de fouille.
+  memoriserNumeroBL(blVal);
   blsActuels.push(item);
   sauvegarderBLs();
   afficherBLs();
@@ -2030,51 +2069,8 @@ window.addEventListener("load", () => {
   }
 
 
-  /*
-   * Enregistrement automatique : dès que les 3 champs sont renseignés
-   * et que l'utilisateur termine une saisie (sortie du champ / validation).
-   * Le bouton Ajouter reste disponible en secours.
-   */
-  let minuterieAutoBL = null;
-  const verifierEnregistrementAutoBL = () => {
-    if (minuterieAutoBL) clearTimeout(minuterieAutoBL);
-    minuterieAutoBL = setTimeout(() => {
-      const numero = (blInput?.value || "").trim();
-      const type = (typeInput?.value || "").trim();
-      const slump = String(slumpInput?.value ?? "").trim();
-      if (numero && type && slump !== "" && Number.isFinite(Number(slump.replace(",", ".")))) {
-        ajouterBL();
-      }
-    }, 180);
-  };
-
-  [blInput, typeInput, slumpInput].forEach(champ => {
-    if (!champ) return;
-    champ.addEventListener("change", verifierEnregistrementAutoBL);
-    champ.addEventListener("blur", verifierEnregistrementAutoBL);
-  });
-
-  /* Entrée sur le numéro BL : passer au type béton. */
-  if (blInput) {
-    blInput.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        if (typeInput) typeInput.focus();
-      }
-    });
-  }
-
-  /* Entrée sur le type béton : passer au slump. */
-  if (typeInput) {
-    typeInput.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        if (slumpInput) slumpInput.focus();
-      }
-    });
-  }
-
-  /* Entrée ou validation du slump : enregistrer immédiatement. */
+  /* Aucun enregistrement automatique : l'agent valide volontairement avec le bouton. */
+  /* Entrée sur le slump : déclenche l'enregistrement volontaire, comme le bouton. */
   if (slumpInput) {
     slumpInput.addEventListener("keydown", e => {
       if (e.key === "Enter") {
@@ -2085,6 +2081,7 @@ window.addEventListener("load", () => {
   }
 
   /* Chargement initial. */
+  afficherHistoriqueNumerosBL();
   chargerBLs();
 
 });
