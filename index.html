@@ -679,7 +679,8 @@ input[readonly]{
   </div>
   <div class="section-content" id="sec-beton">
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
-      <input type="text" id="bl_beton" placeholder="N° de BL" style="flex:1; height:32px; font-size:0.85em; text-transform:uppercase;" oninput="this.value = this.value.toUpperCase();">
+      <input type="text" id="bl_beton" placeholder="N° de BL (saisie ou scan)" autocomplete="off" style="flex:1; min-width:0; height:32px; font-size:0.85em; text-transform:uppercase;" oninput="this.value = this.value.toUpperCase();">
+      <button type="button" onclick="scannerBLTelephone()" style="background:#7c2270; color:white; padding:6px 9px; margin:0; white-space:nowrap; font-size:0.82em;">📷 Scanner</button>
     </div>
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
       <input list="bl-datalist" id="bl-input" placeholder="Type Béton" style="flex:2; height:32px; font-size:0.85em;">
@@ -1293,267 +1294,263 @@ function cleAutosaveBL() {
 
 
 /* ============================================================
-   CHARGER LES BL DU SUPPORT COURANT
+   SYNCHRONISATION DES BL BÉTON AVEC SUPABASE
+   - La table blindage existante reste inchangée.
+   - Les BL sont stockés dans blindage_beton_bl.
+   - Chaque ligne est liée à blindage.id.
+   - localStorage est conservé pour le mode hors connexion.
    ============================================================ */
 
-function chargerBLs() {
-  const cle = cleAutosaveBL();
+function creerRefLocaleBL() {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+  return "bl-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
+}
 
+function normaliserBL(item) {
+  return {
+    bl: String(item?.bl || item?.numero_bl || "").trim().toUpperCase(),
+    type: String(item?.type || item?.type_beton || "").trim().toUpperCase(),
+    slump: item?.slump !== undefined && item?.slump !== null && item?.slump !== ""
+      ? Number(item.slump) : null,
+    _dbId: item?._dbId ?? item?.id ?? null,
+    local_ref: item?.local_ref || item?._localRef || ""
+  };
+}
+
+function lireBLsLocaux(cle) {
   try {
     const brut = cle ? localStorage.getItem(cle) : null;
     const donnees = brut ? JSON.parse(brut) : [];
-
-    if (!Array.isArray(donnees)) {
-      blsActuels = [];
-    } else {
-
-      /*
-       * Migration des anciennes données.
-       *
-       * Ancien format :
-       * {
-       *   bl: "BL-001",
-       *   slumps: [18, 20]
-       * }
-       *
-       * On transforme chaque slump en ligne indépendante.
-       */
-      blsActuels = [];
-
-      donnees.forEach(item => {
-
-        /* Ancien format */
-        if (item && Array.isArray(item.slumps)) {
-
-          const blAncien = item.bl || "";
-          const typeAncien = item.type || "";
-
-          item.slumps.forEach(slump => {
-            if (slump !== null && slump !== undefined && slump !== "") {
-              blsActuels.push({
-                bl: blAncien,
-                type: typeAncien,
-                slump: parseFloat(slump)
-              });
-            }
-          });
-
-          /*
-           * Si ancien BL sans slump,
-           * on le conserve quand même.
-           */
-          if (item.slumps.length === 0 && blAncien) {
-            blsActuels.push({
-              bl: blAncien,
-              type: typeAncien,
-              slump: null
-            });
-          }
-
+    if (!Array.isArray(donnees)) return [];
+    const resultat = [];
+    donnees.forEach(item => {
+      if (item && Array.isArray(item.slumps)) {
+        item.slumps.forEach(slump => resultat.push(normaliserBL({
+          bl: item.bl, type: item.type, slump,
+          local_ref: creerRefLocaleBL()
+        })));
+        if (item.slumps.length === 0 && item.bl) {
+          resultat.push(normaliserBL({ bl: item.bl, type: item.type, slump: null, local_ref: creerRefLocaleBL() }));
         }
-
-        /* Nouveau format */
-        else if (item && typeof item === "object") {
-
-          blsActuels.push({
-            bl: item.bl || "",
-            type: item.type || "",
-            slump:
-              item.slump !== undefined &&
-              item.slump !== null &&
-              item.slump !== ""
-                ? parseFloat(item.slump)
-                : null
-          });
-
-        }
-
-        /* Très ancien format : simple texte BL */
-        else if (typeof item === "string") {
-
-          blsActuels.push({
-            bl: item,
-            type: "",
-            slump: null
-          });
-
-        }
-
-      });
-    }
-
+      } else if (typeof item === "string") {
+        resultat.push(normaliserBL({ bl: item, local_ref: creerRefLocaleBL() }));
+      } else if (item && typeof item === "object") {
+        resultat.push(normaliserBL(item));
+      }
+    });
+    resultat.forEach(item => { if (!item.local_ref) item.local_ref = creerRefLocaleBL(); });
+    return resultat;
   } catch (e) {
-
-    console.error("Erreur chargement BL :", e);
-    blsActuels = [];
-
+    console.error("Erreur lecture BL locaux :", e);
+    return [];
   }
-
-  afficherBLs();
 }
 
+function obtenirSupportBLActuel() {
+  const support = String(document.getElementById("selectSupport")?.value || "").trim();
+  const chantierSelect = document.getElementById("selectChantier");
+  const chantier = chantierSelect && chantierSelect.selectedIndex >= 0
+    ? String(chantierSelect.options[chantierSelect.selectedIndex]?.text || "").trim()
+    : "";
+  if (!support || !chantier) return null;
 
-/* ============================================================
-   SAUVEGARDER
-   ============================================================ */
+  const ligne = (typeof baseSupports !== "undefined" ? baseSupports : []).find(s =>
+    String(s.chantier || "").trim() === chantier &&
+    String(s.support ?? s.SUPPORT ?? "").trim() === support
+  );
+  return { support, chantier, id: ligne?.id ?? null };
+}
 
-function sauvegarderBLs() {
+async function obtenirIdBlindageActuel() {
+  const actuel = obtenirSupportBLActuel();
+  if (!actuel) throw new Error("Sélectionne un chantier et une fouille avant d'enregistrer un BL.");
+  if (actuel.id !== null && actuel.id !== undefined && actuel.id !== "") return actuel.id;
+
+  const { data, error } = await supabaseClient
+    .from("blindage")
+    .select("id")
+    .eq("chantier", actuel.chantier)
+    .eq("support", actuel.support)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data?.id) throw new Error("Identifiant de fouille introuvable dans blindage pour " + actuel.chantier + " / " + actuel.support);
+  return data.id;
+}
+
+async function enregistrerBLDansSupabase(item, blindageId) {
+  if (!item.local_ref) item.local_ref = creerRefLocaleBL();
+  const payload = {
+    blindage_id: blindageId,
+    numero_bl: item.bl,
+    type_beton: item.type || null,
+    slump: item.slump,
+    local_ref: item.local_ref
+  };
+  const { data, error } = await supabaseClient
+    .from("blindage_beton_bl")
+    .upsert(payload, { onConflict: "blindage_id,local_ref" })
+    .select("id, local_ref")
+    .single();
+  if (error) throw error;
+  item._dbId = data.id;
+  item.local_ref = data.local_ref || item.local_ref;
+  return item;
+}
+
+async function chargerBLs() {
   const cle = cleAutosaveBL();
-
-  if (!cle) return;
+  const actuel = obtenirSupportBLActuel();
+  let locaux = lireBLsLocaux(cle);
+  blsActuels = locaux;
+  afficherBLs();
+  if (!cle || !actuel) return;
 
   try {
+    const blindageId = await obtenirIdBlindageActuel();
+    // Si l'utilisateur a changé de fouille pendant la lecture, on ne mélange pas les listes.
+    if (cleAutosaveBL() !== cle) return;
 
-    localStorage.setItem(
-      cle,
-      JSON.stringify(blsActuels)
-    );
+    const { data: distants, error } = await supabaseClient
+      .from("blindage_beton_bl")
+      .select("id, blindage_id, numero_bl, type_beton, slump, local_ref, date_creation")
+      .eq("blindage_id", blindageId)
+      .order("id", { ascending: true });
+    if (error) throw error;
 
+    const distantsNormalises = (distants || []).map(row => normaliserBL({
+      id: row.id,
+      bl: row.numero_bl,
+      type: row.type_beton,
+      slump: row.slump,
+      local_ref: row.local_ref || ("remote-" + row.id)
+    }));
+
+    // Migrer les anciens BL du navigateur vers Supabase, sans supprimer la sauvegarde locale.
+    for (const item of locaux) {
+      if (item._dbId) continue;
+      const deja = distantsNormalises.find(row => row.local_ref === item.local_ref);
+      if (deja) {
+        item._dbId = deja._dbId;
+        continue;
+      }
+      try {
+        await enregistrerBLDansSupabase(item, blindageId);
+      } catch (e) {
+        // On conserve la ligne localement : elle sera retentée à la prochaine synchronisation.
+        console.warn("BL conservé localement, synchronisation à retenter :", item.bl, e.message || e);
+      }
+    }
+
+    const union = [];
+    const refs = new Set();
+    distantsNormalises.forEach(item => {
+      const localCorrespondant = locaux.find(l => l.local_ref === item.local_ref);
+      if (localCorrespondant) {
+        localCorrespondant._dbId = item._dbId;
+        union.push(localCorrespondant);
+        refs.add(localCorrespondant.local_ref);
+      } else {
+        union.push(item);
+        refs.add(item.local_ref);
+      }
+    });
+    locaux.forEach(item => {
+      if (!refs.has(item.local_ref)) union.push(item);
+    });
+
+    if (cleAutosaveBL() !== cle) return;
+    blsActuels = union;
+    sauvegarderBLs();
+    afficherBLs();
   } catch (e) {
-
-    console.error("Erreur sauvegarde BL :", e);
-
+    console.warn("Chargement Supabase des BL impossible. La sauvegarde locale reste disponible :", e.message || e);
+    blsActuels = locaux;
+    afficherBLs();
   }
 }
 
+/* ============================================================
+   SAUVEGARDE LOCALE (maintenue pour le mode hors connexion)
+   ============================================================ */
+function sauvegarderBLs() {
+  const cle = cleAutosaveBL();
+  if (!cle) return;
+  try {
+    localStorage.setItem(cle, JSON.stringify(blsActuels));
+  } catch (e) {
+    console.error("Erreur sauvegarde locale BL :", e);
+  }
+}
 
 /* ============================================================
-   AJOUTER UN ENREGISTREMENT
-   BL + TYPE BÉTON + SLUMP
+   AJOUTER UN ENREGISTREMENT : BL + TYPE BÉTON + SLUMP
    ============================================================ */
-
-function ajouterBL() {
-
-  const blInput    = document.getElementById("bl_beton");
-  const typeInput  = document.getElementById("bl-input");
+async function ajouterBL() {
+  const blInput = document.getElementById("bl_beton");
+  const typeInput = document.getElementById("bl-input");
   const slumpInput = document.getElementById("slump-input");
+  const blVal = (blInput?.value || "").trim().toUpperCase();
+  const typeVal = (typeInput?.value || "").trim().toUpperCase();
+  const slumpTexte = String(slumpInput?.value ?? "").trim();
+  const slumpVal = slumpTexte !== "" ? Number(slumpTexte.replace(",", ".")) : null;
 
-  const blVal = (blInput?.value || "")
-    .trim()
-    .toUpperCase();
-
-  const typeVal = (typeInput?.value || "")
-    .trim()
-    .toUpperCase();
-
-  const slumpTexte = slumpInput?.value ?? "";
-
-  const slumpVal =
-    slumpTexte !== ""
-      ? parseFloat(slumpTexte)
-      : null;
-
-
-  /* Vérification BL */
-
-  if (!blVal) {
-    alert("⚠️ Saisis ou scanne un numéro BL.");
-    blInput?.focus();
-    return;
+  if (!blVal) { alert("⚠️ Saisis ou scanne un numéro BL."); blInput?.focus(); return; }
+  if (!typeVal) { alert("⚠️ Saisis le type de béton."); typeInput?.focus(); return; }
+  if (slumpVal === null || !Number.isFinite(slumpVal)) {
+    alert("⚠️ Saisis une valeur de SLUMP."); slumpInput?.focus(); return;
+  }
+  if (!obtenirSupportBLActuel()) {
+    alert("⚠️ Sélectionne d'abord un chantier et une fouille."); return;
   }
 
-
-  /* Vérification Type béton */
-
-  if (!typeVal) {
-    alert("⚠️ Saisis le type de béton.");
-    typeInput?.focus();
-    return;
-  }
-
-
-  /* Vérification Slump */
-
-  if (
-    slumpVal === null ||
-    isNaN(slumpVal)
-  ) {
-    alert("⚠️ Saisis une valeur de SLUMP.");
-    slumpInput?.focus();
-    return;
-  }
-
-
-  /*
-   * Chaque clic crée une nouvelle ligne.
-   *
-   * Même si le BL existe déjà,
-   * on ne fusionne PAS les slumps.
-   */
-
-  blsActuels.push({
-    bl: blVal,
-    type: typeVal,
-    slump: slumpVal
-  });
-
-
+  const item = { bl: blVal, type: typeVal, slump: slumpVal, _dbId: null, local_ref: creerRefLocaleBL() };
+  blsActuels.push(item);
   sauvegarderBLs();
   afficherBLs();
 
+  if (blInput) blInput.value = "";
+  if (typeInput) typeInput.value = "";
+  if (slumpInput) slumpInput.value = "";
 
-  /* Nettoyage des champs */
-
-  if (blInput) {
-    blInput.value = "";
+  try {
+    const blindageId = await obtenirIdBlindageActuel();
+    await enregistrerBLDansSupabase(item, blindageId);
+    sauvegarderBLs();
+    afficherBLs();
+  } catch (e) {
+    console.error("Erreur synchronisation BL :", e);
+    alert("⚠️ Le BL est conservé sur cet appareil, mais l'envoi vers Supabase a échoué. Il sera retenté à la prochaine synchronisation.\n\nDétail : " + (e.message || e));
   }
-
-  if (typeInput) {
-    typeInput.value = "";
-  }
-
-  if (slumpInput) {
-    slumpInput.value = "";
-  }
-
-
-  /* Retour sur le BL */
-
-  if (blInput) {
-    blInput.focus();
-  }
+  if (blInput) blInput.focus();
 }
-
 
 /* ============================================================
-   SUPPRIMER UN ENREGISTREMENT COMPLET
+   SUPPRIMER UN ENREGISTREMENT
    ============================================================ */
-
-function supprimerBL(index) {
-
-  if (
-    !blsActuels[index]
-  ) {
-    return;
-  }
-
+async function supprimerBL(index) {
   const item = blsActuels[index];
+  if (!item) return;
+  const texte = [item.bl || "BL sans numéro", item.type || "Type non renseigné",
+    item.slump !== null && item.slump !== undefined ? item.slump + " cm" : "Slump non renseigné"].join(" — ");
+  if (!confirm("Supprimer cet enregistrement béton ?\n\n" + texte)) return;
 
-  const texte = [
-    item.bl || "BL sans numéro",
-    item.type || "Type non renseigné",
-    item.slump !== null && item.slump !== undefined
-      ? item.slump + " cm"
-      : "Slump non renseigné"
-  ].join(" — ");
-
-
-  if (
-    !confirm(
-      "Supprimer cet enregistrement béton ?\n\n" +
-      texte
-    )
-  ) {
-    return;
+  if (item._dbId) {
+    try {
+      const blindageId = await obtenirIdBlindageActuel();
+      const { error } = await supabaseClient.from("blindage_beton_bl")
+        .delete().eq("id", item._dbId).eq("blindage_id", blindageId);
+      if (error) throw error;
+    } catch (e) {
+      alert("❌ Suppression Supabase impossible. L'enregistrement est conservé.\n\n" + (e.message || e));
+      return;
+    }
   }
-
-
   blsActuels.splice(index, 1);
-
   sauvegarderBLs();
   afficherBLs();
 }
-
 
 /* ============================================================
    AFFICHER LA LISTE
@@ -3220,21 +3217,25 @@ async function exporterPDF() {
       titreSection("BONS DE LIVRAISON BÉTON", violet);
       const rowsBL = blsActuels.map((item, i) => [
         i + 1,
-        item.bl,
-        item.slumps.length > 0 ? item.slumps.join(" / ") + " cm" : "-"
+        item.bl || "-",
+        item.type || "-",
+        item.slump !== null && item.slump !== undefined && item.slump !== "" && Number.isFinite(Number(item.slump))
+          ? String(item.slump).replace(".", ",") + " cm"
+          : "-"
       ]);
       doc.autoTable({
         startY: y,
         margin: { left: marge, right: marge, bottom: footerReserve },
-        head: [["#", "N° BL", "Slump(s)"]],
+        head: [["#", "N° BL", "Type de béton", "Slump"]],
         body: rowsBL,
         theme: "grid",
-        styles: { fontSize: 8.5, cellPadding: 2.5 },
+        styles: { fontSize: 8.2, cellPadding: 2.5, overflow: "linebreak" },
         headStyles: { fillColor: violet, textColor: 255, fontStyle: "bold" },
         columnStyles: {
-          0: { cellWidth: 10, halign: "center" },
-          1: { fontStyle: "bold" },
-          2: { halign: "center", textColor: [3, 105, 161] }
+          0: { cellWidth: 8, halign: "center" },
+          1: { cellWidth: 35, fontStyle: "bold" },
+          2: { cellWidth: "auto" },
+          3: { cellWidth: 22, halign: "center", textColor: [3, 105, 161] }
         },
       });
       y = doc.lastAutoTable.finalY + 5;
@@ -5475,6 +5476,86 @@ document.addEventListener('change', (e) => {
 window.addEventListener('DOMContentLoaded', () => {
     fbmMajStatut();
     fbmRestaurerEtatLocal();
+});
+</script>
+
+
+<!-- Scanner téléphone dédié aux numéros de BL : QR codes et codes-barres -->
+<div id="modalScannerBL" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,.88); align-items:center; justify-content:center; padding:14px; box-sizing:border-box;">
+  <div style="width:100%; max-width:440px; background:white; color:#222; border-radius:12px; padding:14px; box-sizing:border-box;">
+    <h3 style="margin:0 0 8px; color:#7c2270;">📷 Scanner le BL</h3>
+    <p style="font-size:.9em; margin:0 0 10px;">Place le QR code ou le code-barres dans le cadre. Le numéro sera repris dans le champ N° de BL.</p>
+    <video id="videoScannerBL" autoplay playsinline muted style="display:block; width:100%; max-height:55vh; object-fit:contain; background:#111; border-radius:8px;"></video>
+    <div id="statutScannerBL" style="font-size:.85em; margin:8px 0;">Démarrage de la caméra…</div>
+    <button type="button" onclick="fermerScannerBL()" style="width:100%; background:#7c2270; color:white; padding:10px; margin:0;">✖ Fermer le scanner</button>
+  </div>
+</div>
+<script>
+/* Scanner BL par caméra : QR codes et formats de codes-barres pris en charge par le navigateur */
+let fluxCameraBL = null;
+let boucleScannerBL = null;
+let detecteurBL = null;
+let scanBLEnCours = false;
+
+async function scannerBLTelephone() {
+  const modal = document.getElementById('modalScannerBL');
+  const video = document.getElementById('videoScannerBL');
+  const statut = document.getElementById('statutScannerBL');
+  if (!('BarcodeDetector' in window)) {
+    alert('La lecture des QR codes et codes-barres n’est pas prise en charge par ce navigateur. Essaie avec Google Chrome à jour sur Android, ou utilise un lecteur USB/Bluetooth.');
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('La caméra nécessite une connexion sécurisée HTTPS et l’autorisation du navigateur.');
+    return;
+  }
+  try {
+    const formatsDisponibles = await BarcodeDetector.getSupportedFormats();
+    const formatsVoulus = ['qr_code','code_128','code_39','code_93','codabar','ean_13','ean_8','itf','upc_a','upc_e','data_matrix','pdf417','aztec'];
+    const formats = formatsVoulus.filter(f => formatsDisponibles.includes(f));
+    if (!formats.length) throw new Error('Aucun format de code reconnu par ce navigateur.');
+    detecteurBL = new BarcodeDetector({ formats });
+    modal.style.display = 'flex';
+    statut.textContent = 'Autorise la caméra et place le code dans le champ de vision.';
+    fluxCameraBL = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+    video.srcObject = fluxCameraBL;
+    await video.play();
+    scanBLEnCours = true;
+    boucleScannerBL = setInterval(async () => {
+      if (!scanBLEnCours || video.readyState < 2 || video.videoWidth === 0) return;
+      try {
+        const codes = await detecteurBL.detect(video);
+        if (codes && codes.length && codes[0].rawValue) {
+          const valeur = String(codes[0].rawValue).trim();
+          const champ = document.getElementById('bl_beton');
+          if (champ) {
+            champ.value = valeur.toUpperCase();
+            champ.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          fermerScannerBL();
+          if (champ) champ.focus();
+        }
+      } catch (e) { console.debug('Lecture du code en cours…', e); }
+    }, 250);
+  } catch (e) {
+    console.error('Erreur scanner BL :', e);
+    fermerScannerBL();
+    alert('Impossible de démarrer le scanner. Vérifie que la caméra est autorisée et que la page est ouverte en HTTPS. Détail : ' + (e.message || e));
+  }
+}
+
+function fermerScannerBL() {
+  scanBLEnCours = false;
+  if (boucleScannerBL) { clearInterval(boucleScannerBL); boucleScannerBL = null; }
+  if (fluxCameraBL) { fluxCameraBL.getTracks().forEach(track => track.stop()); fluxCameraBL = null; }
+  const video = document.getElementById('videoScannerBL');
+  if (video) video.srcObject = null;
+  const modal = document.getElementById('modalScannerBL');
+  if (modal) modal.style.display = 'none';
+}
+
+document.getElementById('modalScannerBL')?.addEventListener('click', event => {
+  if (event.target.id === 'modalScannerBL') fermerScannerBL();
 });
 </script>
 
