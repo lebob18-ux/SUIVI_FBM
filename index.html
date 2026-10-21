@@ -3935,8 +3935,7 @@ function restaurerLocal() {
       if (el.type === "checkbox") {
         el.checked = donnees[id];
       } else {
-        // Ne pas écraser une valeur de référence déjà chargée par une sauvegarde vide
-        if (donnees[id] === "" || donnees[id] === null || donnees[id] === undefined) return;
+        if (donnees[id] === null || donnees[id] === undefined) return;
         el.value = donnees[id];
       }
     });
@@ -4134,7 +4133,7 @@ function filtrerSupports() {
 
     if (!supportSelect) return;
 
-    resetSaisieAvantSupport();
+    
     supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
 
     if (!chantier) return;
@@ -4236,9 +4235,16 @@ function chargerSupport() {
     const dt = document.getElementById("display_type"); if(dt) dt.innerText = data.TYPE ? "🧊 " + data.TYPE : "";
 
     if (typeof refreshBlocs === "function") refreshBlocs();
-    if (typeof restaurerLocal === "function") restaurerLocal();
-    if (typeof rechargerBLsSupport === "function") rechargerBLsSupport();
     if (typeof calculer === "function") calculer();
+
+    // Restaure les saisies locales EN PRIORITÉ sur les valeurs vides
+    const cleLocal = "fbm_save_" + (document.getElementById("selectChantier")?.value || "") + "_" + (selectSupport?.value || "");
+    const sauvegardeExistante = localStorage.getItem(cleLocal);
+    if (sauvegardeExistante) {
+      if (typeof restaurerLocal === "function") restaurerLocal();
+    }
+
+    if (typeof rechargerBLsSupport === "function") rechargerBLsSupport();
 }
 
 /* ============================================================
