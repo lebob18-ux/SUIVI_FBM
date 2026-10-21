@@ -1210,6 +1210,18 @@ async function chargerSupportsDepuisSupabase() {
             date_fouille: row.date_fouille,
             date_beton: row.date_beton,
             date_matage: row.date_matage,
+            // Relevés réellement saisis : rechargés pour tous les agents depuis Supabase
+            i_reel: row.i_reel,
+            ech_reel: row.ech_reel,
+            ar_reel: row.ar_reel,
+            enc_reel: row.enc_reel,
+            a_reel: row.a_reel,
+            b_reel: row.b_reel,
+            h_reel: row.h_reel,
+            f_reel: row.f_reel,
+            p_reel: row.p_reel,
+            sup_reel: row.sup_reel,
+            m3_reel: row.m3_reel,
             m3_prevu: row.vol_theorique,
             m3_reel: row.vol_reel,
             EE: row.ee,
@@ -1382,17 +1394,15 @@ async function ajouterTypeBetonChantier() {
 }
 
 /* ============================================================
-   SYNCHRONISATION DES BL BÉTON AVEC SUPABASE
-   - La table blindage existante reste inchangée.
-   - Les BL sont stockés dans blindage_beton_bl.
-   - Chaque ligne est liée à blindage.id.
-   - localStorage est conservé pour le mode hors connexion.
+   BL BÉTON : DONNÉES DU BL + LIAISON AVEC UNE OU PLUSIEURS FOUILLES
+   Tables utilisées :
+   - beton_bl : fiche unique du BL (quantité/type/slump restent sur le BL)
+   - blindage_beton_bl_liaison : associe un BL à une fouille
+   La table blindage et les volumes prévus/réels ne sont pas modifiés.
    ============================================================ */
 
 function creerRefLocaleBL() {
-  if (window.crypto && typeof window.crypto.randomUUID === "function") {
-    return window.crypto.randomUUID();
-  }
+  if (window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
   return "bl-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
 }
 
@@ -1400,12 +1410,11 @@ function normaliserBL(item) {
   return {
     bl: String(item?.bl || item?.numero_bl || "").trim().toUpperCase(),
     type: String(item?.type || item?.type_beton || "").trim().toUpperCase(),
-    slump: item?.slump !== undefined && item?.slump !== null && item?.slump !== ""
-      ? Number(item.slump) : null,
-    quantite_beton: item?.quantite_beton !== undefined && item?.quantite_beton !== null && item?.quantite_beton !== ""
-      ? Number(item.quantite_beton) : null,
-    _dbId: item?._dbId ?? item?.id ?? null,
-    local_ref: item?.local_ref || item?._localRef || ""
+    slump: item?.slump !== undefined && item?.slump !== null && item?.slump !== "" ? Number(item.slump) : null,
+    quantite_beton: item?.quantite_beton !== undefined && item?.quantite_beton !== null && item?.quantite_beton !== "" ? Number(item.quantite_beton) : null,
+    _dbId: item?._dbId ?? item?.beton_bl_id ?? item?.id_bl ?? null,
+    _assocId: item?._assocId ?? item?.association_id ?? item?.id_liaison ?? null,
+    local_ref: item?.local_ref || item?._localRef || creerRefLocaleBL()
   };
 }
 
@@ -1417,38 +1426,21 @@ function lireBLsLocaux(cle) {
     const resultat = [];
     donnees.forEach(item => {
       if (item && Array.isArray(item.slumps)) {
-        item.slumps.forEach(slump => resultat.push(normaliserBL({
-          bl: item.bl, type: item.type, slump, quantite_beton: item.quantite_beton,
-          local_ref: creerRefLocaleBL()
-        })));
-        if (item.slumps.length === 0 && item.bl) {
-          resultat.push(normaliserBL({ bl: item.bl, type: item.type, slump: null, local_ref: creerRefLocaleBL() }));
-        }
-      } else if (typeof item === "string") {
-        resultat.push(normaliserBL({ bl: item, local_ref: creerRefLocaleBL() }));
-      } else if (item && typeof item === "object") {
-        resultat.push(normaliserBL(item));
-      }
+        item.slumps.forEach(slump => resultat.push(normaliserBL({ bl:item.bl, type:item.type, slump, quantite_beton:item.quantite_beton })));
+      } else if (typeof item === "string") resultat.push(normaliserBL({ bl:item }));
+      else if (item && typeof item === "object") resultat.push(normaliserBL(item));
     });
-    resultat.forEach(item => { if (!item.local_ref) item.local_ref = creerRefLocaleBL(); });
-    return resultat;
-  } catch (e) {
-    console.error("Erreur lecture BL locaux :", e);
-    return [];
-  }
+    return resultat.filter(x => x.bl);
+  } catch (e) { console.error("Erreur lecture BL locaux :", e); return []; }
 }
 
 function obtenirSupportBLActuel() {
   const support = String(document.getElementById("selectSupport")?.value || "").trim();
   const chantierSelect = document.getElementById("selectChantier");
-  const chantier = chantierSelect && chantierSelect.selectedIndex >= 0
-    ? String(chantierSelect.options[chantierSelect.selectedIndex]?.text || "").trim()
-    : "";
+  const chantier = chantierSelect && chantierSelect.selectedIndex >= 0 ? String(chantierSelect.options[chantierSelect.selectedIndex]?.text || "").trim() : "";
   if (!support || !chantier) return null;
-
   const ligne = (typeof baseSupports !== "undefined" ? baseSupports : []).find(s =>
-    String(s.chantier || "").trim() === chantier &&
-    String(s.support ?? s.SUPPORT ?? "").trim() === support
+    String(s.chantier || "").trim() === chantier && String(s.support ?? s.SUPPORT ?? "").trim() === support
   );
   return { support, chantier, id: ligne?.id ?? null };
 }
@@ -1456,37 +1448,68 @@ function obtenirSupportBLActuel() {
 async function obtenirIdBlindageActuel() {
   const actuel = obtenirSupportBLActuel();
   if (!actuel) throw new Error("Sélectionne un chantier et une fouille avant d'enregistrer un BL.");
-  if (actuel.id !== null && actuel.id !== undefined && actuel.id !== "") return actuel.id;
-
-  const { data, error } = await supabaseClient
-    .from("blindage")
-    .select("id")
-    .eq("chantier", actuel.chantier)
-    .eq("support", actuel.support)
-    .maybeSingle();
+  // Important : l'id de baseSupports peut provenir d'une autre source.
+  // Pour la liaison BL, on récupère toujours l'id réel de la table blindage.
+  const { data, error } = await supabaseClient.from("blindage").select("id")
+    .eq("chantier", actuel.chantier).eq("support", actuel.support).maybeSingle();
   if (error) throw error;
   if (!data?.id) throw new Error("Identifiant de fouille introuvable dans blindage pour " + actuel.chantier + " / " + actuel.support);
   return data.id;
 }
 
-async function enregistrerBLDansSupabase(item, blindageId) {
-  if (!item.local_ref) item.local_ref = creerRefLocaleBL();
-  const payload = {
-    blindage_id: blindageId,
-    numero_bl: item.bl,
-    type_beton: item.type || null,
-    quantite_beton: item.quantite_beton,
-    slump: item.slump,
-    local_ref: item.local_ref
-  };
-  const { data, error } = await supabaseClient
-    .from("blindage_beton_bl")
-    .upsert(payload, { onConflict: "blindage_id,local_ref" })
-    .select("id, local_ref")
-    .single();
+async function trouverBLGlobal(chantier, numero) {
+  const { data, error } = await supabaseClient.from("beton_bl")
+    .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation")
+    .eq("chantier", chantier).eq("numero_bl", String(numero).trim().toUpperCase()).maybeSingle();
   if (error) throw error;
-  item._dbId = data.id;
-  item.local_ref = data.local_ref || item.local_ref;
+  return data || null;
+}
+
+async function enregistrerBLDansSupabase(item, blindageId) {
+  if (!supabaseClient) throw new Error("Connexion Supabase indisponible.");
+  const actuel = obtenirSupportBLActuel();
+  if (!actuel) throw new Error("Sélectionne un chantier et une fouille.");
+  const numero = String(item.bl || "").trim().toUpperCase();
+  if (!numero) throw new Error("Numéro de BL manquant.");
+
+  // Si le BL existe déjà sur le chantier, on réutilise sa fiche et sa quantité sans la recopier/modifier.
+  let fiche = await trouverBLGlobal(actuel.chantier, numero);
+  if (!fiche) {
+    const payload = {
+      chantier: actuel.chantier,
+      numero_bl: numero,
+      type_beton: item.type || null,
+      quantite_beton: item.quantite_beton,
+      slump: item.slump,
+      local_ref: item.local_ref || creerRefLocaleBL()
+    };
+    const { data, error } = await supabaseClient.from("beton_bl").insert(payload)
+      .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation").single();
+    if (error) {
+      // Gestion d'un ajout simultané par un autre agent : on relit le BL créé entre-temps.
+      fiche = await trouverBLGlobal(actuel.chantier, numero);
+      if (!fiche) throw error;
+    } else fiche = data;
+  }
+
+  const { data: liaison, error: erreurLiaison } = await supabaseClient.from("blindage_beton_bl_liaison")
+    .upsert({ blindage_id: blindageId, beton_bl_id: fiche.id }, { onConflict: "blindage_id,beton_bl_id", ignoreDuplicates: true })
+    .select("id, blindage_id, beton_bl_id").maybeSingle();
+  if (erreurLiaison) throw erreurLiaison;
+
+  // Avec ignoreDuplicates, PostgREST peut ne pas retourner de ligne : rechercher la liaison existante.
+  let assoc = liaison;
+  if (!assoc) {
+    const { data, error } = await supabaseClient.from("blindage_beton_bl_liaison")
+      .select("id, blindage_id, beton_bl_id").eq("blindage_id", blindageId).eq("beton_bl_id", fiche.id).single();
+    if (error) throw error;
+    assoc = data;
+  }
+  Object.assign(item, normaliserBL({
+    id: fiche.id, bl: fiche.numero_bl, type: fiche.type_beton,
+    quantite_beton: fiche.quantite_beton, slump: fiche.slump,
+    local_ref: fiche.local_ref, association_id: assoc.id
+  }));
   return item;
 }
 
@@ -1494,306 +1517,154 @@ async function chargerBLs() {
   await chargerTypesBetonChantier();
   const cle = cleAutosaveBL();
   const actuel = obtenirSupportBLActuel();
-  let locaux = lireBLsLocaux(cle);
+  const locaux = lireBLsLocaux(cle);
   blsActuels = locaux;
-  afficherBLs();
-  afficherHistoriqueNumerosBL();
+  afficherBLs(); afficherHistoriqueNumerosBL();
   locaux.forEach(item => { if (item.bl) memoriserNumeroBL(item.bl); });
-  if (!cle || !actuel) return;
+  if (!cle || !actuel || typeof supabaseClient === "undefined" || !supabaseClient) return;
 
   try {
     const blindageId = await obtenirIdBlindageActuel();
-    // Si l'utilisateur a changé de fouille pendant la lecture, on ne mélange pas les listes.
     if (cleAutosaveBL() !== cle) return;
-
-    const { data: distants, error } = await supabaseClient
-      .from("blindage_beton_bl")
-      .select("id, blindage_id, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation")
-      .eq("blindage_id", blindageId)
-      .order("id", { ascending: true });
-    if (error) throw error;
-
-    const distantsNormalises = (distants || []).map(row => normaliserBL({
-      id: row.id,
-      bl: row.numero_bl,
-      type: row.type_beton,
-      quantite_beton: row.quantite_beton,
-      slump: row.slump,
-      local_ref: row.local_ref || ("remote-" + row.id)
-    }));
-
-    // Migrer les anciens BL du navigateur vers Supabase, sans supprimer la sauvegarde locale.
-    for (const item of locaux) {
-      if (item._dbId) continue;
-      const deja = distantsNormalises.find(row => row.local_ref === item.local_ref);
-      if (deja) {
-        item._dbId = deja._dbId;
-        continue;
-      }
-      try {
-        await enregistrerBLDansSupabase(item, blindageId);
-      } catch (e) {
-        // On conserve la ligne localement : elle sera retentée à la prochaine synchronisation.
-        console.warn("BL conservé localement, synchronisation à retenter :", item.bl, e.message || e);
-      }
+    const { data: liens, error: errLiens } = await supabaseClient.from("blindage_beton_bl_liaison")
+      .select("id, blindage_id, beton_bl_id").eq("blindage_id", blindageId).order("id", { ascending: true });
+    if (errLiens) throw errLiens;
+    const ids = [...new Set((liens || []).map(x => x.beton_bl_id))];
+    let fiches = [];
+    if (ids.length) {
+      const { data, error } = await supabaseClient.from("beton_bl")
+        .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation")
+        .in("id", ids).order("id", { ascending: true });
+      if (error) throw error;
+      fiches = data || [];
     }
+    const distants = (liens || []).map(lien => {
+      const f = fiches.find(x => String(x.id) === String(lien.beton_bl_id));
+      return f ? normaliserBL({ id:f.id, bl:f.numero_bl, type:f.type_beton, quantite_beton:f.quantite_beton,
+        slump:f.slump, local_ref:f.local_ref, association_id:lien.id }) : null;
+    }).filter(Boolean);
 
-    const union = [];
-    const refs = new Set();
-    distantsNormalises.forEach(item => {
-      const localCorrespondant = locaux.find(l => l.local_ref === item.local_ref);
-      if (localCorrespondant) {
-        localCorrespondant._dbId = item._dbId;
-        union.push(localCorrespondant);
-        refs.add(localCorrespondant.local_ref);
-      } else {
-        union.push(item);
-        refs.add(item.local_ref);
-      }
-    });
-    locaux.forEach(item => {
-      if (!refs.has(item.local_ref)) union.push(item);
-    });
-
+    // Rattacher les anciennes saisies locales à une fiche existante ou en créer une, sans dupliquer un même BL.
+    for (const local of locaux) {
+      if (!local.bl || distants.some(d => d.bl === local.bl)) continue;
+      try {
+        const copie = { ...local };
+        await enregistrerBLDansSupabase(copie, blindageId);
+        if (!distants.some(d => d.bl === copie.bl)) distants.push(copie);
+      } catch (e) { console.warn("BL local en attente de synchronisation :", e.message || e); }
+    }
     if (cleAutosaveBL() !== cle) return;
-    blsActuels = union;
-    union.forEach(item => { if (item.bl) memoriserNumeroBL(item.bl); });
-    sauvegarderBLs();
-    afficherBLs();
+    blsActuels = distants;
+    blsActuels.forEach(item => { if (item.bl) memoriserNumeroBL(item.bl); });
+    sauvegarderBLs(); afficherBLs();
   } catch (e) {
-    console.warn("Chargement Supabase des BL impossible. La sauvegarde locale reste disponible :", e.message || e);
-    blsActuels = locaux;
-    afficherBLs();
+    console.warn("Chargement des BL partagés impossible :", e.message || e);
+    blsActuels = locaux; afficherBLs();
   }
 }
 
-/* ============================================================
-   SAUVEGARDE LOCALE (maintenue pour le mode hors connexion)
-   ============================================================ */
 function sauvegarderBLs() {
   const cle = cleAutosaveBL();
   if (!cle) return;
-  try {
-    localStorage.setItem(cle, JSON.stringify(blsActuels));
-  } catch (e) {
-    console.error("Erreur sauvegarde locale BL :", e);
-  }
+  try { localStorage.setItem(cle, JSON.stringify(blsActuels)); }
+  catch (e) { console.error("Erreur sauvegarde locale BL :", e); }
 }
 
-/* ============================================================
-   AJOUTER UN ENREGISTREMENT : BL + TYPE BÉTON + SLUMP
-   ============================================================ */
 async function ajouterBL() {
   const blInput = document.getElementById("bl_beton");
   const typeInput = document.getElementById("bl-input");
   const slumpInput = document.getElementById("slump-input");
   const quantiteInput = document.getElementById("quantite-beton-input");
-  const blVal = (blInput?.value || "").trim().toUpperCase();
-  const typeVal = (typeInput?.value || "").trim().toUpperCase();
+  const blVal = String(blInput?.value || "").trim().toUpperCase();
+  const typeVal = String(typeInput?.value || "").trim().toUpperCase();
   const slumpTexte = String(slumpInput?.value ?? "").trim();
   const slumpVal = slumpTexte !== "" ? Number(slumpTexte.replace(",", ".")) : null;
   const quantiteTexte = String(quantiteInput?.value ?? "").trim();
   const quantiteVal = quantiteTexte !== "" ? Number(quantiteTexte.replace(",", ".")) : null;
-
+  const actuel = obtenirSupportBLActuel();
   if (!blVal) { alert("⚠️ Saisis ou scanne un numéro BL."); blInput?.focus(); return; }
-  if (!typeVal) { alert("⚠️ Saisis le type de béton."); typeInput?.focus(); return; }
-  if (quantiteVal === null || !Number.isFinite(quantiteVal) || quantiteVal <= 0) {
-    alert("⚠️ Saisis une quantité de béton en m³ supérieure à zéro."); quantiteInput?.focus(); return;
-  }
-  if (slumpVal === null || !Number.isFinite(slumpVal)) {
-    alert("⚠️ Saisis une valeur de SLUMP."); slumpInput?.focus(); return;
-  }
-  if (!obtenirSupportBLActuel()) {
-    alert("⚠️ Sélectionne d'abord un chantier et une fouille."); return;
-  }
+  if (!actuel) { alert("⚠️ Sélectionne d'abord un chantier et une fouille."); return; }
 
-  const item = { bl: blVal, type: typeVal, quantite_beton: quantiteVal, slump: slumpVal, _dbId: null, local_ref: creerRefLocaleBL() };
-  // Le numéro reste dans l'historique, même après changement de fouille.
-  memoriserNumeroBL(blVal);
-  blsActuels.push(item);
-  sauvegarderBLs();
-  afficherBLs();
-
-  if (blInput) blInput.value = "";
-  if (typeInput) typeInput.value = "";
-  if (quantiteInput) quantiteInput.value = "";
-  if (slumpInput) slumpInput.value = "";
-
+  let item;
   try {
-    const blindageId = await obtenirIdBlindageActuel();
-    await enregistrerBLDansSupabase(item, blindageId);
-    sauvegarderBLs();
-    afficherBLs();
-  } catch (e) {
-    console.error("Erreur synchronisation BL :", e);
-    alert("⚠️ Le BL est conservé sur cet appareil, mais l'envoi vers Supabase a échoué. Il sera retenté à la prochaine synchronisation.\n\nDétail : " + (e.message || e));
-  }
-  if (blInput) blInput.focus();
-}
-
-/* ============================================================
-   SUPPRIMER UN ENREGISTREMENT
-   ============================================================ */
-async function supprimerBL(index) {
-  const item = blsActuels[index];
-  if (!item) return;
-  const texte = [item.bl || "BL sans numéro", item.type || "Type non renseigné",
-    item.quantite_beton !== null && item.quantite_beton !== undefined ? item.quantite_beton + " m³" : "Quantité non renseignée",
-    item.slump !== null && item.slump !== undefined ? item.slump + " cm" : "Slump non renseigné"].join(" — ");
-  if (!confirm("Supprimer cet enregistrement béton ?\n\n" + texte)) return;
-
-  if (item._dbId) {
-    try {
-      const blindageId = await obtenirIdBlindageActuel();
-      const { error } = await supabaseClient.from("blindage_beton_bl")
-        .delete().eq("id", item._dbId).eq("blindage_id", blindageId);
-      if (error) throw error;
-    } catch (e) {
-      alert("❌ Suppression Supabase impossible. L'enregistrement est conservé.\n\n" + (e.message || e));
-      return;
+    if (typeof supabaseClient !== "undefined" && supabaseClient && navigator.onLine) {
+      // Un BL déjà connu sur le chantier est simplement associé à cette fouille.
+      const ficheExistante = await trouverBLGlobal(actuel.chantier, blVal);
+      if (ficheExistante) {
+        item = normaliserBL({ id:ficheExistante.id, bl:ficheExistante.numero_bl, type:ficheExistante.type_beton,
+          quantite_beton:ficheExistante.quantite_beton, slump:ficheExistante.slump, local_ref:ficheExistante.local_ref });
+      }
     }
-  }
-  blsActuels.splice(index, 1);
-  sauvegarderBLs();
-  afficherBLs();
-}
-
-/* ============================================================
-   AFFICHER LA LISTE
-   ============================================================ */
-
-function afficherBLs() {
-
-  const liste = document.getElementById("bl-liste");
-
-  if (!liste) return;
-
-
-  if (blsActuels.length === 0) {
-
-    liste.innerHTML =
-      "<p style='" +
-      "color:#999;" +
-      "font-size:0.8em;" +
-      "text-align:center;" +
-      "margin:6px 0;" +
-      "'>" +
-      "Aucun BL enregistré" +
-      "</p>";
-
+  } catch (e) {
+    alert("Impossible de vérifier si ce BL existe déjà dans Supabase. Rien n'a été ajouté.\n\n" + (e.message || e));
     return;
   }
 
+  // Les champs détaillés sont requis uniquement pour un nouveau BL.
+  if (!item) {
+    if (!typeVal) { alert("⚠️ Saisis le type de béton pour ce nouveau BL."); typeInput?.focus(); return; }
+    if (quantiteVal === null || !Number.isFinite(quantiteVal) || quantiteVal <= 0) { alert("⚠️ Saisis une quantité de béton en m³ supérieure à zéro."); quantiteInput?.focus(); return; }
+    if (slumpVal === null || !Number.isFinite(slumpVal)) { alert("⚠️ Saisis une valeur de SLUMP."); slumpInput?.focus(); return; }
+    item = normaliserBL({ bl:blVal, type:typeVal, quantite_beton:quantiteVal, slump:slumpVal, local_ref:creerRefLocaleBL() });
+  }
 
+  memoriserNumeroBL(blVal);
+  try {
+    const blindageId = await obtenirIdBlindageActuel();
+    await enregistrerBLDansSupabase(item, blindageId);
+    const existant = blsActuels.findIndex(x => x.bl === item.bl);
+    if (existant >= 0) blsActuels[existant] = item; else blsActuels.push(item);
+    sauvegarderBLs(); afficherBLs();
+    if (blInput) blInput.value = "";
+    if (typeInput) typeInput.value = "";
+    if (quantiteInput) quantiteInput.value = "";
+    if (slumpInput) slumpInput.value = "";
+    if (item._dbId && (typeVal !== item.type || quantiteVal !== item.quantite_beton || slumpVal !== item.slump)) {
+      // Aucun écrasement des données du BL déjà enregistré.
+    }
+    if (blInput) blInput.focus();
+  } catch (e) {
+    console.error("Erreur synchronisation BL :", e);
+    alert("⚠️ Le BL n'a pas pu être associé dans Supabase. Vérifie les tables beton_bl et blindage_beton_bl_liaison.\n\n" + (e.message || e));
+  }
+}
+
+async function supprimerBL(index) {
+  const item = blsActuels[index];
+  if (!item) return;
+  if (!confirm("Retirer ce BL de cette fouille ?\n\n" + (item.bl || "BL sans numéro") + "\n\nLe BL et sa quantité resteront enregistrés et pourront être utilisés sur une autre fouille.")) return;
+  if (item._assocId) {
+    try {
+      const blindageId = await obtenirIdBlindageActuel();
+      const { error } = await supabaseClient.from("blindage_beton_bl_liaison")
+        .delete().eq("id", item._assocId).eq("blindage_id", blindageId);
+      if (error) throw error;
+    } catch (e) {
+      alert("❌ Impossible de retirer ce BL de la fouille.\n\n" + (e.message || e)); return;
+    }
+  }
+  blsActuels.splice(index, 1); sauvegarderBLs(); afficherBLs();
+}
+
+function afficherBLs() {
+  const liste = document.getElementById("bl-liste");
+  if (!liste) return;
+  if (!blsActuels.length) {
+    liste.innerHTML = "<p style='color:#999;font-size:0.8em;text-align:center;margin:6px 0;'>Aucun BL enregistré pour cette fouille</p>";
+    return;
+  }
   liste.innerHTML = blsActuels.map((item, i) => {
-
-    const bl = item.bl || "--";
-    const type = item.type || "--";
-
-    const slump =
-      item.slump !== null &&
-      item.slump !== undefined &&
-      item.slump !== "" &&
-      !isNaN(item.slump)
-        ? item.slump + " cm"
-        : "--";
-
-
-    return `
-      <div style="
-        background:#f9fafb;
-        border:1px solid #e5e7eb;
-        border-radius:8px;
-        padding:7px 8px;
-        margin-bottom:5px;
-      ">
-
-        <div style="
-          display:flex;
-          align-items:center;
-          justify-content:space-between;
-          gap:6px;
-        ">
-
-          <div style="
-            display:flex;
-            align-items:center;
-            gap:5px;
-            min-width:0;
-            flex:1;
-          ">
-
-            <span style="
-              font-weight:bold;
-              color:#333;
-              font-size:0.82em;
-              white-space:nowrap;
-            ">
-              🧾 ${echapperHTML(bl)}
-            </span>
-
-            <span style="
-              color:#7C2270;
-              background:#f0e4ee;
-              font-weight:bold;
-              padding:2px 6px;
-              border-radius:8px;
-              font-size:0.72em;
-              overflow:hidden;
-              text-overflow:ellipsis;
-              white-space:nowrap;
-            ">
-              ${echapperHTML(type)}
-            </span>
-
-            <span style="
-              color:#166534;
-              background:#dcfce7;
-              font-weight:bold;
-              padding:2px 6px;
-              border-radius:8px;
-              font-size:0.72em;
-              white-space:nowrap;
-            ">
-              ${item.quantite_beton !== null && item.quantite_beton !== undefined && !isNaN(item.quantite_beton) ? Number(item.quantite_beton).toLocaleString("fr-FR", { maximumFractionDigits: 3 }) + " m³" : "-- m³"}
-            </span>
-
-            <span style="
-              color:#0369a1;
-              background:#e0f2fe;
-              font-weight:bold;
-              padding:2px 6px;
-              border-radius:8px;
-              font-size:0.72em;
-              white-space:nowrap;
-            ">
-              ${slump}
-            </span>
-
-          </div>
-
-          <button
-            type="button"
-            onclick="supprimerBL(${i})"
-            style="
-              background:#fee2e2;
-              color:#dc2626;
-              padding:2px 7px;
-              font-size:0.72em;
-              margin:0;
-              border-radius:4px;
-              flex-shrink:0;
-            "
-            title="Supprimer cet enregistrement"
-          >
-            ✕
-          </button>
-
+    const val = v => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v)) ? Number(v).toLocaleString("fr-FR", { maximumFractionDigits:3 }) : "--";
+    return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:7px 8px;margin-bottom:5px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+        <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;flex-wrap:wrap;">
+          <span style="font-weight:bold;color:#333;font-size:.82em;">🧾 ${echapperHTML(item.bl || "--")}</span>
+          <span style="color:#7C2270;background:#f0e4ee;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${echapperHTML(item.type || "--")}</span>
+          <span style="color:#166534;background:#dcfce7;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${val(item.quantite_beton)} m³</span>
+          <span style="color:#0369a1;background:#e0f2fe;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${val(item.slump)} cm</span>
         </div>
-
-      </div>
-    `;
-
+        <button type="button" onclick="supprimerBL(${i})" style="background:#fee2e2;color:#dc2626;padding:2px 7px;font-size:.72em;margin:0;border-radius:4px;flex-shrink:0;" title="Retirer ce BL de cette fouille">✕</button>
+      </div></div>`;
   }).join("");
 }
 
@@ -2804,25 +2675,44 @@ async function synchroniserSupportActuel() {
 
     const { data: lignes, error } = await supabaseClient
       .from('blindage')
-      .update({
-        nom: nom,
-        prenom: prenom,
-        i_reel: iReel ? parseFloat(iReel) : null,
-        ech_reel: echValeur ? String(echValeur).trim() : null,
-        ar_reel: arReel ? parseFloat(arReel) : null,
-        enc_reel: encReel ? parseFloat(encReel) : null,
-        a_reel: aReel ? parseFloat(aReel) : null,
-        b_reel: bReel ? parseFloat(bReel) : null,
-        h_reel: hReel ? parseFloat(hReel) : null,
-        f_reel: fReel ? parseFloat(fReel) : null,
-        p_reel: pSaisi ? parseFloat(pSaisi) : null,
-        sup_reel: supReel ? parseFloat(supReel) : null,
-        m3_reel: volReelNum,
-        effectue: 1,
-        date_exec: dateJour,
-        brh: document.getElementById('brh_oui')?.checked || false,
-        ...phases
-      })
+      .update((() => {
+        // Mise à jour partielle : une valeur vide ne doit JAMAIS effacer le relevé
+        // d'une phase précédemment enregistré par un autre agent.
+        const maj = {
+          nom: nom,
+          prenom: prenom,
+          effectue: 1,
+          date_exec: dateJour,
+          ...phases
+        };
+        const ajouterSiRenseigne = (colonne, valeur, numerique = true) => {
+          if (valeur !== undefined && valeur !== null && String(valeur).trim() !== '') {
+            maj[colonne] = numerique ? parseFloat(String(valeur).replace(',', '.')) : String(valeur).trim();
+          }
+        };
+
+        // Ne conserver que les valeurs effectivement saisies. Les phases non faites
+        // ne transmettent plus de null à Supabase.
+        if (document.getElementById('check_fouille')?.checked) {
+          ajouterSiRenseigne('a_reel', aReel);
+          ajouterSiRenseigne('b_reel', bReel);
+          ajouterSiRenseigne('h_reel', hReel);
+        }
+        if (document.getElementById('check_matage')?.checked) {
+          ajouterSiRenseigne('i_reel', iReel);
+          ajouterSiRenseigne('ech_reel', echValeur, false);
+          ajouterSiRenseigne('ar_reel', arReel);
+          ajouterSiRenseigne('enc_reel', encReel);
+          ajouterSiRenseigne('f_reel', fReel);
+          ajouterSiRenseigne('p_reel', pSaisi);
+          ajouterSiRenseigne('sup_reel', supReel);
+        }
+        if (document.getElementById('check_beton')?.checked && Number.isFinite(volReelNum) && volReelNum > 0) {
+          maj.m3_reel = volReelNum;
+        }
+        if (document.getElementById('brh_oui')?.checked) maj.brh = true;
+        return maj;
+      })())
       .eq('chantier', nomChantier)
       .eq('support', numSupportInput)
       .select('support');
@@ -2897,9 +2787,10 @@ function validerSaisiesFBM() {
         let blBeton = document.getElementById('bl_beton')?.value;
         let blInput = document.getElementById('bl-input')?.value;
         let slump = document.getElementById('slump-input')?.value;
-        
-        if (!blBeton || !blInput || !slump) {
-            erreurs.push("🧱 **Béton** : Le N° de BL, le type de béton ou le slump est manquant.");
+        const listeBLExistante = (typeof blsActuels !== "undefined" && Array.isArray(blsActuels)) ? blsActuels : [];
+        // Les champs de saisie sont vidés après l'ajout d'un BL : une ligne déjà enregistrée compte aussi.
+        if (listeBLExistante.length === 0 && (!blBeton || !blInput || !slump)) {
+            erreurs.push("🧱 **Béton** : Enregistre au moins un BL complet (N° BL, type béton, quantité et slump).");
         }
     }
 
@@ -2981,12 +2872,62 @@ function logoSVGversPNG(largeurPx, hauteurPx) {
 /* ============================================================
    EXPORT PDF — document structuré (pas une capture d'écran)
    ============================================================ */
+async function chargerBLsDepuisSupabasePourPDF() {
+  if (typeof supabaseClient === "undefined" || !supabaseClient) {
+    throw new Error("Connexion Supabase indisponible : les bons de livraison béton ne peuvent pas être chargés.");
+  }
+  const actuel = obtenirSupportBLActuel();
+  if (!actuel) throw new Error("Sélectionne un chantier et un support avant l'export PDF.");
+  const blindageId = await obtenirIdBlindageActuel();
+  const { data: liens, error: errLiens } = await supabaseClient.from("blindage_beton_bl_liaison")
+    .select("id, blindage_id, beton_bl_id").eq("blindage_id", blindageId).order("id", { ascending: true });
+  if (errLiens) throw errLiens;
+  const ids = [...new Set((liens || []).map(x => x.beton_bl_id))];
+  let fiches = [];
+  if (ids.length) {
+    const { data, error } = await supabaseClient.from("beton_bl")
+      .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation")
+      .in("id", ids).order("id", { ascending: true });
+    if (error) throw error;
+    fiches = data || [];
+  }
+  blsActuels = (liens || []).map(lien => {
+    const f = fiches.find(x => String(x.id) === String(lien.beton_bl_id));
+    return f ? normaliserBL({ id:f.id, bl:f.numero_bl, type:f.type_beton, quantite_beton:f.quantite_beton,
+      slump:f.slump, local_ref:f.local_ref, association_id:lien.id }) : null;
+  }).filter(Boolean);
+
+  // Compatibilité avec les BL encore présents uniquement dans l'ancienne table.
+  // Aucun volume prévu/réel n'est lu ni modifié ici.
+  if (blsActuels.length === 0) {
+    const { data: anciens, error: errAnciens } = await supabaseClient.from("blindage_beton_bl")
+      .select("id, blindage_id, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation")
+      .eq("blindage_id", blindageId).order("id", { ascending: true });
+    if (errAnciens) throw errAnciens;
+    blsActuels = (anciens || []).map(x => normaliserBL({
+      id:x.id, bl:x.numero_bl, type:x.type_beton, quantite_beton:x.quantite_beton,
+      slump:x.slump, local_ref:x.local_ref, association_id:x.id
+    })).filter(x => x.bl);
+  }
+  if (typeof afficherBLs === "function") afficherBLs();
+  return blsActuels;
+}
+
 async function exporterPDF() {
   const numSupportInput = document.getElementById("selectSupport").value.trim();
 
   if (numSupportInput === "") {
     alert("⚠️ Saisie obligatoire :\nVous devez inscrire un N° Support avant de pouvoir exporter les résultats.");
     document.getElementById("selectSupport").focus();
+    return;
+  }
+
+  // Charger les bons de livraison depuis Supabase avant validation et export.
+  try {
+    await chargerBLsDepuisSupabasePourPDF();
+  } catch (e) {
+    console.error("Chargement des BL béton depuis Supabase impossible :", e);
+    alert("❌ Impossible de charger les bons de livraison béton depuis la table blindage_beton_bl.\n\nLe PDF n'a pas été généré pour éviter un export incomplet.\n\nDétail : " + (e.message || e));
     return;
   }
 
@@ -3031,10 +2972,7 @@ async function exporterPDF() {
     return;
   }
   // ------------------------------------------------
-  // S'assurer que les BLs sont bien chargés avant export
-  if (typeof chargerBLs === "function" && obtenirSupportBLActuel()) {
-    await chargerBLs();
-  }
+
   const btnPdf = document.getElementById("btnExportPdf");
   const btnOriginalHTML = btnPdf ? btnPdf.innerHTML : "";
   if (btnPdf) {
@@ -3205,17 +3143,17 @@ async function exporterPDF() {
     const sensPTexte = blocNVisible ? "amont" : "aval";
 
     const rowsFouille = [
-      ["Implantation (I)", val("I") ? val("I") + " m" : "-", txt("I_ref")],
-      ["Echantillon", echValeur || "-", txt("ECH_ref")],
-      ["Arasement (AR)", val("AR") ? val("AR") + " Cm" : "-", txt("AR_ref")],
-      ["Encastrement (Enc)", val("Enc") ? val("Enc") + " m" : "-", txt("Enc_ref")],
-      ["Cote A", val("AF") ? val("AF") + " m" : "-", txt("AF_ref")],
-      ["Cote B", val("B_Fouille") ? val("B_Fouille") + " m" : "-", txt("B_ref")],
-      ["Cote H", val("H_Fouille") ? val("H_Fouille") + " m" : "-", txt("H_ref")],
-      ["F", val("valF") || "-", txt("F_ref")],
-      ["P (" + sensPTexte + " de SUP)", valPActuel || "-", refPActuel],
-      ["SUP", val("valSUP") || "-", txt("SUP_ref")],
-    ];
+      ["Implantation (I)", val("I"), txt("I_ref")],
+      ["Echantillon", echValeur, txt("ECH_ref")],
+      ["Arasement (AR)", val("AR"), txt("AR_ref")],
+      ["Encastrement (Enc)", val("Enc"), txt("Enc_ref")],
+      ["Cote A", val("AF"), txt("AF_ref")],
+      ["Cote B", val("B_Fouille"), txt("B_ref")],
+      ["Cote H", val("H_Fouille"), txt("H_ref")],
+      ["F", val("valF"), txt("F_ref")],
+      ["P (" + sensPTexte + " de SUP)", valPActuel, refPActuel],
+      ["SUP", val("valSUP"), txt("SUP_ref")],
+    ].filter(row => row.some((v, i) => String(v ?? "").trim() !== ""));
 
     doc.autoTable({
       startY: y,
@@ -3331,32 +3269,36 @@ async function exporterPDF() {
     });
     y = doc.lastAutoTable.finalY + 5;
 
-    // Section BL-BÉTON
-        // Section BL-BÉTON
-    const blsAuMomentExport = (typeof blsActuels !== "undefined" && Array.isArray(blsActuels)) ? blsActuels : [];
-    if (blsAuMomentExport.length > 0) {
-      titreSection("BONS DE LIVRAISON BÉTON", violet);
-     const rowsBL = blsAuMomentExport.map((item, i) => [
-        i + 1,
-        item.bl || "-",
-        item.type || "-",
-        item.slump !== null && item.slump !== undefined && item.slump !== "" && Number.isFinite(Number(item.slump))
-          ? String(item.slump).replace(".", ",") + " cm"
-          : "-"
-      ]);
+    // Bloc BÉTON du PDF : toujours affiché quand la phase béton est cochée.
+    // Les BL affichés sont ceux associés à la fouille sélectionnée.
+    if (g("check_beton")?.checked) {
+      titreSection("BÉTON — BONS DE LIVRAISON", violet);
+      const fmtNombre = (v) => v !== null && v !== undefined && String(v).trim() !== "" && Number.isFinite(Number(v))
+        ? String(v).replace(".", ",") : "";
+      const listePdfBL = Array.isArray(blsActuels) ? blsActuels : [];
+      const rowsBL = listePdfBL.length
+        ? listePdfBL.map((item, i) => [
+            i + 1,
+            item.bl || "",
+            item.type || "",
+            fmtNombre(item.quantite_beton) ? fmtNombre(item.quantite_beton) + " m³" : "",
+            fmtNombre(item.slump) !== "" ? fmtNombre(item.slump) + " cm" : ""
+          ])
+        : [["—", "Aucun BL associé à cette fouille", "", "", ""]];
       doc.autoTable({
         startY: y,
         margin: { left: marge, right: marge, bottom: footerReserve },
-        head: [["#", "N° BL", "Type de béton", "Slump"]],
+        head: [["#", "N° BL", "Type de béton", "Quantité BL", "Slump"]],
         body: rowsBL,
         theme: "grid",
-        styles: { fontSize: 8.2, cellPadding: 2.5, overflow: "linebreak" },
+        styles: { fontSize: 7.8, cellPadding: 2.2, overflow: "linebreak" },
         headStyles: { fillColor: violet, textColor: 255, fontStyle: "bold" },
         columnStyles: {
           0: { cellWidth: 8, halign: "center" },
-          1: { cellWidth: 35, fontStyle: "bold" },
+          1: { cellWidth: 45, fontStyle: "bold" },
           2: { cellWidth: "auto" },
-          3: { cellWidth: 22, halign: "center", textColor: [3, 105, 161] }
+          3: { cellWidth: 25, halign: "center" },
+          4: { cellWidth: 20, halign: "center", textColor: [3, 105, 161] }
         },
       });
       y = doc.lastAutoTable.finalY + 5;
@@ -3405,6 +3347,49 @@ async function exporterPDF() {
       bodyStyles: { fontStyle: 'bold', textColor: [22, 130, 60] },
     });
     y = doc.lastAutoTable.finalY + 8;
+
+    // Saisies complémentaires : toute autre valeur non vide qui n'est pas déjà reprise dans les tableaux ci-dessus.
+    const idsDejaDansPDF = new Set([
+      "selectChantier", "selectSupport", "I", "E_select", "E", "AR", "Enc", "AF", "B_Fouille", "H_Fouille",
+      "valF", "valP_N", "valP_S", "valSUP", "verifVoie", "carotte", "blindageCheck", "brh_oui",
+      "A_carotte", "B_carotte", "H_carotte", "E1_carotte", "E2_carotte", "P_carotte",
+      "dist_blindage", "LT", "SOL", "NIT", "vol_prevu", "vol_modifie", "vol_carotte",
+      "bl_beton", "bl-input", "quantite-beton-input", "slump-input", "prenom", "nom", "emailRedacteur",
+      "BMax_display", "DMin_display", "Hmax_display"
+    ]);
+    const saisiesComplementaires = [];
+    document.querySelectorAll(".box input, .box select, .box textarea").forEach(el => {
+      if (!el || !el.id || idsDejaDansPDF.has(el.id)) return;
+      if (["hidden", "button", "submit", "reset", "file", "password"].includes((el.type || "").toLowerCase())) return;
+      if (el.disabled || el.readOnly) return;
+      if (el.type === "radio" && !el.checked) return;
+      if (el.type === "checkbox" && !el.checked) return;
+      // Les champs explicitement masqués ne sont pas des saisies actives.
+      if (el.closest("[hidden]") || el.style.display === "none") return;
+      let valeur = "";
+      if (el.type === "checkbox" || el.type === "radio") valeur = "Oui";
+      else if (el.tagName === "SELECT") valeur = el.selectedIndex >= 0 ? (el.options[el.selectedIndex]?.text || el.value || "") : "";
+      else valeur = String(el.value ?? "").trim();
+      if (!valeur) return;
+      const labelEl = document.querySelector('label[for="' + CSS.escape(el.id) + '"]') || el.closest("label");
+      const libelle = (labelEl?.innerText || el.getAttribute("aria-label") || el.getAttribute("placeholder") || el.id)
+        .replace(/\s+/g, " ").trim();
+      saisiesComplementaires.push([libelle, valeur]);
+    });
+    if (saisiesComplementaires.length > 0) {
+      titreSection("AUTRES SAISIES RENSEIGNÉES", [90, 90, 90]);
+      doc.autoTable({
+        startY: y,
+        margin: { left: marge, right: marge, bottom: footerReserve },
+        head: [["Champ", "Valeur saisie"]],
+        body: saisiesComplementaires,
+        theme: "grid",
+        styles: { fontSize: 7.8, cellPadding: 1.8, overflow: "linebreak" },
+        headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: "bold" },
+        columnStyles: { 0: { cellWidth: 65, fontStyle: "bold" }, 1: { cellWidth: "auto" } },
+      });
+      y = doc.lastAutoTable.finalY + 5;
+    }
 
     // ---------- Gestion Nom / Prénom / Email (avec colonnes Supabase 'nom' et 'prenom') ----------
     const prenomRedacteur = val("prenom"); // ID de ton input HTML pour le prénom
@@ -4184,16 +4169,22 @@ function chargerSupport() {
     const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
     const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
 
-    setVal("valF", "");
-    setVal("valSUP", "");
-    setVal("I", "");
-    setVal("AF", valOuVide(data.AF !== undefined ? data.AF : data.A));
-    setVal("B_Fouille", "");
-    setVal("H_Fouille", "");
-    setVal("AR", "");
-    setVal("Enc", "");
-    setVal("valP_N", "");
-    setVal("valP_S", "");
+    // La sauvegarde locale peut dépanner hors réseau, mais Supabase reste prioritaire
+    // dès que ce support est chargé depuis le serveur.
+    if (typeof restaurerLocal === "function") restaurerLocal();
+
+    // Restaurer les relevés réels depuis Supabase (et non seulement les valeurs de référence).
+    // Ainsi, un autre agent retrouve les phases déjà saisies sur un autre appareil.
+    setVal("valF", valOuVide(data.f_reel));
+    setVal("valSUP", valOuVide(data.sup_reel));
+    setVal("I", valOuVide(data.i_reel));
+    setVal("AF", valOuVide(data.a_reel !== undefined && data.a_reel !== null ? data.a_reel : (data.AF !== undefined ? data.AF : data.A)));
+    setVal("B_Fouille", valOuVide(data.b_reel));
+    setVal("H_Fouille", valOuVide(data.h_reel));
+    setVal("AR", valOuVide(data.ar_reel));
+    setVal("Enc", valOuVide(data.enc_reel));
+    setVal("valP_N", valOuVide(data.p_reel));
+    setVal("valP_S", valOuVide(data.p_reel));
 
     setTxt("F_ref", valOuVide(data.F));
     setTxt("SUP_ref", valOuVide(data.SUP));
@@ -4241,7 +4232,6 @@ function chargerSupport() {
     const dt = document.getElementById("display_type"); if(dt) dt.innerText = data.TYPE ? "🧊 " + data.TYPE : "";
 
     if (typeof refreshBlocs === "function") refreshBlocs();
-    if (typeof restaurerLocal === "function") restaurerLocal();
     if (typeof rechargerBLsSupport === "function") rechargerBLsSupport();
     if (typeof calculer === "function") calculer();
 }
