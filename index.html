@@ -3031,7 +3031,10 @@ async function exporterPDF() {
     return;
   }
   // ------------------------------------------------
-
+  // S'assurer que les BLs sont bien chargés avant export
+  if (typeof chargerBLs === "function" && obtenirSupportBLActuel()) {
+    await chargerBLs();
+  }
   const btnPdf = document.getElementById("btnExportPdf");
   const btnOriginalHTML = btnPdf ? btnPdf.innerHTML : "";
   if (btnPdf) {
@@ -3329,9 +3332,11 @@ async function exporterPDF() {
     y = doc.lastAutoTable.finalY + 5;
 
     // Section BL-BÉTON
-    if (typeof blsActuels !== "undefined" && blsActuels.length > 0) {
+        // Section BL-BÉTON
+    const blsAuMomentExport = (typeof blsActuels !== "undefined" && Array.isArray(blsActuels)) ? blsActuels : [];
+    if (blsAuMomentExport.length > 0) {
       titreSection("BONS DE LIVRAISON BÉTON", violet);
-      const rowsBL = blsActuels.map((item, i) => [
+     const rowsBL = blsAuMomentExport.map((item, i) => [
         i + 1,
         item.bl || "-",
         item.type || "-",
