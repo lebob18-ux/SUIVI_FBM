@@ -4027,18 +4027,12 @@ function initChantiers() {
     a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
   );
 
-  chantiersUniques.forEach(c => {
-    const data = chantiersMap[c];
-
-    if (data && data.total > 0 && data.effectues === data.total) {
-      return; 
-    }
-
-    const opt = document.createElement("option");
-    opt.value = c;
-    opt.textContent = c;
-    select.appendChild(opt);
-  });
+    chantiersUniques.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
+    });
 
   // Met à jour automatiquement les boutons dans la sidebar
   if (typeof peuplerChantiersSidebar === 'function') {
@@ -4131,13 +4125,7 @@ function filtrerSupports() {
 
     const filtres = baseSupports.filter(s => {
         const nomChantier = s.chantier || s.CHANTIER;
-        if (nomChantier !== chantier) return false;
-        
-        const df = s.date_fouille || s.DATE_FOUILLE;
-        const db = s.date_beton || s.DATE_BETON;
-        const dm = s.date_matage || s.DATE_MATAGE;
-
-        return !(df && db && dm);
+        return nomChantier === chantier;
     });
     
     filtres.sort((a, b) => {
