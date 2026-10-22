@@ -2333,12 +2333,10 @@ let largeur_m = largeurEchantillon / 1000;
 let profondeur_m = profondeurEchantillon / 1000;
 
 /* e1 = écart Fouille <-> Carotte (ce que tu veux : (Afouille - Acarotte)/2) */
-let S1 = (AF - ac) / 2;
-let S2 = (B_Fouille - bc) / 2;
-
-/* e2 = écart Carotte <-> Echantillon (profil) */
-let S3 = (ac - profondeur_m) / 2;
-let S4 = (bc - largeur_m) / 2;
+let S1 = (ac - profondeur_m) / 2;  // e1 Cote A : Carotte <-> Échantillon
+let S2 = (bc - largeur_m) / 2;     // e1 Cote B : Carotte <-> Échantillon
+let S3 = (AF - ac) / 2;            // e2 Cote A : Fouille <-> Carotte
+let S4 = (B_Fouille - bc) / 2;     // e2 Cote B : Fouille <-> Carotte
 
 document.getElementById("calc_S1").innerText =(S1*100).toFixed(1); /* e1 : Afouille - Acarotte */
 document.getElementById("calc_S2").innerText =(S2*100).toFixed(1); /* e1 : Bfouille - Bcarotte */
