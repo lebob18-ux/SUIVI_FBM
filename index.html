@@ -2965,9 +2965,20 @@ async function chargerBLsDepuisSupabasePourPDF() {
     fiches = data || [];
   }
   blsActuels = (liens || []).map(lien => {
-    const f = fiches.find(x => String(x.id) === String(lien.beton_bl_id));
-    return f ? normaliserBL({ id:f.id, bl:f.numero_bl, type:f.type_beton, quantite_beton:f.quantite_beton,
-      slump:f.slump, local_ref:f.local_ref, association_id:lien.id }) : null;
+
+const f = fiches.find(x => String(x.id) === String(lien.beton_bl_id));
+
+return f ? normaliserBL({
+  _dbId: f.id,
+  bl: f.numero_bl,
+  type: f.type_beton,
+  quantite_beton: f.quantite_beton,
+  slump: f.slump,
+  classe_slump: f.classe_slump,
+  local_ref: f.local_ref,
+  association_id: lien.id
+}) : null;
+
   }).filter(Boolean);
 
   // Compatibilité avec les BL encore présents uniquement dans l'ancienne table.
