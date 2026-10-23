@@ -3386,7 +3386,33 @@ async function exporterPDF() {
       titreSection("BÉTON — BONS DE LIVRAISON", violet);
       const fmtNombre = (v) => v !== null && v !== undefined && String(v).trim() !== "" && Number.isFinite(Number(v))
         ? String(v).replace(".", ",") : "";
-      const listePdfBL = (Array.isArray(blsActuels) ? blsActuels : []).map(normaliserBL);
+      
+const listePdfBL = (Array.isArray(blsActuels) ? blsActuels : []).map(normaliserBL);
+
+// Récupérer les valeurs du formulaire, même sans cliquer sur « Ajouter »
+const saisieBL = String(document.getElementById("bl_beton")?.value || "").trim().toUpperCase();
+const saisieType = String(document.getElementById("bl-input")?.value || "").trim().toUpperCase();
+const saisieQteTexte = String(document.getElementById("quantite-beton-input")?.value ?? "").trim();
+const saisieSlumpTexte = String(document.getElementById("slump-input")?.value ?? "").trim();
+
+const saisieQte = saisieQteTexte !== "" ? Number(saisieQteTexte.replace(",", ".")) : null;
+const saisieSlump = saisieSlumpTexte !== "" ? Number(saisieSlumpTexte.replace(",", ".")) : null;
+
+const formulaireNonVide = saisieBL || saisieType || saisieQteTexte || saisieSlumpTexte;
+
+if (
+  formulaireNonVide &&
+  (!saisieBL || !listePdfBL.some(x => String(x.bl || "").trim().toUpperCase() === saisieBL))
+) {
+  listePdfBL.push(normaliserBL({
+    bl: saisieBL,
+    type: saisieType,
+    quantite_beton: Number.isFinite(saisieQte) ? saisieQte : null,
+    slump: Number.isFinite(saisieSlump) ? saisieSlump : null,
+    classe_slump: typeof classeSlumpActuelle !== "undefined" ? classeSlumpActuelle : "S4"
+  }));
+}
+
       const rowsBL = listePdfBL.length
         ? listePdfBL.map((item, i) => {
             const statut = statutSlump(item.slump, item.classe_slump || 'S4');
