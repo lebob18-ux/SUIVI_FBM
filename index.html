@@ -3386,14 +3386,14 @@ async function exporterPDF() {
       titreSection("BÉTON — BONS DE LIVRAISON", violet);
       const fmtNombre = (v) => v !== null && v !== undefined && String(v).trim() !== "" && Number.isFinite(Number(v))
         ? String(v).replace(".", ",") : "";
-      const listePdfBL = Array.isArray(blsActuels) ? blsActuels : [];
+      const listePdfBL = (Array.isArray(blsActuels) ? blsActuels : []).map(normaliserBL);
       const rowsBL = listePdfBL.length
         ? listePdfBL.map((item, i) => {
             const statut = statutSlump(item.slump, item.classe_slump || 'S4');
             const statutTxt = statut === 'conforme' ? '✅ Conforme' : statut === 'tolerance' ? '⚠️ Tolérance' : statut === 'non_conforme' ? '🚨 Non conforme' : '-';
             return [
               i + 1,
-              item.bl || "",
+             item.bl || item.bl_beton || item.numero_bl || "",
               item.type || "",
               fmtNombre(item.quantite_beton) ? fmtNombre(item.quantite_beton) + " m³" : "",
               (item.classe_slump || 'S4') + " — " + (fmtNombre(item.slump) !== "" ? fmtNombre(item.slump) + " cm" : "-"),
