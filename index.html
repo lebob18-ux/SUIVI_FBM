@@ -482,6 +482,14 @@ input[readonly]{
 </style>
 
 
+
+<style>
+.support-filtre-radio{flex:1;min-width:0;cursor:pointer;}
+.support-filtre-radio input{position:absolute;opacity:0;pointer-events:none;}
+.support-filtre-radio span{display:block;text-align:center;padding:9px 4px;border:1px solid #555;border-radius:7px;background:#222;color:#ddd;font-size:13px;font-weight:600;transition:background .15s,border-color .15s;}
+.support-filtre-radio input:checked + span{background:#7C2270;border-color:#c06bb3;color:#fff;box-shadow:0 0 0 1px #7C2270;}
+.support-filtre-radio input:focus-visible + span{outline:2px solid #fff;outline-offset:2px;}
+</style>
 </head>
 <body>
 
@@ -512,8 +520,16 @@ input[readonly]{
     <button class="btn-fermer-droit" onclick="basculerMenuSupportsDroit()">&times;</button>
     <div style="padding: 15px 20px;">
         <h3 style="color: #fff; margin-top: 0; font-size: 1.1em; border-bottom: 1px solid #333; padding-bottom: 8px;">📍 Liste des Supports</h3>
-        <div style="margin-bottom: 12px;">
+        <div style="margin-bottom: 10px;">
             <input type="text" id="filtreSupportInput" placeholder="Rechercher un support..." oninput="filtrerListeSupportsDroite()" style="width: 100%; padding: 8px; box-sizing: border-box; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;">
+        </div>
+        <div style="margin-bottom: 14px;">
+            <div style="color:#ddd;font-size:13px;margin-bottom:7px;font-weight:600;">Afficher</div>
+            <div role="radiogroup" aria-label="Filtrer les supports" style="display:flex;gap:5px;width:100%;">
+                <label class="support-filtre-radio"><input type="radio" name="statutFiltreSupport" value="tous" onchange="filtrerSupportsParStatut()"><span>Tous</span></label>
+                <label class="support-filtre-radio"><input type="radio" name="statutFiltreSupport" value="fait" onchange="filtrerSupportsParStatut()"><span>Fait</span></label>
+                <label class="support-filtre-radio"><input type="radio" name="statutFiltreSupport" value="nonfait" checked onchange="filtrerSupportsParStatut()"><span>Reste</span></label>
+            </div>
         </div>
         <div id="sidebarSupportsContainer" style="display: flex; flex-direction: column; gap: 6px;"></div>
     </div>
@@ -689,10 +705,18 @@ input[readonly]{
       <input type="number" id="quantite-beton-input" placeholder="Quantité (m³)" style="flex:1; min-width:0; height:32px; font-size:0.85em;" step="0.001" min="0">
       <button type="button" onclick="ajouterTypeBetonChantier()" title="Ajouter un type de béton au chantier actif" style="background:#7c2270; color:white; padding:5px 9px; margin:0; font-weight:bold; font-size:0.9em;">＋ Type</button>
     </div>
+    <div style="display:flex; gap:4px; margin-bottom:5px; align-items:center;">
+      <span style="font-size:0.75em; font-weight:bold; color:#0369a1; white-space:nowrap;">Classe S :</span>
+      <button type="button" id="btn-S1" onclick="choisirClasseSlump('S1')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#f3f4f6; color:#333;">S1</button>
+      <button type="button" id="btn-S2" onclick="choisirClasseSlump('S2')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#f3f4f6; color:#333;">S2</button>
+      <button type="button" id="btn-S3" onclick="choisirClasseSlump('S3')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#f3f4f6; color:#333;">S3</button>
+      <button type="button" id="btn-S4" onclick="choisirClasseSlump('S4')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#e0f2fe; color:#0369a1; border-color:#0369a1;">S4</button>
+    </div>
     <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
-      <input type="number" id="slump-input" placeholder="Slump (cm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0">
+      <input type="number" id="slump-input" placeholder="Slump (mm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0" oninput="verifierSlump()">
       <button type="button" onclick="ajouterBL()" style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">💾 Enregistrer BL</button>
     </div>
+    <div id="slump-alerte" style="font-size:0.78em; font-weight:bold; margin-bottom:6px; display:none;"></div>
     <div id="bl-liste"></div>
 
     <div class="result" style="margin-top: 10px; padding: 8px; border: 1px dashed #bbb; border-radius: 8px; background: #fafafa;">
@@ -880,6 +904,11 @@ input[readonly]{
     <span id="Hmax_display">    </span>    
   </div>   
 </div>  
+<div style="margin:8px 0 12px;">
+  <button type="button" id="btnEnregistrerBas" onclick="exporterPDF()" style="width:100%;background:#16a34a;color:white;border:0;border-radius:8px;padding:12px 10px;font-size:1em;font-weight:bold;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.15);">
+    💾 ENREGISTRER / EXPORTER PDF
+  </button>
+</div>
 
 <div id="bloc-redacteur" style="display: none;">
   <div class="section collapsed">
@@ -1276,6 +1305,88 @@ const LISTE_BL = [
    - Compatible avec l'ancien format de données
    ============================================================ */
 
+/* ============================================================
+   CLASSE SLUMP S1-S4
+   ============================================================ */
+const PLAGES_SLUMP = {
+  S1: { min: 10, max: 40 },
+  S2: { min: 50, max: 90 },
+  S3: { min: 100, max: 150 },
+  S4: { min: 160, max: 210 }
+};
+
+let classeSlumpActuelle = 'S4';
+
+function choisirClasseSlump(classe) {
+  classeSlumpActuelle = classe;
+  ['S1','S2','S3','S4'].forEach(s => {
+    const btn = document.getElementById('btn-' + s);
+    if (!btn) return;
+    if (s === classe) {
+      btn.style.background = '#e0f2fe';
+      btn.style.color = '#0369a1';
+      btn.style.borderColor = '#0369a1';
+    } else {
+      btn.style.background = '#f3f4f6';
+      btn.style.color = '#333';
+      btn.style.borderColor = '#ccc';
+    }
+  });
+  verifierSlump();
+}
+
+function verifierSlump() {
+  const input = document.getElementById('slump-input');
+  const alerte = document.getElementById('slump-alerte');
+  if (!input || !alerte) return;
+
+  const valeur = parseFloat(input.value);
+  if (isNaN(valeur) || input.value === '') {
+    input.style.borderColor = '#ccc';
+    input.style.background = '';
+    alerte.style.display = 'none';
+    return;
+  }
+
+  const plage = PLAGES_SLUMP[classeSlumpActuelle];
+  const TOLERANCE = 20; // mm = 2 cm
+
+  if (valeur >= plage.min && valeur <= plage.max) {
+    // Dans la plage
+    input.style.borderColor = '#16a34a';
+    input.style.background = '#f0fdf4';
+    alerte.style.display = 'none';
+  } else {
+    const ecart = valeur < plage.min ? plage.min - valeur : valeur - plage.max;
+    if (ecart <= TOLERANCE) {
+      // Tolérance orange
+      input.style.borderColor = '#f59e0b';
+      input.style.background = '#fffbeb';
+      alerte.style.display = 'block';
+      alerte.style.color = '#92400e';
+      alerte.innerHTML = `⚠️ Slump hors plage ${classeSlumpActuelle} (${plage.min}-${plage.max} cm) — écart : ${ecart} cm (tolérance ±20 mm)`;
+    } else {
+      // Hors tolérance rouge
+      input.style.borderColor = '#dc2626';
+      input.style.background = '#fef2f2';
+      alerte.style.display = 'block';
+      alerte.style.color = '#991b1b';
+      alerte.innerHTML = `🚨 Slump NON CONFORME ${classeSlumpActuelle} (${plage.min}-${plage.max} cm) — écart : ${ecart} cm`;
+    }
+  }
+}
+
+function statutSlump(slump, classe) {
+  if (slump === null || slump === undefined || !classe) return null;
+  const plage = PLAGES_SLUMP[classe];
+  if (!plage) return null;
+  const TOLERANCE = 20;
+  if (slump >= plage.min && slump <= plage.max) return 'conforme';
+  const ecart = slump < plage.min ? plage.min - slump : slump - plage.max;
+  return ecart <= TOLERANCE ? 'tolerance' : 'non_conforme';
+}
+
+
 let blsActuels = [];
 
 /*
@@ -1319,12 +1430,30 @@ function memoriserNumeroBL(numero) {
   afficherHistoriqueNumerosBL();
 }
 
-function afficherHistoriqueNumerosBL() {
+async function afficherHistoriqueNumerosBL() {
   const dl = document.getElementById("bl-numeros-historique");
   if (!dl) return;
-  dl.innerHTML = lireHistoriqueNumerosBL()
-    .map(v => `<option value="${echapperHTML(v)}">`)
-    .join("");
+  const locaux = lireHistoriqueNumerosBL();
+  let recentsSupabase = [];
+  const chantierSelect = document.getElementById("selectChantier");
+  const chantier = chantierSelect && chantierSelect.selectedIndex >= 0
+    ? String(chantierSelect.options[chantierSelect.selectedIndex]?.text || "").trim() : "";
+  if (chantier && chantier.toLowerCase() !== "aucun chantier" && typeof supabaseClient !== "undefined" && supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.from("beton_bl")
+        .select("numero_bl, date_creation")
+        .eq("chantier", chantier)
+        .order("date_creation", { ascending: false })
+        .limit(3);
+      if (error) throw error;
+      recentsSupabase = (data || []).map(x => String(x.numero_bl || "").trim().toUpperCase()).filter(Boolean);
+    } catch (e) {
+      console.warn("Historique récent des BL indisponible dans Supabase :", e.message || e);
+    }
+  }
+  // Priorité aux trois derniers BL connus du chantier, puis historique local en secours.
+  const fusion = [...new Set([...recentsSupabase, ...locaux])].slice(0, 3);
+  dl.innerHTML = fusion.map(v => `<option value="${echapperHTML(v)}">`).join("");
 }
 
 /* ============================================================
@@ -1411,6 +1540,7 @@ function normaliserBL(item) {
     bl: String(item?.bl || item?.numero_bl || "").trim().toUpperCase(),
     type: String(item?.type || item?.type_beton || "").trim().toUpperCase(),
     slump: item?.slump !== undefined && item?.slump !== null && item?.slump !== "" ? Number(item.slump) : null,
+    classe_slump: item?.classe_slump || 'S4',
     quantite_beton: item?.quantite_beton !== undefined && item?.quantite_beton !== null && item?.quantite_beton !== "" ? Number(item.quantite_beton) : null,
     _dbId: item?._dbId ?? item?.beton_bl_id ?? item?.id_bl ?? null,
     _assocId: item?._assocId ?? item?.association_id ?? item?.id_liaison ?? null,
@@ -1459,7 +1589,7 @@ async function obtenirIdBlindageActuel() {
 
 async function trouverBLGlobal(chantier, numero) {
   const { data, error } = await supabaseClient.from("beton_bl")
-    .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation")
+    .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, classe_slump, local_ref, date_creation")
     .eq("chantier", chantier).eq("numero_bl", String(numero).trim().toUpperCase()).maybeSingle();
   if (error) throw error;
   return data || null;
@@ -1481,10 +1611,11 @@ async function enregistrerBLDansSupabase(item, blindageId) {
       type_beton: item.type || null,
       quantite_beton: item.quantite_beton,
       slump: item.slump,
+      classe_slump: item.classe_slump || 'S4',
       local_ref: item.local_ref || creerRefLocaleBL()
     };
     const { data, error } = await supabaseClient.from("beton_bl").insert(payload)
-      .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation").single();
+      .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, classe_slump, local_ref, date_creation").single();
     if (error) {
       // Gestion d'un ajout simultané par un autre agent : on relit le BL créé entre-temps.
       fiche = await trouverBLGlobal(actuel.chantier, numero);
@@ -1508,6 +1639,7 @@ async function enregistrerBLDansSupabase(item, blindageId) {
   Object.assign(item, normaliserBL({
     id: fiche.id, bl: fiche.numero_bl, type: fiche.type_beton,
     quantite_beton: fiche.quantite_beton, slump: fiche.slump,
+    classe_slump: fiche.classe_slump || item.classe_slump || 'S4',
     local_ref: fiche.local_ref, association_id: assoc.id
   }));
   return item;
@@ -1533,7 +1665,7 @@ async function chargerBLs() {
     let fiches = [];
     if (ids.length) {
       const { data, error } = await supabaseClient.from("beton_bl")
-        .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation")
+        .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, classe_slump, local_ref, date_creation")
         .in("id", ids).order("id", { ascending: true });
       if (error) throw error;
       fiches = data || [];
@@ -1541,7 +1673,7 @@ async function chargerBLs() {
     const distants = (liens || []).map(lien => {
       const f = fiches.find(x => String(x.id) === String(lien.beton_bl_id));
       return f ? normaliserBL({ id:f.id, bl:f.numero_bl, type:f.type_beton, quantite_beton:f.quantite_beton,
-        slump:f.slump, local_ref:f.local_ref, association_id:lien.id }) : null;
+        slump:f.slump, classe_slump:f.classe_slump, local_ref:f.local_ref, association_id:lien.id }) : null;
     }).filter(Boolean);
 
     // Rattacher les anciennes saisies locales à une fiche existante ou en créer une, sans dupliquer un même BL.
@@ -1582,8 +1714,8 @@ async function ajouterBL() {
   const quantiteTexte = String(quantiteInput?.value ?? "").trim();
   const quantiteVal = quantiteTexte !== "" ? Number(quantiteTexte.replace(",", ".")) : null;
   const actuel = obtenirSupportBLActuel();
-  if (!blVal) { alert("⚠️ Saisis ou scanne un numéro BL."); blInput?.focus(); return; }
-  if (!actuel) { alert("⚠️ Sélectionne d'abord un chantier et une fouille."); return; }
+  if (!blVal) { alert("⚠️ Saisis ou scanne un numéro BL."); blInput?.focus(); return false; }
+  if (!actuel) { alert("⚠️ Sélectionne d'abord un chantier et une fouille."); return false; }
 
   let item;
   try {
@@ -1592,20 +1724,20 @@ async function ajouterBL() {
       const ficheExistante = await trouverBLGlobal(actuel.chantier, blVal);
       if (ficheExistante) {
         item = normaliserBL({ id:ficheExistante.id, bl:ficheExistante.numero_bl, type:ficheExistante.type_beton,
-          quantite_beton:ficheExistante.quantite_beton, slump:ficheExistante.slump, local_ref:ficheExistante.local_ref });
+          quantite_beton:ficheExistante.quantite_beton, slump:ficheExistante.slump, classe_slump:ficheExistante.classe_slump, local_ref:ficheExistante.local_ref });
       }
     }
   } catch (e) {
     alert("Impossible de vérifier si ce BL existe déjà dans Supabase. Rien n'a été ajouté.\n\n" + (e.message || e));
-    return;
+    return false;
   }
 
   // Les champs détaillés sont requis uniquement pour un nouveau BL.
   if (!item) {
-    if (!typeVal) { alert("⚠️ Saisis le type de béton pour ce nouveau BL."); typeInput?.focus(); return; }
-    if (quantiteVal === null || !Number.isFinite(quantiteVal) || quantiteVal <= 0) { alert("⚠️ Saisis une quantité de béton en m³ supérieure à zéro."); quantiteInput?.focus(); return; }
-    if (slumpVal === null || !Number.isFinite(slumpVal)) { alert("⚠️ Saisis une valeur de SLUMP."); slumpInput?.focus(); return; }
-    item = normaliserBL({ bl:blVal, type:typeVal, quantite_beton:quantiteVal, slump:slumpVal, local_ref:creerRefLocaleBL() });
+    if (!typeVal) { alert("⚠️ Saisis le type de béton pour ce nouveau BL."); typeInput?.focus(); return false; }
+    if (quantiteVal === null || !Number.isFinite(quantiteVal) || quantiteVal <= 0) { alert("⚠️ Saisis une quantité de béton en m³ supérieure à zéro."); quantiteInput?.focus(); return false; }
+    if (slumpVal === null || !Number.isFinite(slumpVal)) { alert("⚠️ Saisis une valeur de SLUMP."); slumpInput?.focus(); return false; }
+    item = normaliserBL({ bl:blVal, type:typeVal, quantite_beton:quantiteVal, slump:slumpVal, classe_slump:classeSlumpActuelle, local_ref:creerRefLocaleBL() });
   }
 
   memoriserNumeroBL(blVal);
@@ -1618,14 +1750,19 @@ async function ajouterBL() {
     if (blInput) blInput.value = "";
     if (typeInput) typeInput.value = "";
     if (quantiteInput) quantiteInput.value = "";
-    if (slumpInput) slumpInput.value = "";
+    if (slumpInput) { slumpInput.value = ""; slumpInput.style.borderColor = '#ccc'; slumpInput.style.background = ''; }
+    const alerteSlump = document.getElementById('slump-alerte');
+    if (alerteSlump) alerteSlump.style.display = 'none';
+    choisirClasseSlump('S4');
     if (item._dbId && (typeVal !== item.type || quantiteVal !== item.quantite_beton || slumpVal !== item.slump)) {
       // Aucun écrasement des données du BL déjà enregistré.
     }
     if (blInput) blInput.focus();
+    return true;
   } catch (e) {
     console.error("Erreur synchronisation BL :", e);
     alert("⚠️ Le BL n'a pas pu être associé dans Supabase. Vérifie les tables beton_bl et blindage_beton_bl_liaison.\n\n" + (e.message || e));
+    return false;
   }
 }
 
@@ -1655,13 +1792,18 @@ function afficherBLs() {
   }
   liste.innerHTML = blsActuels.map((item, i) => {
     const val = v => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v)) ? Number(v).toLocaleString("fr-FR", { maximumFractionDigits:3 }) : "--";
+    const classe = item.classe_slump || 'S4';
+    const statut = statutSlump(item.slump, classe);
+    const couleur = statut === 'conforme' ? '#166534' : statut === 'tolerance' ? '#92400e' : statut === 'non_conforme' ? '#991b1b' : '#0369a1';
+    const fond = statut === 'conforme' ? '#dcfce7' : statut === 'tolerance' ? '#fef3c7' : statut === 'non_conforme' ? '#fee2e2' : '#e0f2fe';
+    const icone = statut === 'conforme' ? '✅' : statut === 'tolerance' ? '⚠️' : statut === 'non_conforme' ? '🚨' : '';
     return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:7px 8px;margin-bottom:5px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
         <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;flex-wrap:wrap;">
           <span style="font-weight:bold;color:#333;font-size:.82em;">🧾 ${echapperHTML(item.bl || "--")}</span>
           <span style="color:#7C2270;background:#f0e4ee;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${echapperHTML(item.type || "--")}</span>
           <span style="color:#166534;background:#dcfce7;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${val(item.quantite_beton)} m³</span>
-          <span style="color:#0369a1;background:#e0f2fe;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${val(item.slump)} cm</span>
+          <span style="color:${couleur};background:${fond};font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;white-space:nowrap;">${icone} ${val(item.slump)} mm ${classe}</span>
         </div>
         <button type="button" onclick="supprimerBL(${i})" style="background:#fee2e2;color:#dc2626;padding:2px 7px;font-size:.72em;margin:0;border-radius:4px;flex-shrink:0;" title="Retirer ce BL de cette fouille">✕</button>
       </div></div>`;
@@ -1951,8 +2093,12 @@ window.addEventListener("load", () => {
 
   initBLDatalist();
   chargerTypesBetonChantier();
+  afficherHistoriqueNumerosBL();
   const selectChantierTypes = document.getElementById("selectChantier");
-  if (selectChantierTypes) selectChantierTypes.addEventListener("change", chargerTypesBetonChantier);
+  if (selectChantierTypes) selectChantierTypes.addEventListener("change", () => {
+    chargerTypesBetonChantier();
+    afficherHistoriqueNumerosBL();
+  });
 
   const blInput =
     document.getElementById("bl_beton");
@@ -2894,13 +3040,13 @@ async function chargerBLsDepuisSupabasePourPDF() {
       if (!errLiens && Array.isArray(liens) && liens.length) {
         const ids = [...new Set(liens.map(x => x.beton_bl_id).filter(x => x !== null && x !== undefined))];
         const { data: fiches, error } = await supabaseClient.from("beton_bl")
-          .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation")
+          .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, classe_slump, local_ref, date_creation")
           .in("id", ids).order("id", { ascending: true });
         if (!error && Array.isArray(fiches)) {
           const trouves = liens.map(lien => {
             const f = fiches.find(x => String(x.id) === String(lien.beton_bl_id));
             return f ? normaliserBL({ id:f.id, bl:f.numero_bl, type:f.type_beton,
-              quantite_beton:f.quantite_beton, slump:f.slump, local_ref:f.local_ref, association_id:lien.id }) : null;
+              quantite_beton:f.quantite_beton, slump:f.slump, classe_slump:f.classe_slump, local_ref:f.local_ref, association_id:lien.id }) : null;
           }).filter(Boolean);
           if (trouves.length) {
             blsActuels = trouves;
@@ -2950,6 +3096,16 @@ async function exporterPDF() {
   try { await chargerBLsDepuisSupabasePourPDF(); }
   catch (e) { console.warn("Chargement BL PDF : utilisation des données déjà chargées.", e); }
 
+  // Si un numéro BL est encore saisi, l'enregistrer/associer avant de produire le PDF.
+  // ajouterBL() vide les champs uniquement après confirmation de l'enregistrement.
+  const numeroBLNonEnregistre = String(document.getElementById("bl_beton")?.value || "").trim();
+  if (numeroBLNonEnregistre) {
+    const enregistre = await ajouterBL();
+    if (!enregistre) return;
+    try { await chargerBLsDepuisSupabasePourPDF(); }
+    catch (e) { console.warn("Rechargement BL après enregistrement :", e); }
+  }
+
   // --- 1. CONTRÔLE DES RÈGLES DE VALIDATION / COCHES ---
   const fouilleCoche = document.getElementById('check_fouille').checked;
   const betonCoche = document.getElementById('check_beton').checked;
@@ -2992,10 +3148,10 @@ async function exporterPDF() {
   }
   // ------------------------------------------------
 
-  const btnPdf = document.getElementById("btnExportPdf");
+  const btnPdf = document.getElementById("btnExportPdf") || document.getElementById("btnEnregistrerBas");
   const btnOriginalHTML = btnPdf ? btnPdf.innerHTML : "";
   if (btnPdf) {
-    btnPdf.innerHTML = "⏳...";
+    btnPdf.innerHTML = "⏳ Enregistrement / PDF...";
     btnPdf.disabled = true;
   }
 
@@ -3306,25 +3462,31 @@ async function exporterPDF() {
       const formulaireNonVide = saisieBL || saisieType || saisieQteTexte || saisieSlumpTexte;
       if (formulaireNonVide && (!saisieBL || !listePdfBL.some(x => String(x.bl || "").trim().toUpperCase() === saisieBL))) {
         listePdfBL.push(normaliserBL({
-          bl: saisieBL,
-          type: saisieType,
+          bl: saisieBL, type: saisieType,
           quantite_beton: Number.isFinite(saisieQte) ? saisieQte : null,
-          slump: Number.isFinite(saisieSlump) ? saisieSlump : null
+          slump: Number.isFinite(saisieSlump) ? saisieSlump : null,
+          classe_slump: classeSlumpActuelle || 'S4'
         }));
       }
       const rowsBL = listePdfBL.length
-        ? listePdfBL.map((item, i) => [
-            i + 1,
-            item.bl || item.bl_beton || item.numero_bl || "",
-            item.type || item.type_beton || "",
-            fmtNombre(item.quantite_beton) ? fmtNombre(item.quantite_beton) + " m³" : "",
-            fmtNombre(item.slump) !== "" ? fmtNombre(item.slump) + " cm" : ""
-          ])
-        : [["—", "Aucun BL associé à cette fouille", "", "", ""]];
+        ? listePdfBL.map((item, i) => {
+            const classe = item.classe_slump || 'S4';
+            const statut = statutSlump(item.slump, classe);
+            const statutTxt = statut === 'conforme' ? 'Conforme' : statut === 'tolerance' ? 'Tolérance' : statut === 'non_conforme' ? 'Non conforme' : '-';
+            return [
+              i + 1,
+              item.bl || item.bl_beton || item.numero_bl || "",
+              item.type || item.type_beton || "",
+              fmtNombre(item.quantite_beton) ? fmtNombre(item.quantite_beton) + " m³" : "",
+              classe + " — " + (fmtNombre(item.slump) !== "" ? fmtNombre(item.slump) + " mm" : "-"),
+              statutTxt
+            ];
+          })
+        : [["—", "Aucun BL associé à cette fouille", "", "", "", ""]];
       doc.autoTable({
         startY: y,
         margin: { left: marge, right: marge, bottom: footerReserve },
-        head: [["#", "N° BL", "Type de béton", "Quantité BL", "Slump"]],
+        head: [["#", "N° BL", "Type de béton", "Quantité BL", "Slump / Classe", "Statut"]],
         body: rowsBL,
         theme: "grid",
         styles: { fontSize: 7.8, cellPadding: 2.2, overflow: "linebreak" },
@@ -3334,7 +3496,16 @@ async function exporterPDF() {
           1: { cellWidth: 45, fontStyle: "bold" },
           2: { cellWidth: "auto" },
           3: { cellWidth: 25, halign: "center" },
-          4: { cellWidth: 20, halign: "center", textColor: [3, 105, 161] }
+          4: { cellWidth: 27, halign: "center", textColor: [3, 105, 161] },
+          5: { cellWidth: 25, halign: "center" }
+        },
+        didParseCell: function(data) {
+          if (data.column.index === 5 && data.section === 'body') {
+            const txt = String(data.cell.raw || '');
+            if (txt.includes('Non conforme')) data.cell.styles.textColor = [153, 27, 27];
+            else if (txt.includes('Tolérance')) data.cell.styles.textColor = [146, 64, 14];
+            else if (txt.includes('Conforme')) data.cell.styles.textColor = [22, 101, 52];
+          }
         },
       });
       y = doc.lastAutoTable.finalY + 5;
@@ -3908,7 +4079,7 @@ async function exporterRecapPDF() {
   } catch (err) {
     alert("Erreur : " + err.message);
   } finally {
-    if (btnPdf) { btnPdf.disabled = false; btnPdf.innerHTML = "📄 Exporter PDF"; }
+    if (btnPdf) { btnPdf.disabled = false; btnPdf.innerHTML = btnPdf.id === "btnEnregistrerBas" ? "💾 ENREGISTRER / EXPORTER PDF" : "📄 Exporter PDF"; }
   }
 }
 
@@ -4065,10 +4236,6 @@ function initChantiers() {
   chantiersUniques.forEach(c => {
     const data = chantiersMap[c];
 
-    if (data && data.total > 0 && data.effectues === data.total) {
-      return; 
-    }
-
     const opt = document.createElement("option");
     opt.value = c;
     opt.textContent = c;
@@ -4152,44 +4319,59 @@ function resetSaisieAvantSupport() {
   if (typeof calculer === "function") calculer();
 }
 
+function supportEstFait(s) {
+    const df = s.date_fouille || s.DATE_FOUILLE;
+    const db = s.date_beton || s.DATE_BETON;
+    const dm = s.date_matage || s.DATE_MATAGE;
+    return !!(df && db && dm);
+}
+
 function filtrerSupports() {
     const chantierSelect = document.getElementById("selectChantier");
     const chantier = chantierSelect ? chantierSelect.value : "";
     const supportSelect = document.getElementById("selectSupport");
-
     if (!supportSelect) return;
 
+    const ancienneSelection = supportSelect.value;
     resetSaisieAvantSupport();
     supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
+    if (!chantier) {
+        if (typeof mettreAJourBoutonsSupportsSidebar === 'function') mettreAJourBoutonsSupportsSidebar();
+        return;
+    }
 
-    if (!chantier) return;
-
+    const statut = document.querySelector('input[name="statutFiltreSupport"]:checked')?.value || 'nonfait';
     const filtres = baseSupports.filter(s => {
         const nomChantier = s.chantier || s.CHANTIER;
         if (nomChantier !== chantier) return false;
-        
-        const df = s.date_fouille || s.DATE_FOUILLE;
-        const db = s.date_beton || s.DATE_BETON;
-        const dm = s.date_matage || s.DATE_MATAGE;
+        const fait = supportEstFait(s);
+        if (statut === 'fait' && !fait) return false;
+        if (statut === 'nonfait' && fait) return false;
+        return true;
+    });
 
-        return !(df && db && dm);
-    });
-    
-    filtres.sort((a, b) => {
-        const supA = String(a.support || a.SUPPORT || "");
-        const supB = String(b.support || b.SUPPORT || "");
-        return supA.localeCompare(supB, undefined, { numeric: true, sensitivity: 'base' });
-    });
+    filtres.sort((a, b) => String(a.support || a.SUPPORT || '').localeCompare(
+        String(b.support || b.SUPPORT || ''), undefined, { numeric: true, sensitivity: 'base' }
+    ));
 
     filtres.forEach(s => {
         const numSupport = s.support || s.SUPPORT;
         if (!numSupport) return;
-
-        let opt = document.createElement("option");
+        const opt = document.createElement('option');
         opt.value = numSupport;
         opt.textContent = numSupport;
         supportSelect.appendChild(opt);
     });
+
+    if (ancienneSelection && Array.from(supportSelect.options).some(o => o.value === ancienneSelection)) {
+        supportSelect.value = ancienneSelection;
+    }
+    if (typeof mettreAJourBoutonsSupportsSidebar === 'function') mettreAJourBoutonsSupportsSidebar();
+}
+
+function filtrerSupportsParStatut() {
+    filtrerSupports();
+    filtrerListeSupportsDroite();
 }
 
 function chargerSupport() {
