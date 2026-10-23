@@ -689,10 +689,18 @@ input[readonly]{
       <input type="number" id="quantite-beton-input" placeholder="Quantité (m³)" style="flex:1; min-width:0; height:32px; font-size:0.85em;" step="0.001" min="0">
       <button type="button" onclick="ajouterTypeBetonChantier()" title="Ajouter un type de béton au chantier actif" style="background:#7c2270; color:white; padding:5px 9px; margin:0; font-weight:bold; font-size:0.9em;">＋ Type</button>
     </div>
+    <div style="display:flex; gap:4px; margin-bottom:5px; align-items:center;">
+      <span style="font-size:0.75em; font-weight:bold; color:#0369a1; white-space:nowrap;">Classe S :</span>
+      <button type="button" id="btn-S1" onclick="choisirClasseSlump('S1')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#f3f4f6; color:#333;">S1</button>
+      <button type="button" id="btn-S2" onclick="choisirClasseSlump('S2')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#f3f4f6; color:#333;">S2</button>
+      <button type="button" id="btn-S3" onclick="choisirClasseSlump('S3')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#f3f4f6; color:#333;">S3</button>
+      <button type="button" id="btn-S4" onclick="choisirClasseSlump('S4')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#e0f2fe; color:#0369a1; border-color:#0369a1;">S4</button>
+    </div>
     <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
-      <input type="number" id="slump-input" placeholder="Slump (cm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0">
+      <input type="number" id="slump-input" placeholder="Slump (cm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0" oninput="verifierSlump()">
       <button type="button" onclick="ajouterBL()" style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">💾 Enregistrer BL</button>
     </div>
+    <div id="slump-alerte" style="font-size:0.78em; font-weight:bold; margin-bottom:6px; display:none;"></div>
     <div id="bl-liste"></div>
 
     <div class="result" style="margin-top: 10px; padding: 8px; border: 1px dashed #bbb; border-radius: 8px; background: #fafafa;">
@@ -1268,37 +1276,89 @@ const LISTE_BL = [
 <script>
 /* ===== js/bl-beton.js ===== */
 /* ============================================================
-   GESTION BONS DE LIVRAISON BÉTON (BL-BÉTON)
-   - 1 enregistrement = BL + Type béton + Slump
-   - Plusieurs BL par support
-   - Sauvegarde localStorage par chantier/support
-   - Scanner QR code
-   - Compatible avec l'ancien format de données
+   CLASSE SLUMP S1-S4
    ============================================================ */
+const PLAGES_SLUMP = {
+  S1: { min: 10, max: 40 },
+  S2: { min: 50, max: 90 },
+  S3: { min: 100, max: 150 },
+  S4: { min: 160, max: 210 }
+};
+
+let classeSlumpActuelle = 'S4';
+
+function choisirClasseSlump(classe) {
+  classeSlumpActuelle = classe;
+  ['S1','S2','S3','S4'].forEach(s => {
+    const btn = document.getElementById('btn-' + s);
+    if (!btn) return;
+    if (s === classe) {
+      btn.style.background = '#e0f2fe';
+      btn.style.color = '#0369a1';
+      btn.style.borderColor = '#0369a1';
+    } else {
+      btn.style.background = '#f3f4f6';
+      btn.style.color = '#333';
+      btn.style.borderColor = '#ccc';
+    }
+  });
+  verifierSlump();
+}
+
+function verifierSlump() {
+  const input = document.getElementById('slump-input');
+  const alerte = document.getElementById('slump-alerte');
+  if (!input || !alerte) return;
+
+  const valeur = parseFloat(input.value);
+  if (isNaN(valeur) || input.value === '') {
+    input.style.borderColor = '#ccc';
+    input.style.background = '';
+    alerte.style.display = 'none';
+    return;
+  }
+
+  const plage = PLAGES_SLUMP[classeSlumpActuelle];
+  const TOLERANCE = 20; // mm = 2 cm
+
+  if (valeur >= plage.min && valeur <= plage.max) {
+    // Dans la plage
+    input.style.borderColor = '#16a34a';
+    input.style.background = '#f0fdf4';
+    alerte.style.display = 'none';
+  } else {
+    const ecart = valeur < plage.min ? plage.min - valeur : valeur - plage.max;
+    if (ecart <= TOLERANCE) {
+      // Tolérance orange
+      input.style.borderColor = '#f59e0b';
+      input.style.background = '#fffbeb';
+      alerte.style.display = 'block';
+      alerte.style.color = '#92400e';
+      alerte.innerHTML = `⚠️ Slump hors plage ${classeSlumpActuelle} (${plage.min}-${plage.max} cm) — écart : ${ecart} cm (tolérance ±20 mm)`;
+    } else {
+      // Hors tolérance rouge
+      input.style.borderColor = '#dc2626';
+      input.style.background = '#fef2f2';
+      alerte.style.display = 'block';
+      alerte.style.color = '#991b1b';
+      alerte.innerHTML = `🚨 Slump NON CONFORME ${classeSlumpActuelle} (${plage.min}-${plage.max} cm) — écart : ${ecart} cm`;
+    }
+  }
+}
+
+function statutSlump(slump, classe) {
+  if (slump === null || slump === undefined || !classe) return null;
+  const plage = PLAGES_SLUMP[classe];
+  if (!plage) return null;
+  const TOLERANCE = 20;
+  if (slump >= plage.min && slump <= plage.max) return 'conforme';
+  const ecart = slump < plage.min ? plage.min - slump : slump - plage.max;
+  return ecart <= TOLERANCE ? 'tolerance' : 'non_conforme';
+}
 
 let blsActuels = [];
 
-/*
-Structure actuelle :
-[
-  {
-    bl: "BL-001",
-    type: "C35/45",
-    slump: 18
-  },
-  {
-    bl: "BL-002",
-    type: "C30/37",
-    slump: 12
-  }
-]
-*/
 
-/* ============================================================
-   HISTORIQUE DES NUMÉROS DE BL
-   Liste commune à toutes les fouilles sur cet appareil :
-   facilite la réutilisation d'un même BL sur plusieurs FBM.
-   ============================================================ */
 const CLE_HISTORIQUE_NUMEROS_BL = "fbm_historique_numeros_bl";
 
 function lireHistoriqueNumerosBL() {
@@ -1412,6 +1472,7 @@ function normaliserBL(item) {
     type: String(item?.type || item?.type_beton || "").trim().toUpperCase(),
     slump: item?.slump !== undefined && item?.slump !== null && item?.slump !== "" ? Number(item.slump) : null,
     quantite_beton: item?.quantite_beton !== undefined && item?.quantite_beton !== null && item?.quantite_beton !== "" ? Number(item.quantite_beton) : null,
+    classe_slump: item?.classe_slump || 'S4',
     _dbId: item?._dbId ?? item?.beton_bl_id ?? item?.id_bl ?? null,
     _assocId: item?._assocId ?? item?.association_id ?? item?.id_liaison ?? null,
     local_ref: item?.local_ref || item?._localRef || creerRefLocaleBL()
@@ -1458,8 +1519,8 @@ async function obtenirIdBlindageActuel() {
 }
 
 async function trouverBLGlobal(chantier, numero) {
-  const { data, error } = await supabaseClient.from("beton_bl")
-    .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation")
+      const { data, error } = await supabaseClient.from("beton_bl")
+        .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, classe_slump, local_ref, date_creation")
     .eq("chantier", chantier).eq("numero_bl", String(numero).trim().toUpperCase()).maybeSingle();
   if (error) throw error;
   return data || null;
@@ -1475,14 +1536,15 @@ async function enregistrerBLDansSupabase(item, blindageId) {
   // Si le BL existe déjà sur le chantier, on réutilise sa fiche et sa quantité sans la recopier/modifier.
   let fiche = await trouverBLGlobal(actuel.chantier, numero);
   if (!fiche) {
-    const payload = {
-      chantier: actuel.chantier,
-      numero_bl: numero,
-      type_beton: item.type || null,
-      quantite_beton: item.quantite_beton,
-      slump: item.slump,
-      local_ref: item.local_ref || creerRefLocaleBL()
-    };
+  const payload = {
+    chantier: actuel.chantier,
+    numero_bl: numero,
+    type_beton: item.type || null,
+    quantite_beton: item.quantite_beton,
+    slump: item.slump,
+    classe_slump: item.classe_slump || 'S4',
+    local_ref: item.local_ref || creerRefLocaleBL()
+  };
     const { data, error } = await supabaseClient.from("beton_bl").insert(payload)
       .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation").single();
     if (error) {
@@ -1605,7 +1667,7 @@ async function ajouterBL() {
     if (!typeVal) { alert("⚠️ Saisis le type de béton pour ce nouveau BL."); typeInput?.focus(); return; }
     if (quantiteVal === null || !Number.isFinite(quantiteVal) || quantiteVal <= 0) { alert("⚠️ Saisis une quantité de béton en m³ supérieure à zéro."); quantiteInput?.focus(); return; }
     if (slumpVal === null || !Number.isFinite(slumpVal)) { alert("⚠️ Saisis une valeur de SLUMP."); slumpInput?.focus(); return; }
-    item = normaliserBL({ bl:blVal, type:typeVal, quantite_beton:quantiteVal, slump:slumpVal, local_ref:creerRefLocaleBL() });
+      item = normaliserBL({ bl:blVal, type:typeVal, quantite_beton:quantiteVal, slump:slumpVal, classe_slump:classeSlumpActuelle, local_ref:creerRefLocaleBL() });
   }
 
   memoriserNumeroBL(blVal);
@@ -1655,13 +1717,17 @@ function afficherBLs() {
   }
   liste.innerHTML = blsActuels.map((item, i) => {
     const val = v => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v)) ? Number(v).toLocaleString("fr-FR", { maximumFractionDigits:3 }) : "--";
+    const statut = statutSlump(item.slump, item.classe_slump || 'S4');
+    const couleurSlump = statut === 'conforme' ? '#166534' : statut === 'tolerance' ? '#92400e' : statut === 'non_conforme' ? '#991b1b' : '#0369a1';
+    const bgSlump = statut === 'conforme' ? '#dcfce7' : statut === 'tolerance' ? '#fef3c7' : statut === 'non_conforme' ? '#fee2e2' : '#e0f2fe';
+    const iconeSlump = statut === 'conforme' ? '✅' : statut === 'tolerance' ? '⚠️' : statut === 'non_conforme' ? '🚨' : '';
     return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:7px 8px;margin-bottom:5px;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
         <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;flex-wrap:wrap;">
           <span style="font-weight:bold;color:#333;font-size:.82em;">🧾 ${echapperHTML(item.bl || "--")}</span>
           <span style="color:#7C2270;background:#f0e4ee;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${echapperHTML(item.type || "--")}</span>
           <span style="color:#166534;background:#dcfce7;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${val(item.quantite_beton)} m³</span>
-          <span style="color:#0369a1;background:#e0f2fe;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${val(item.slump)} cm</span>
+          <span style="color:${couleurSlump};background:${bgSlump};font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;white-space:nowrap;">${iconeSlump} ${val(item.slump)} cm ${item.classe_slump || 'S4'}</span>
         </div>
         <button type="button" onclick="supprimerBL(${i})" style="background:#fee2e2;color:#dc2626;padding:2px 7px;font-size:.72em;margin:0;border-radius:4px;flex-shrink:0;" title="Retirer ce BL de cette fouille">✕</button>
       </div></div>`;
@@ -2044,6 +2110,7 @@ window.addEventListener("load", () => {
   /* Chargement initial. */
   afficherHistoriqueNumerosBL();
   chargerBLs();
+  choisirClasseSlump('S4'); // ← ajouter ici
 
 });
 
@@ -2892,7 +2959,7 @@ async function chargerBLsDepuisSupabasePourPDF() {
   let fiches = [];
   if (ids.length) {
     const { data, error } = await supabaseClient.from("beton_bl")
-      .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, local_ref, date_creation")
+      .select("id, chantier, numero_bl, type_beton, quantite_beton, slump, classe_slump, local_ref, date_creation")
       .in("id", ids).order("id", { ascending: true });
     if (error) throw error;
     fiches = data || [];
@@ -3283,29 +3350,43 @@ async function exporterPDF() {
         ? String(v).replace(".", ",") : "";
       const listePdfBL = Array.isArray(blsActuels) ? blsActuels : [];
       const rowsBL = listePdfBL.length
-        ? listePdfBL.map((item, i) => [
-            i + 1,
-            item.bl || "",
-            item.type || "",
-            fmtNombre(item.quantite_beton) ? fmtNombre(item.quantite_beton) + " m³" : "",
-            fmtNombre(item.slump) !== "" ? fmtNombre(item.slump) + " cm" : ""
-          ])
-        : [["—", "Aucun BL associé à cette fouille", "", "", ""]];
+        ? listePdfBL.map((item, i) => {
+            const statut = statutSlump(item.slump, item.classe_slump || 'S4');
+            const statutTxt = statut === 'conforme' ? '✅ Conforme' : statut === 'tolerance' ? '⚠️ Tolérance' : statut === 'non_conforme' ? '🚨 Non conforme' : '-';
+            return [
+              i + 1,
+              item.bl || "",
+              item.type || "",
+              fmtNombre(item.quantite_beton) ? fmtNombre(item.quantite_beton) + " m³" : "",
+              (item.classe_slump || 'S4') + " — " + (fmtNombre(item.slump) !== "" ? fmtNombre(item.slump) + " cm" : "-"),
+              statutTxt
+            ];
+          })
+        : [["—", "Aucun BL associé à cette fouille", "", "", "", ""]];
       doc.autoTable({
         startY: y,
         margin: { left: marge, right: marge, bottom: footerReserve },
-        head: [["#", "N° BL", "Type de béton", "Quantité BL", "Slump"]],
+        head: [["#", "N° BL", "Type de béton", "Quantité", "Slump", "Statut"]],
         body: rowsBL,
         theme: "grid",
-        styles: { fontSize: 7.8, cellPadding: 2.2, overflow: "linebreak" },
+        styles: { fontSize: 7.5, cellPadding: 2, overflow: "linebreak" },
         headStyles: { fillColor: violet, textColor: 255, fontStyle: "bold" },
         columnStyles: {
           0: { cellWidth: 8, halign: "center" },
-          1: { cellWidth: 45, fontStyle: "bold" },
+          1: { cellWidth: 38, fontStyle: "bold" },
           2: { cellWidth: "auto" },
-          3: { cellWidth: 25, halign: "center" },
-          4: { cellWidth: 20, halign: "center", textColor: [3, 105, 161] }
+          3: { cellWidth: 22, halign: "center" },
+          4: { cellWidth: 25, halign: "center", textColor: [3, 105, 161] },
+          5: { cellWidth: 28, halign: "center" }
         },
+        didParseCell: function(data) {
+          if (data.column.index === 5 && data.section === 'body') {
+            const txt = String(data.cell.raw || '');
+            if (txt.includes('Non conforme')) data.cell.styles.textColor = [153, 27, 27];
+            else if (txt.includes('Tolérance')) data.cell.styles.textColor = [146, 64, 14];
+            else if (txt.includes('Conforme')) data.cell.styles.textColor = [22, 101, 52];
+          }
+        }
       });
       y = doc.lastAutoTable.finalY + 5;
     }
