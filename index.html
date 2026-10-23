@@ -1305,56 +1305,83 @@ function choisirClasseSlump(classe) {
   verifierSlump();
 }
 
+
 function verifierSlump() {
   const input = document.getElementById('slump-input');
   const alerte = document.getElementById('slump-alerte');
   if (!input || !alerte) return;
 
-  const valeur = parseFloat(input.value);
-  if (isNaN(valeur) || input.value === '') {
+  const texte = String(input.value || '').trim().replace(',', '.');
+  const valeurCm = texte === '' ? NaN : Number(texte);
+
+  if (!Number.isFinite(valeurCm)) {
     input.style.borderColor = '#ccc';
     input.style.background = '';
     alerte.style.display = 'none';
     return;
   }
 
+  // Conversion cm vers mm uniquement pour le contrôle du slump.
+  const valeurMm = valeurCm * 10;
   const plage = PLAGES_SLUMP[classeSlumpActuelle];
-  const TOLERANCE = 20; // mm = 2 cm
+  const TOLERANCE = 20; // 20 mm = 2 cm
 
-  if (valeur >= plage.min && valeur <= plage.max) {
-    // Dans la plage
+  if (valeurMm >= plage.min && valeurMm <= plage.max) {
     input.style.borderColor = '#16a34a';
     input.style.background = '#f0fdf4';
     alerte.style.display = 'none';
   } else {
-    const ecart = valeur < plage.min ? plage.min - valeur : valeur - plage.max;
-    if (ecart <= TOLERANCE) {
-      // Tolérance orange
+    const ecartMm = valeurMm < plage.min
+      ? plage.min - valeurMm
+      : valeurMm - plage.max;
+
+    alerte.style.display = 'block';
+
+    if (ecartMm <= TOLERANCE) {
       input.style.borderColor = '#f59e0b';
       input.style.background = '#fffbeb';
-      alerte.style.display = 'block';
       alerte.style.color = '#92400e';
-      alerte.innerHTML = `⚠️ Slump hors plage ${classeSlumpActuelle} (${plage.min}-${plage.max} cm) — écart : ${ecart} cm (tolérance ±20 mm)`;
+      alerte.textContent =
+        `⚠️ Slump hors plage ${classeSlumpActuelle} ` +
+        `(${plage.min}-${plage.max} mm) — écart : ${ecartMm} mm`;
     } else {
-      // Hors tolérance rouge
       input.style.borderColor = '#dc2626';
       input.style.background = '#fef2f2';
-      alerte.style.display = 'block';
       alerte.style.color = '#991b1b';
-      alerte.innerHTML = `🚨 Slump NON CONFORME ${classeSlumpActuelle} (${plage.min}-${plage.max} cm) — écart : ${ecart} cm`;
+      alerte.textContent =
+        `🚨 Slump NON CONFORME ${classeSlumpActuelle} ` +
+        `(${plage.min}-${plage.max} mm) — écart : ${ecartMm} mm`;
     }
   }
 }
 
+
+
 function statutSlump(slump, classe) {
-  if (slump === null || slump === undefined || !classe) return null;
+  if (slump === null || slump === undefined || slump === '' || !classe) {
+    return null;
+  }
+
   const plage = PLAGES_SLUMP[classe];
   if (!plage) return null;
-  const TOLERANCE = 20;
-  if (slump >= plage.min && slump <= plage.max) return 'conforme';
-  const ecart = slump < plage.min ? plage.min - slump : slump - plage.max;
-  return ecart <= TOLERANCE ? 'tolerance' : 'non_conforme';
+
+  // La valeur saisie est en cm ; les plages sont en mm.
+  const valeurMm = Number(slump) * 10;
+  if (!Number.isFinite(valeurMm)) return null;
+
+  const TOLERANCE = 20; // 20 mm = 2 cm
+
+  if (valeurMm >= plage.min && valeurMm <= plage.max) {
+    return 'conforme';
+  }
+
+  const ecartMm = valeurMm < plage.min
+    ? plage.min - valeurMm
+    : valeurMm - plage.max;
+
+  return ecartMm <= TOLERANCE ? 'tolerance' : 'non_conforme';
 }
+
 
 let blsActuels = [];
 
