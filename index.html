@@ -2462,8 +2462,16 @@ if (!calculLTVPossible) {
 
   let T_BF_m = T_BF_cm / 100; 
   if (document.getElementById("TBF_display")) document.getElementById("TBF_display").innerHTML = T_BF_m.toFixed(2);
-  
-  if (showLTV && NIT_m > T_BF_m) {  
+    if (!verifBlindage) {
+    showLTV = false;
+    I_min_LTV = null;
+    if(document.getElementById("tbf")) document.getElementById("tbf").innerHTML = "";
+    if(document.getElementById("ltv")) document.getElementById("ltv").innerHTML = "";
+    if(document.getElementById("I_LTV")) document.getElementById("I_LTV").innerHTML = "";
+    if (typeof evaluerAlertes === "function") evaluerAlertes();
+    return;
+  }
+  if (verifBlindage && showLTV && NIT_m > T_BF_m) {  
     if(document.getElementById("ltv")) document.getElementById("ltv").innerHTML = D > 3.0 ? "🚨 LTV 72H après Fouille" : "🚨 LTV 72H après comblement Béton";
     let diff = NIT_m - T_BF_m;
     I_min_LTV = I + diff + 0.001;
