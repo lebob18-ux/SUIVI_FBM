@@ -3313,6 +3313,22 @@ async function exporterPDF() {
     // Section 6 : résultat blindage / LTV
     titreSection("RESULTAT", rouge);
 
+        // Blindage de convenance : afficher la Règle 1 si blindage coché mais pas d'alerte réglementaire
+    const blindageConvenance = verifBlindage && !document.getElementById("ltv")?.innerText?.includes("🚨") && !document.getElementById("tbf")?.innerText?.includes("🚨");
+    if (blindageConvenance) {
+      assurerPlace(12);
+      doc.setFillColor(255, 243, 205);
+      doc.rect(marge, y, pageW - marge * 2, 10, 'F');
+      doc.setDrawColor(255, 193, 7);
+      doc.rect(marge, y, pageW - marge * 2, 10, 'D');
+      doc.setTextColor(133, 100, 4);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text("Regle 1 : La fouille est-elle executee et coulee avec du beton dans la meme", marge + 2, y + 4);
+      doc.text("interception de voie = NON", marge + 2, y + 8.5);
+      y += 14;
+    }
+
     const lignesTbf = lignesColorees("tbf");
     const ligneLtv = clean(txt("ltv"));
     const ligneILtv = clean(txt("I_LTV"));
