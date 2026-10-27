@@ -2654,10 +2654,6 @@ if (!calculLTVPossible) {
     document.getElementById("I_LTV").innerHTML = (I_min_LTV !== null) ? "👉 I mini sans LTV = " + I_min_LTV.toFixed(2) + " m" : "";
   }
   
-  // Ne jamais conserver l'alerte de position du blindage d'un support précédent.
-  if (document.getElementById("alerte_blindage_bloc")) {
-    document.getElementById("alerte_blindage_bloc").innerHTML = "";
-  }
   if (verifBlindage) {
     let alerteBlindageHTML = "";
     if (distBlindage > 0) {
@@ -2690,16 +2686,6 @@ if (!calculLTVPossible) {
     let p2_calc = ((T_BF_cm / 100) - ((ara - 31) / 100) + SOL).toFixed(2);
     let p1_calc = P1_profondeur_dispo.toFixed(2);
     p1p2_div.innerHTML = "📏 SOL jusqu'à P2 = <span style='color: #2563eb;'>" + p2_calc + " m</span> | P1 = <span style='color: #2563eb;'>" + p1_calc + " m</span>";
-  }
-
-  /* Sans chantier ou support sélectionné, aucune alerte d'un ancien support ne doit rester visible. */
-  const chantierActifAlerte = String(document.getElementById("selectChantier")?.value || "").trim();
-  const supportActifAlerte = String(document.getElementById("selectSupport")?.value || "").trim();
-  if (!chantierActifAlerte || !supportActifAlerte) {
-    ["tbf", "ltv", "I_LTV", "alerte_blindage_bloc"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = "";
-    });
   }
 
   /* Ouvre/ferme automatiquement le bloc Alertes selon présence d'une alerte blindage/LTV */
@@ -2760,6 +2746,24 @@ function dateDuPosteFBM() {
   const d = new Date();
   if (d.getHours() < 6) d.setDate(d.getDate() - 1);
   return d.toLocaleDateString('sv-SE'); // AAAA-MM-JJ
+}
+
+/* Récupère les alertes déjà calculées par l'application.
+   Elles restent visibles sur le téléphone, sont enregistrées dans blindage.alerte,
+   mais ne sont plus imprimées dans le PDF. */
+function texteAlertePourSupabase() {
+  const morceaux = [];
+  const ajouterSiAlerte = (id, libelle) => {
+    const element = document.getElementById(id);
+    const texte = String(element?.innerText || "").replace(/\s+/g, " ").trim();
+    if (texte && texte.includes("🚨")) morceaux.push(libelle + texte);
+  };
+
+  ajouterSiAlerte("tbf", "Blindage : ");
+  ajouterSiAlerte("ltv", "LTV : ");
+  ajouterSiAlerte("alerte_blindage_bloc", "Position du blindage : ");
+
+  return morceaux.length ? [...new Set(morceaux)].join("\n") : null;
 }
 
 async function synchroniserSupportActuel() {
@@ -2843,6 +2847,7 @@ async function synchroniserSupportActuel() {
           prenom: prenom,
           effectue: 1,
           date_exec: dateJour,
+          alerte: texteAlertePourSupabase(),
           ...phases
         };
         const ajouterSiRenseigne = (colonne, valeur, numerique = true) => {
@@ -3512,8 +3517,10 @@ async function exporterPDF() {
       });
       y = doc.lastAutoTable.finalY + 5;
 
-    // Les alertes (blindage / LTV) restent dans l'application et ne sont plus imprimées dans le PDF.
-    // Section 6 : seuils réglementaires
+    // Les alertes calculées restent visibles dans l'application et sont stockées
+    // dans blindage.alerte ; elles ne sont pas reprises dans le PDF.
+
+    // Section 7 : seuils réglementaires
     doc.autoTable({
       startY: y,
       margin: { left: marge, right: marge, bottom: footerReserve },
@@ -4312,7 +4319,6 @@ function filtrerSupports() {
     resetSaisieAvantSupport();
     supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
     if (!chantier) {
-        if (typeof calculer === "function") calculer();
         if (typeof mettreAJourBoutonsSupportsSidebar === 'function') mettreAJourBoutonsSupportsSidebar();
         return;
     }
@@ -4343,7 +4349,6 @@ function filtrerSupports() {
     if (ancienneSelection && Array.from(supportSelect.options).some(o => o.value === ancienneSelection)) {
         supportSelect.value = ancienneSelection;
     }
-    if (!supportSelect.value && typeof calculer === "function") calculer();
     if (typeof mettreAJourBoutonsSupportsSidebar === 'function') mettreAJourBoutonsSupportsSidebar();
 }
 
@@ -4905,10 +4910,11 @@ document.addEventListener("DOMContentLoaded", function () {
 /* --- 3. CHARGEMENT INITIAL --- */
 window.addEventListener('load', function() {
     verifierAdmin();
-    // Aucun chantier n'est sélectionné automatiquement au démarrage.
-    // Les liens QR explicites restent libres de sélectionner leur chantier/support.
-    if (!document.getElementById("selectChantier")?.value || !document.getElementById("selectSupport")?.value) {
-        if (typeof calculer === "function") calculer();
+    const selectChantier = document.getElementById("selectChantier");
+    if (selectChantier && selectChantier.options.length > 1) {
+        selectChantier.selectedIndex = 1;
+        selectChantier.dispatchEvent(new Event('change'));
+ 
     }
 });
 // Sélection automatique au focus sur tous les inputs numériques
@@ -5437,15 +5443,6 @@ function logoAINMversPNG(largeurPx, hauteurPx) {
           mainSelect.addEventListener('change', () => {
               mettreAJourBoutonsChantiersSidebar();
               mettreAJourBoutonsSupportsSidebar();
-              // Lors d'un changement de chantier, effacer les alertes du support précédent
-              // après l'exécution des autres gestionnaires de changement.
-              setTimeout(() => {
-                  ["tbf", "ltv", "I_LTV", "alerte_blindage_bloc"].forEach(id => {
-                      const el = document.getElementById(id);
-                      if (el) el.innerHTML = "";
-                  });
-                  if (typeof evaluerAlertes === "function") evaluerAlertes();
-              }, 0);
           });
           observerChantiers.observe(mainSelect, { childList: true, subtree: true, attributes: true });
           setTimeout(mettreAJourBoutonsChantiersSidebar, 400);
