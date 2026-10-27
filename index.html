@@ -5437,6 +5437,15 @@ function logoAINMversPNG(largeurPx, hauteurPx) {
           mainSelect.addEventListener('change', () => {
               mettreAJourBoutonsChantiersSidebar();
               mettreAJourBoutonsSupportsSidebar();
+              // Lors d'un changement de chantier, effacer les alertes du support précédent
+              // après l'exécution des autres gestionnaires de changement.
+              setTimeout(() => {
+                  ["tbf", "ltv", "I_LTV", "alerte_blindage_bloc"].forEach(id => {
+                      const el = document.getElementById(id);
+                      if (el) el.innerHTML = "";
+                  });
+                  if (typeof evaluerAlertes === "function") evaluerAlertes();
+              }, 0);
           });
           observerChantiers.observe(mainSelect, { childList: true, subtree: true, attributes: true });
           setTimeout(mettreAJourBoutonsChantiersSidebar, 400);
