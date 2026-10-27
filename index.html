@@ -2654,6 +2654,10 @@ if (!calculLTVPossible) {
     document.getElementById("I_LTV").innerHTML = (I_min_LTV !== null) ? "👉 I mini sans LTV = " + I_min_LTV.toFixed(2) + " m" : "";
   }
   
+  // Ne jamais conserver l'alerte de position du blindage d'un support précédent.
+  if (document.getElementById("alerte_blindage_bloc")) {
+    document.getElementById("alerte_blindage_bloc").innerHTML = "";
+  }
   if (verifBlindage) {
     let alerteBlindageHTML = "";
     if (distBlindage > 0) {
@@ -2686,6 +2690,16 @@ if (!calculLTVPossible) {
     let p2_calc = ((T_BF_cm / 100) - ((ara - 31) / 100) + SOL).toFixed(2);
     let p1_calc = P1_profondeur_dispo.toFixed(2);
     p1p2_div.innerHTML = "📏 SOL jusqu'à P2 = <span style='color: #2563eb;'>" + p2_calc + " m</span> | P1 = <span style='color: #2563eb;'>" + p1_calc + " m</span>";
+  }
+
+  /* Sans chantier ou support sélectionné, aucune alerte d'un ancien support ne doit rester visible. */
+  const chantierActifAlerte = String(document.getElementById("selectChantier")?.value || "").trim();
+  const supportActifAlerte = String(document.getElementById("selectSupport")?.value || "").trim();
+  if (!chantierActifAlerte || !supportActifAlerte) {
+    ["tbf", "ltv", "I_LTV", "alerte_blindage_bloc"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = "";
+    });
   }
 
   /* Ouvre/ferme automatiquement le bloc Alertes selon présence d'une alerte blindage/LTV */
@@ -3409,18 +3423,6 @@ async function exporterPDF() {
       });
       y = doc.lastAutoTable.finalY + 3;
 
-      const lignesAlerteBlindage = lignesColorees("alerte_blindage_bloc");
-      if (lignesAlerteBlindage.length > 0) {
-        assurerPlace(6 * lignesAlerteBlindage.length + 4);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(8);
-        lignesAlerteBlindage.forEach(l => {
-          doc.setTextColor(l.couleur[0], l.couleur[1], l.couleur[2]);
-          doc.text(l.texte, marge + 1, y);
-          y += 4.6;
-        });
-        y += 2;
-      }
     }
 
     // Section 5 : volumes
@@ -3510,34 +3512,8 @@ async function exporterPDF() {
       });
       y = doc.lastAutoTable.finalY + 5;
 
-    // Section 6 : résultat blindage / LTV
-    titreSection("RESULTAT", rouge);
-
-    const lignesTbf = lignesColorees("tbf");
-    const ligneLtv = clean(txt("ltv"));
-    const ligneILtv = clean(txt("I_LTV"));
-
-    assurerPlace(6 * (lignesTbf.length + (ligneLtv ? 1 : 0) + (ligneILtv ? 1 : 0)) + 6);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    lignesTbf.forEach(l => {
-      doc.setTextColor(l.couleur[0], l.couleur[1], l.couleur[2]);
-      doc.text(l.texte, marge + 1, y);
-      y += 5;
-    });
-    if (ligneLtv) {
-      doc.setTextColor(200, 30, 40);
-      doc.text(ligneLtv, marge + 1, y);
-      y += 5;
-    }
-    if (ligneILtv) {
-      doc.setTextColor(110, 40, 160);
-      doc.text(ligneILtv, marge + 1, y);
-      y += 5;
-    }
-    y += 2;
-
-    // Section 7 : seuils réglementaires
+    // Les alertes (blindage / LTV) restent dans l'application et ne sont plus imprimées dans le PDF.
+    // Section 6 : seuils réglementaires
     doc.autoTable({
       startY: y,
       margin: { left: marge, right: marge, bottom: footerReserve },
@@ -4336,6 +4312,7 @@ function filtrerSupports() {
     resetSaisieAvantSupport();
     supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
     if (!chantier) {
+        if (typeof calculer === "function") calculer();
         if (typeof mettreAJourBoutonsSupportsSidebar === 'function') mettreAJourBoutonsSupportsSidebar();
         return;
     }
@@ -4366,6 +4343,7 @@ function filtrerSupports() {
     if (ancienneSelection && Array.from(supportSelect.options).some(o => o.value === ancienneSelection)) {
         supportSelect.value = ancienneSelection;
     }
+    if (!supportSelect.value && typeof calculer === "function") calculer();
     if (typeof mettreAJourBoutonsSupportsSidebar === 'function') mettreAJourBoutonsSupportsSidebar();
 }
 
@@ -4927,11 +4905,10 @@ document.addEventListener("DOMContentLoaded", function () {
 /* --- 3. CHARGEMENT INITIAL --- */
 window.addEventListener('load', function() {
     verifierAdmin();
-    const selectChantier = document.getElementById("selectChantier");
-    if (selectChantier && selectChantier.options.length > 1) {
-        selectChantier.selectedIndex = 1;
-        selectChantier.dispatchEvent(new Event('change'));
- 
+    // Aucun chantier n'est sélectionné automatiquement au démarrage.
+    // Les liens QR explicites restent libres de sélectionner leur chantier/support.
+    if (!document.getElementById("selectChantier")?.value || !document.getElementById("selectSupport")?.value) {
+        if (typeof calculer === "function") calculer();
     }
 });
 // Sélection automatique au focus sur tous les inputs numériques
