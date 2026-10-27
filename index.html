@@ -2847,6 +2847,9 @@ async function synchroniserSupportActuel() {
           prenom: prenom,
           effectue: 1,
           date_exec: dateJour,
+          // Enregistre le statut du blindage dans la même mise à jour que la fouille.
+          // Le déclencheur SQL peut ainsi détecter date_fouille + blind = OUI.
+          blind: document.getElementById('blindageCheck')?.checked ? 'OUI' : 'NON',
           alerte: texteAlertePourSupabase(),
           ...phases
         };
