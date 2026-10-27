@@ -1202,6 +1202,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Déclaration de la variable globale qu'utilisent tes autres scripts
 let baseSupports = [];
+let supportsSupabaseCharges = false;
 
 // Fonction asynchrone pour charger les données depuis Supabase
 async function chargerSupportsDepuisSupabase() {
@@ -1253,6 +1254,7 @@ async function chargerSupportsDepuisSupabase() {
             CPT: row.n_rj
         }));
 
+        supportsSupabaseCharges = true;
         console.log(`${baseSupports.length} supports chargés et mappés depuis Supabase.`);
 
         // On lance l'initialisation des chantiers
@@ -4364,7 +4366,11 @@ function chargerSupport() {
 
     const valOuVide = (val) => (val !== undefined && val !== null && val !== "") ? val : "";
 
-    const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        // Une valeur vide dans Supabase ne doit pas effacer une saisie locale non terminée.
+        if (el && val !== undefined && val !== null && val !== "") el.value = val;
+    };
     const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
 
     // La sauvegarde locale peut dépanner hors réseau, mais Supabase reste prioritaire
@@ -4419,14 +4425,16 @@ function chargerSupport() {
     const chkB = document.getElementById('check_beton');
     const chkM = document.getElementById('check_matage');
 
-    if (chkF) chkF.checked = !!(data.date_fouille || data.DATE_FOUILLE);
-    if (chkB) chkB.checked = !!(data.date_beton || data.DATE_BETON);
-    if (chkM) chkM.checked = !!(data.date_matage || data.DATE_MATAGE);
+    if (chkF && (data.date_fouille || data.DATE_FOUILLE)) chkF.checked = true;
+    if (chkB && (data.date_beton || data.DATE_BETON)) chkB.checked = true;
+    if (chkM && (data.date_matage || data.DATE_MATAGE)) chkM.checked = true;
     
     memoriserEtatInitialPhases();
 
-    const blind = document.getElementById("blindageCheck"); if(blind) blind.checked = (data.BLIND === "OUI");
-    const caro = document.getElementById("carotte"); if(caro) caro.checked = (data.CARO === "OUI");
+    const blind = document.getElementById("blindageCheck");
+    if (blind && data.BLIND !== undefined && data.BLIND !== null && data.BLIND !== "") blind.checked = (String(data.BLIND).toUpperCase() === "OUI");
+    const caro = document.getElementById("carotte");
+    if (caro && data.CARO !== undefined && data.CARO !== null && data.CARO !== "") caro.checked = (String(data.CARO).toUpperCase() === "OUI");
     const dt = document.getElementById("display_type"); if(dt) dt.innerText = data.TYPE ? "🧊 " + data.TYPE : "";
 
     if (typeof refreshBlocs === "function") refreshBlocs();
@@ -5703,7 +5711,12 @@ function fbmRestaurerEtatLocal() {
                 if(el) el.dispatchEvent(new Event('change',{bubbles:true}));
             });
 
-            if (typeof calculer === 'function') {
+            // Priorité aux valeurs Supabase lorsque le chargement serveur a réussi.
+            // Les champs absents du serveur restent ceux de la sauvegarde locale,
+            // afin de conserver une saisie inachevée.
+            if (navigator.onLine && supportsSupabaseCharges && typeof chargerSupport === 'function') {
+                try { chargerSupport(); } catch(e) { console.warn('Priorité Supabase :', e); }
+            } else if (typeof calculer === 'function') {
                 try { calculer(); } catch(e) {}
             }
             if (typeof mettreAJourBoutonsChantiersSidebar === 'function') {
