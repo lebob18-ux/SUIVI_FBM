@@ -3226,7 +3226,43 @@ async function exporterPDF() {
 
     const logoAinmDataUrl = (typeof logoAINMversPNG === "function") ? await logoAINMversPNG(737, 291) : null;
     const logoAinmRatio = 291.02362 / 737.00789;
+    const phasesInit = window.phasesInitiales || {};
+    const phasesCochees = [
+      { cle: 'fouille', nom: 'FOUILLE', coche: !!g("check_fouille")?.checked },
+      { cle: 'beton',   nom: 'BÉTON',   coche: !!g("check_beton")?.checked },
+      { cle: 'matage',  nom: 'MATAGE',  coche: !!g("check_matage")?.checked }
+    ];
+    let phasesTitre = phasesCochees.filter(p => p.coche && !phasesInit[p.cle]);
+    if (!phasesTitre.length) phasesTitre = phasesCochees.filter(p => p.coche);
+    const sousTitrePhases = (phasesTitre.length > 0 && phasesTitre.length < 3)
+      ? phasesTitre.map(p => p.nom).join(" + ")
+      : "";
+	
+    const colonnesDatePhase = { fouille: "date_fouille", beton: "date_beton", matage: "date_matage" };
+    const phasageActif = !!sousTitrePhases;
+    const ligneSupportBase = (typeof baseSupports !== "undefined" ? baseSupports : []).find(s =>
+      String(s.chantier || "").trim() === String(nomChantier || "").trim() &&
+      String(s.support ?? "").trim() === numSupportInput
+    );
 
+    function formatDateFR(iso) {
+      if (!iso) return "";
+      const p = String(iso).slice(0, 10).split("-");
+      return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : String(iso);
+    }
+
+    function datePhase(cle) {
+      const p = phasesCochees.find(x => x.cle === cle);
+      if (!p || !p.coche) return "";
+      if (phasesInit[cle]) return formatDateFR(ligneSupportBase?.[colonnesDatePhase[cle]]);
+      return formatDateFR(dateDuPosteFBM());
+    }
+
+    function suffixeDates(cles) {
+      if (!phasageActif) return "";
+      const parts = cles.map(c => datePhase(c)).filter(Boolean);
+      return parts.length ? "  -  " + parts.join(" / ") : "";
+    }
     function bandeauDegrade(y0, h) {
       const bandes = 60;
       for (let i = 0; i < bandes; i++) {
@@ -3258,6 +3294,11 @@ async function exporterPDF() {
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
       doc.text("SNCF Reseau  -  Outil FBM", pageW / 2, 14.5, { align: "center" });
+		if (sousTitrePhases) {
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text("PHASE : " + sousTitrePhases, pageW / 2, 20, { align: "center" });
+      }
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.text("Chantier : " + (nomChantier || "-") + "    RJ : " + (window.numeroRJ || "-"), marge, 24);
@@ -3319,146 +3360,40 @@ async function exporterPDF() {
       y += 6.2 + 5;
     }
 
-    // Section 1 : paramètres de fouille
-    titreSection("PARAMETRES DE FOUILLE", violet);
-
-    const echValeur = (() => {
-      const sel = g("E_select");
-      if (sel && sel.style.display !== "none") {
-        const opt = sel.options[sel.selectedIndex];
-        return opt ? opt.text : sel.value;
-      }
-      return val("E") + " cm";
-    })();
-
-    const blocNVisible = g("bloc-N") && g("bloc-N").style.display !== "none";
-    const valPActuel = blocNVisible ? val("valP_N") : val("valP_S");
-    const refPActuel = blocNVisible ? txt("P_ref_N") : txt("P_ref_S");
-    const sensPTexte = blocNVisible ? "amont" : "aval";
-
-    const rowsFouille = [
-      ["Implantation (I)", val("I"), txt("I_ref")],
-      ["Echantillon", echValeur, txt("ECH_ref")],
-      ["Arasement (AR)", val("AR"), txt("AR_ref")],
-      ["Encastrement (Enc)", val("Enc"), txt("Enc_ref")],
-      ["Cote A", val("AF"), txt("AF_ref")],
-      ["Cote B", val("B_Fouille"), txt("B_ref")],
-      ["Cote H", val("H_Fouille"), txt("H_ref")],
-      ["F", val("valF"), txt("F_ref")],
-      ["P (" + sensPTexte + " de SUP)", valPActuel, refPActuel],
-      ["SUP", val("valSUP"), txt("SUP_ref")],
-    ].filter(row => row.some((v, i) => String(v ?? "").trim() !== ""));
-
-    doc.autoTable({
-      startY: y,
+    const phaseOn = (cle) => !!g("check_" + cle)?.checked;
+    const tableBase = {
       margin: { left: marge, right: marge, bottom: footerReserve },
-      head: [["Parametre", "Valeur saisie", "Reference"]],
-      body: rowsFouille,
       theme: 'grid',
       styles: { fontSize: 8, cellPadding: 1.8, textColor: [40, 40, 40], lineColor: [225, 225, 225] },
       headStyles: { fillColor: violet, textColor: 255, fontStyle: 'bold', fontSize: 8 },
-      columnStyles: { 2: { textColor: [22, 130, 60], fontStyle: 'bold' } },
-    });
-    y = doc.lastAutoTable.finalY + 5;
+    };
 
-    // Section 2 : configuration
-    titreSection("CONFIGURATION", [90, 90, 90]);
-    doc.autoTable({
-      startY: y,
-      margin: { left: marge, right: marge, bottom: footerReserve },
-      head: [["Voies annoncees / interceptees (TES.D)", "Carottage", "Blindage", "BRH"]],
-      body: [[
-        verifVoie ? "OUI" : "NON",
-        verifCarotte ? "OUI" : "NON",
-        verifBlindage ? "OUI" : "NON",
-        document.getElementById('brh_oui')?.checked ? "OUI" : "NON",
-      ]],
-      theme: 'grid',
-      styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
-      headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: 'bold', fontSize: 7.3 },
-      bodyStyles: { fontStyle: 'bold' },
-    });
-    y = doc.lastAutoTable.finalY + 5;
-
-    // Section 3 : carottage
-    if (verifCarotte) {
-      titreSection("CAROTTAGE", [217, 119, 6]);
-      const rowsCarotte = [
-        ["A carotte", val("A_carotte") + " cm"],
-        ["B carotte", val("B_carotte") + " cm"],
-        ["Encastrement", val("H_carotte") + " cm"],
-        ["Plus petit e1", val("E1_carotte") + " cm"],
-        ["Plus petit e2", val("E2_carotte") + " cm"],
-        ["P carotte", val("P_carotte") + " cm"],
-        ["Profile", txt("display_nom") || "-"],
-        ["Largeur profile", txt("display_larg") + " mm"],
-        ["Profondeur profile", txt("display_prof") + " mm"],
-        ["e1 cote A (haut/bas)", txt("calc_S1")],
-        ["e1 cote B (gauche/droite)", txt("calc_S2")],
-        ["e2 cote A (haut/bas)", txt("calc_S3")],
-        ["e2 cote B (gauche/droite)", txt("calc_S4")],
+    // ===================== CHAPITRE FOUILLE =====================
+    if (phaseOn("fouille")) {
+      titreSection("FOUILLE" + suffixeDates(["fouille"]), violet);
+      const rowsFouille = [
+        ["Cote A", val("AF"), txt("AF_ref")],
+        ["Cote B", val("B_Fouille"), txt("B_ref")],
+        ["Cote H", val("H_Fouille"), txt("H_ref")],
+        ["Nombre de Big-Bag de terre", val("nb_big_bag_terre") || "0", ""],
+        ["Utilisation BRH", document.getElementById('brh_oui')?.checked ? "OUI" : "NON", ""],
       ];
       doc.autoTable({
+        ...tableBase,
         startY: y,
-        margin: { left: marge, right: marge, bottom: footerReserve },
-        body: rowsCarotte,
-        theme: 'grid',
-        styles: { fontSize: 7.8, cellPadding: 1.6 },
-        columnStyles: { 1: { fontStyle: 'bold', halign: 'right' } },
+        head: [["Parametre", "Valeur saisie", "Reference"]],
+        body: rowsFouille,
+        columnStyles: { 2: { textColor: [22, 130, 60], fontStyle: 'bold' } },
       });
       y = doc.lastAutoTable.finalY + 5;
     }
 
-    // Section 4 : blindage
-    if (verifBlindage) {
-      titreSection("BLINDAGE", [3, 105, 161]);
-      const rowsBlindage = [
-        ["Bord blindage - bord rail", val("dist_blindage") + " m"],
-        ["Traverse (LT)", val("LT") + " cm"],
-        ["Sol -> Massif", val("SOL") + " m"],
-        ["NiT -> Hbis", val("NIT") + " m"],
-      ];
-      doc.autoTable({
-        startY: y,
-        margin: { left: marge, right: marge, bottom: footerReserve },
-        body: rowsBlindage,
-        theme: 'grid',
-        styles: { fontSize: 8, cellPadding: 1.8 },
-        columnStyles: { 1: { fontStyle: 'bold', halign: 'right' } },
-      });
-      y = doc.lastAutoTable.finalY + 3;
+    // ===================== CHAPITRE BÉTON =====================
+    if (phaseOn("beton")) {
+      titreSection("BÉTON" + suffixeDates(["beton"]), violet);
 
-    }
-
-    // Section 5 : volumes
-    titreSection("VOLUMES", violet);
-    const volCarotteVisible = g("display_vol_carotte") && g("display_vol_carotte").style.display !== "none";
-    const headVolumes = ["Volume theorique", "Volume reel"];
-    const rowVolumes = [txt("vol_prevu") || "-", txt("vol_modifie") || "-"];
-    if (volCarotteVisible) {
-      headVolumes.push("Beton net (hors carotte)");
-      rowVolumes.push(txt("vol_carotte") || "-");
-    }
-    doc.autoTable({
-      startY: y,
-      margin: { left: marge, right: marge, bottom: footerReserve },
-      head: [headVolumes],
-      body: [rowVolumes],
-      theme: 'grid',
-      styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
-      headStyles: { fillColor: violet, textColor: 255, fontStyle: 'bold' },
-      bodyStyles: { fontStyle: 'bold', textColor: [0, 100, 180] },
-    });
-    y = doc.lastAutoTable.finalY + 5;
-
-    // Bloc BÉTON du PDF : toujours imprimé, même si la case de phase est décochée.
-    // Les BL affichés sont ceux associés à la fouille sélectionnée ou déjà chargés.
-      titreSection("BÉTON — BONS DE LIVRAISON", violet);
       const fmtNombre = (v) => v !== null && v !== undefined && String(v).trim() !== "" && Number.isFinite(Number(v))
         ? String(v).replace(".", ",") : "";
-      // Partir des BL déjà enregistrés dans la liste, puis inclure aussi
-      // les valeurs encore présentes dans le formulaire si l'utilisateur
-      // exporte sans avoir cliqué sur « Ajouter ».
       const listePdfBL = (Array.isArray(blsActuels) ? blsActuels : []).map(normaliserBL);
       const saisieBL = String(document.getElementById("bl_beton")?.value || "").trim().toUpperCase();
       const saisieType = String(document.getElementById("bl-input")?.value || "").trim().toUpperCase();
@@ -3480,57 +3415,173 @@ async function exporterPDF() {
             const classe = item.classe_slump || 'S4';
             const statut = statutSlump(item.slump, classe);
             const statutTxt = statut === 'conforme' ? 'Conforme' : statut === 'tolerance' ? 'Tolérance' : statut === 'non_conforme' ? 'Non conforme' : '-';
+            const slumpTxt = fmtNombre(item.slump) !== "" ? fmtNombre(item.slump) + " mm" : "-";
             return [
               i + 1,
               item.bl || item.bl_beton || item.numero_bl || "",
               item.type || item.type_beton || "",
               fmtNombre(item.quantite_beton) ? fmtNombre(item.quantite_beton) + " m³" : "",
-              classe + " — " + (fmtNombre(item.slump) !== "" ? fmtNombre(item.slump) + " mm" : "-"),
+              classe,
+              slumpTxt,
               statutTxt
             ];
           })
-        : [["—", "Aucun BL associé à cette fouille", "", "", "", ""]];
+        : [["-", "Aucun BL associé à cette fouille", "", "", "", "", ""]];
       doc.autoTable({
+        ...tableBase,
         startY: y,
-        margin: { left: marge, right: marge, bottom: footerReserve },
-        head: [["#", "N° BL", "Type de béton", "Quantité BL", "Slump / Classe", "Statut"]],
+        head: [["#", "N° BL", "Type de béton", "Quantité BL", "Classe", "Slump", "Statut"]],
         body: rowsBL,
-        theme: "grid",
         styles: { fontSize: 7.8, cellPadding: 2.2, overflow: "linebreak" },
-        headStyles: { fillColor: violet, textColor: 255, fontStyle: "bold" },
         columnStyles: {
           0: { cellWidth: 8, halign: "center" },
-          1: { cellWidth: 45, fontStyle: "bold" },
+          1: { cellWidth: 40, fontStyle: "bold" },
           2: { cellWidth: "auto" },
-          3: { cellWidth: 25, halign: "center" },
-          4: { cellWidth: 27, halign: "center", textColor: [3, 105, 161] },
-          5: { cellWidth: 25, halign: "center" }
+          3: { cellWidth: 22, halign: "center" },
+          4: { cellWidth: 14, halign: "center" },
+          5: { cellWidth: 20, halign: "center", fontStyle: "bold", textColor: [3, 105, 161] },
+          6: { cellWidth: 24, halign: "center" }
         },
         didParseCell: function(data) {
-          if (data.column.index === 5 && data.section === 'body') {
-            const txt = String(data.cell.raw || '');
-            if (txt.includes('Non conforme')) data.cell.styles.textColor = [153, 27, 27];
-            else if (txt.includes('Tolérance')) data.cell.styles.textColor = [146, 64, 14];
-            else if (txt.includes('Conforme')) data.cell.styles.textColor = [22, 101, 52];
+          if (data.column.index === 6 && data.section === 'body') {
+            const t = String(data.cell.raw || '');
+            if (t.includes('Non conforme')) data.cell.styles.textColor = [153, 27, 27];
+            else if (t.includes('Tolérance')) data.cell.styles.textColor = [146, 64, 14];
+            else if (t.includes('Conforme')) data.cell.styles.textColor = [22, 101, 52];
           }
         },
       });
+      y = doc.lastAutoTable.finalY + 4;
+
+      // Volumes
+      const volCarotteVisible = g("display_vol_carotte") && g("display_vol_carotte").style.display !== "none";
+      const headVolumes = ["Volume theorique", "Volume reel"];
+      const rowVolumes = [txt("vol_prevu") || "-", txt("vol_modifie") || "-"];
+      if (volCarotteVisible) {
+        headVolumes.push("Beton net (hors carotte)");
+        rowVolumes.push(txt("vol_carotte") || "-");
+      }
+      doc.autoTable({
+        ...tableBase,
+        startY: y,
+        head: [headVolumes],
+        body: [rowVolumes],
+        styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
+        bodyStyles: { fontStyle: 'bold', textColor: [0, 100, 180] },
+      });
       y = doc.lastAutoTable.finalY + 5;
+    }
 
-    // Les alertes calculées restent visibles dans l'application et sont stockées
-    // dans blindage.alerte ; elles ne sont pas reprises dans le PDF.
+    // ===================== CHAPITRE MATAGE =====================
+    if (phaseOn("matage")) {
+      titreSection("MATAGE" + suffixeDates(["matage"]), violet);
 
-    // Section 7 : seuils réglementaires
+      const echValeur = (() => {
+        const sel = g("E_select");
+        if (sel && sel.style.display !== "none") {
+          const opt = sel.options[sel.selectedIndex];
+          return opt ? opt.text : sel.value;
+        }
+        return val("E") + " cm";
+      })();
+      const blocNVisible = g("bloc-N") && g("bloc-N").style.display !== "none";
+      const valPActuel = blocNVisible ? val("valP_N") : val("valP_S");
+      const refPActuel = blocNVisible ? txt("P_ref_N") : txt("P_ref_S");
+      const sensPTexte = blocNVisible ? "amont" : "aval";
+
+      const rowsMatage = [
+        ["Implantation (I)", val("I"), txt("I_ref")],
+        ["Echantillon", echValeur, txt("ECH_ref")],
+        ["Arasement (AR)", val("AR"), txt("AR_ref")],
+        ["Encastrement (Enc)", val("Enc"), txt("Enc_ref")],
+        ["F", val("valF"), txt("F_ref")],
+        ["P (" + sensPTexte + " de SUP)", valPActuel, refPActuel],
+        ["SUP", val("valSUP"), txt("SUP_ref")],
+      ].filter(row => row.some((v, i) => String(v ?? "").trim() !== ""));
+      doc.autoTable({
+        ...tableBase,
+        startY: y,
+        head: [["Parametre", "Valeur saisie", "Reference"]],
+        body: rowsMatage,
+        columnStyles: { 2: { textColor: [22, 130, 60], fontStyle: 'bold' } },
+      });
+      y = doc.lastAutoTable.finalY + 5;
+    }
+
+    // ===================== CHAPITRE INFORMATIONS COMPLÉMENTAIRES =====================
+    titreSection("INFORMATIONS COMPLEMENTAIRES", [90, 90, 90]);
     doc.autoTable({
+      ...tableBase,
       startY: y,
-      margin: { left: marge, right: marge, bottom: footerReserve },
+      head: [["Voies annoncees / interceptees (TES.D)", "Carottage", "Blindage", "BRH"]],
+      body: [[
+        verifVoie ? "OUI" : "NON",
+        verifCarotte ? "OUI" : "NON",
+        verifBlindage ? "OUI" : "NON",
+        document.getElementById('brh_oui')?.checked ? "OUI" : "NON",
+      ]],
+      styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
+      headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: 'bold', fontSize: 7.3 },
+      bodyStyles: { fontStyle: 'bold' },
+    });
+    y = doc.lastAutoTable.finalY + 4;
+
+    if (verifCarotte) {
+      const rowsCarotte = [
+        ["A carotte", val("A_carotte") + " cm"],
+        ["B carotte", val("B_carotte") + " cm"],
+        ["Encastrement", val("H_carotte") + " cm"],
+        ["Plus petit e1", val("E1_carotte") + " cm"],
+        ["Plus petit e2", val("E2_carotte") + " cm"],
+        ["P carotte", val("P_carotte") + " cm"],
+        ["Profile", txt("display_nom") || "-"],
+        ["Largeur profile", txt("display_larg") + " mm"],
+        ["Profondeur profile", txt("display_prof") + " mm"],
+        ["e1 cote A (haut/bas)", txt("calc_S1")],
+        ["e1 cote B (gauche/droite)", txt("calc_S2")],
+        ["e2 cote A (haut/bas)", txt("calc_S3")],
+        ["e2 cote B (gauche/droite)", txt("calc_S4")],
+      ];
+      doc.autoTable({
+        ...tableBase,
+        startY: y,
+        head: [["Carottage", ""]],
+        body: rowsCarotte,
+        styles: { fontSize: 7.8, cellPadding: 1.6 },
+        headStyles: { fillColor: [217, 119, 6], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+        columnStyles: { 1: { fontStyle: 'bold', halign: 'right' } },
+      });
+      y = doc.lastAutoTable.finalY + 4;
+    }
+
+    if (verifBlindage) {
+      const rowsBlindage = [
+        ["Bord blindage - bord rail", val("dist_blindage") + " m"],
+        ["Traverse (LT)", val("LT") + " cm"],
+        ["Sol -> Massif", val("SOL") + " m"],
+        ["NiT -> Hbis", val("NIT") + " m"],
+        ["Nombre de Big-Bag mignonette", val("nb_big_bag_mignonette") || "0"],
+      ];
+      doc.autoTable({
+        ...tableBase,
+        startY: y,
+        head: [["Blindage", ""]],
+        body: rowsBlindage,
+        headStyles: { fillColor: [3, 105, 161], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+        columnStyles: { 1: { fontStyle: 'bold', halign: 'right' } },
+      });
+      y = doc.lastAutoTable.finalY + 4;
+    }
+
+    doc.autoTable({
+      ...tableBase,
+      startY: y,
       head: [["BMax", "DMin", "Hmax"]],
       body: [[
         clean(txt("BMax_display")) || "-",
         clean(txt("DMin_display")) || "-",
         clean(txt("Hmax_display")) || "-",
       ]],
-      theme: 'grid',
       styles: { fontSize: 8.5, cellPadding: 2, halign: 'center' },
       headStyles: { fillColor: [90, 90, 90], textColor: 255, fontStyle: 'bold' },
       bodyStyles: { fontStyle: 'bold', textColor: [22, 130, 60] },
@@ -3544,7 +3595,9 @@ async function exporterPDF() {
       "A_carotte", "B_carotte", "H_carotte", "E1_carotte", "E2_carotte", "P_carotte",
       "dist_blindage", "LT", "SOL", "NIT", "vol_prevu", "vol_modifie", "vol_carotte",
       "bl_beton", "bl-input", "quantite-beton-input", "slump-input", "prenom", "nom", "emailRedacteur",
-      "BMax_display", "DMin_display", "Hmax_display"
+      "BMax_display", "DMin_display", "Hmax_display",
+      "nb_big_bag_terre", "nb_big_bag_mignonette", "brh_non",
+      "check_fouille", "check_beton", "check_matage"
     ]);
     const saisiesComplementaires = [];
     document.querySelectorAll(".box input, .box select, .box textarea").forEach(el => {
@@ -3561,9 +3614,12 @@ async function exporterPDF() {
       else valeur = String(el.value ?? "").trim();
       if (!valeur) return;
       const labelEl = document.querySelector('label[for="' + CSS.escape(el.id) + '"]') || el.closest("label");
-      const libelle = (labelEl?.innerText || el.getAttribute("aria-label") || el.getAttribute("placeholder") || el.id)
-        .replace(/\s+/g, " ").trim();
-      saisiesComplementaires.push([libelle, valeur]);
+      let libelle = clean(
+        (labelEl?.innerText || el.getAttribute("aria-label") || el.getAttribute("placeholder") || el.id)
+          .replace(/\s+/g, " ")
+      ).replace(/\s*:\s*$/, "").trim();
+      if (!libelle) libelle = el.id;
+      saisiesComplementaires.push([libelle, clean(valeur) || valeur]);
     });
     if (saisiesComplementaires.length > 0) {
       titreSection("AUTRES SAISIES RENSEIGNÉES", [90, 90, 90]);
@@ -3612,7 +3668,8 @@ async function exporterPDF() {
     }
 
     // 1. DÉCLENCHEMENT IMMÉDIAT DU TÉLÉCHARGEMENT PDF (priorité utilisateur)
-    const nomFichier = "FBM_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
+        const lettresPhases = phasesTitre.map(p => p.nom[0]).join("") || "FBM";
+    const nomFichier = lettresPhases + "_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
     doc.save(nomFichier);
 
     // 2. MISE À JOUR SUPABASE JUSTE APRÈS (en arrière-plan)
