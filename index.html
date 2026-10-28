@@ -692,7 +692,8 @@ input[readonly]{
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
       <input type="text" id="bl_beton" list="bl-numeros-historique" placeholder="N° de BL (saisie ou scan)" autocomplete="off" style="flex:1; min-width:0; height:32px; font-size:0.85em; text-transform:uppercase;" oninput="this.value = this.value.toUpperCase();">
       <datalist id="bl-numeros-historique"></datalist>
-      <button type="button" onclick="scannerBLTelephone()" style="background:#7c2270; color:white; padding:6px 9px; margin:0; white-space:nowrap; font-size:0.82em;">📷 Scanner</button>
+            <button type="button" onclick="scannerBLTelephone()" style="background:#7c2270; color:white; padding:6px 9px; margin:0; white-space:nowrap; font-size:0.82em;">📷 Scanner</button>
+      <button type="button" onclick="rappelerDernierBL()" title="Reprendre le dernier BL utilisé sur ce chantier" style="background:#0369a1; color:white; padding:6px 9px; margin:0; white-space:nowrap; font-size:0.82em;">↩ Dernier</button>
     </div>
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
       <input list="bl-datalist" id="bl-input" placeholder="Type béton prévu au chantier" style="flex:1.5; min-width:0; height:32px; font-size:0.85em;">
@@ -1548,9 +1549,9 @@ function normaliserBL(item) {
     quantite_beton: item?.quantite_beton !== undefined && item?.quantite_beton !== null && item?.quantite_beton !== "" ? Number(item.quantite_beton) : null,
     _dbId: item?._dbId ?? item?.beton_bl_id ?? item?.id_bl ?? null,
     _assocId: item?._assocId ?? item?.association_id ?? item?.id_liaison ?? null,
-    local_ref: item?.local_ref || item?._localRef || creerRefLocaleBL()
+    local_ref: item?.local_ref || item?._localRef || creerRefLocaleBL(),
 	destination: item?.destination === 'carotte' ? 'carotte' : 'massif',
-    date_coulage: item?.date_coulage || null,
+    date_coulage: item?.date_coulage || null
   };
 }
 
@@ -1708,7 +1709,44 @@ function sauvegarderBLs() {
   try { localStorage.setItem(cle, JSON.stringify(blsActuels)); }
   catch (e) { console.error("Erreur sauvegarde locale BL :", e); }
 }
+/* ===== Mémoire du dernier BL (par chantier) ===== */
+function cleDernierBL() {
+  const c = document.getElementById("selectChantier")?.value || "";
+  return c ? "fbm_dernier_bl_" + c : null;
+}
 
+function memoriserDernierBL(item) {
+  const cle = cleDernierBL();
+  if (!cle || !item || !item.bl) return;
+  try {
+    localStorage.setItem(cle, JSON.stringify({
+      bl: item.bl, type: item.type,
+      quantite_beton: item.quantite_beton, slump: item.slump,
+      classe_slump: item.classe_slump || 'S4'
+    }));
+  } catch (e) { console.warn("Mémoire dernier BL :", e); }
+}
+
+function rappelerDernierBL(silencieux) {
+  const cle = cleDernierBL();
+  if (!cle) { if (!silencieux) alert("Sélectionne d'abord un chantier."); return false; }
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(cle) || "null"); } catch (e) {}
+  if (!d || !d.bl) { if (!silencieux) alert("Aucun BL mémorisé pour ce chantier."); return false; }
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = (v ?? ""); };
+  set("bl_beton", d.bl);
+  set("bl-input", d.type);
+  set("quantite-beton-input", d.quantite_beton);
+  set("slump-input", d.slump);
+  if (typeof choisirClasseSlump === "function") choisirClasseSlump(d.classe_slump || 'S4');
+  return true;
+}
+
+function prefillDernierBL() {
+  if (String(document.getElementById("bl_beton")?.value || "").trim()) return;
+  if (Array.isArray(blsActuels) && blsActuels.length) return;
+  rappelerDernierBL(true);
+}
 async function ajouterBL() {
   const blInput = document.getElementById("bl_beton");
   const typeInput = document.getElementById("bl-input");
@@ -1752,6 +1790,7 @@ async function ajouterBL() {
   try {
     const blindageId = await obtenirIdBlindageActuel();
     await enregistrerBLDansSupabase(item, blindageId);
+	    memoriserDernierBL(item);
     const existant = blsActuels.findIndex(x => x.bl === item.bl);
     if (existant >= 0) blsActuels[existant] = item; else blsActuels.push(item);
     sauvegarderBLs(); afficherBLs();
@@ -3132,7 +3171,7 @@ async function exporterPDF() {
   // Si un numéro BL est encore saisi, l'enregistrer/associer avant de produire le PDF.
   // ajouterBL() vide les champs uniquement après confirmation de l'enregistrement.
   const numeroBLNonEnregistre = String(document.getElementById("bl_beton")?.value || "").trim();
-  if (numeroBLNonEnregistre) {
+    if (numeroBLNonEnregistre && document.getElementById("check_beton")?.checked) {
     const enregistre = await ajouterBL();
     if (!enregistre) return;
     try { await chargerBLsDepuisSupabasePourPDF(); }
@@ -3403,7 +3442,7 @@ async function exporterPDF() {
     }
 
     // ===================== CHAPITRE BÉTON =====================
-    if (phaseOn("beton")) {
+       if (phaseOn("beton") || (Array.isArray(blsActuels) && blsActuels.length > 0)) {
       titreSection("BÉTON" + suffixeDates(["beton"]), violet);
 
       const fmtNombre = (v) => v !== null && v !== undefined && String(v).trim() !== "" && Number.isFinite(Number(v))
@@ -4339,6 +4378,69 @@ function peuplerChantiersSidebar() {
         conteneurSidebar.appendChild(btn);
     }
 }
+function viderToutFormulaire() {
+  const page = document.getElementById("fbmPage");
+  if (!page) return;
+
+  const defauts = {
+    LT: "40", SOL: "0", nb_big_bag_terre: "0", nb_big_bag_mignonette: "0",
+    A_carotte: "0", B_carotte: "0", E1_carotte: "0", E2_carotte: "0"
+  };
+
+  page.querySelectorAll("input[id], select[id], textarea[id]").forEach(el => {
+    if (el.id === "selectChantier" || el.id === "selectSupport") return;
+    if (el.type === "checkbox") {
+      el.checked = (el.id === "verifVoie");
+    } else if (el.type === "radio") {
+      el.checked = (el.id === "brh_non");
+    } else if (el.tagName === "SELECT") {
+      if (el.id === "E_select") el.innerHTML = "";
+      else if (el.id === "destination-bl") el.value = "massif";
+    } else {
+      el.value = (defauts[el.id] !== undefined) ? defauts[el.id] : "";
+      el.style.borderColor = "";
+      el.style.background = "";
+    }
+  });
+
+  const dateCoulage = document.getElementById("date-coulage-bl");
+  if (dateCoulage && typeof dateDuPosteFBM === "function") dateCoulage.value = dateDuPosteFBM();
+
+  const inputE = document.getElementById("E");
+  if (inputE) inputE.style.display = "none";
+
+  // Textes de référence et résultats
+  ["AF_ref","B_ref","H_ref","I_ref","AR_ref","Enc_ref","ECH_ref","F_ref","SUP_ref","P_ref_N","P_ref_S",
+   "display_type","tbf","ltv","I_LTV","alerte_blindage_bloc","BMax_display","DMin_display","Hmax_display",
+   "info_p1p2_bloc"].forEach(id => { const e = document.getElementById(id); if (e) e.innerHTML = ""; });
+  [["vol_prevu","0.00 m³"],["vol_modifie","0.00 m³"],["vol_carotte","0.00 m³"],
+   ["display_nom","-"],["display_larg","0"],["display_prof","0"],
+   ["calc_S1","0.00"],["calc_S2","0.00"],["calc_S3","0.00"],["calc_S4","0.00"]
+  ].forEach(([id, t]) => { const e = document.getElementById(id); if (e) e.innerText = t; });
+
+  ["bloc-N","bloc-S"].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = "none"; });
+
+  // Sections repliées
+  [["section-fouille-global-wrap"],["section-beton-wrap"],["section-matage-wrap"],["section-blindage-wrap"]]
+    .forEach(([id]) => {
+      const s = document.getElementById(id);
+      if (s) s.classList.add("collapsed");
+    });
+
+  // États internes
+  window.phasesInitiales = {};
+  window.phasesInitialesCount = 0;
+  if (typeof largeurEchantillon !== "undefined") largeurEchantillon = 0;
+  if (typeof profondeurEchantillon !== "undefined") profondeurEchantillon = 0;
+  if (typeof choixExtensionA !== "undefined") choixExtensionA = "centre";
+  if (typeof blsActuels !== "undefined") blsActuels = [];
+  if (typeof afficherBLs === "function") afficherBLs();
+  if (typeof choisirClasseSlump === "function") choisirClasseSlump("S4");
+  const alerteSlump = document.getElementById("slump-alerte");
+  if (alerteSlump) alerteSlump.style.display = "none";
+  const sec = document.getElementById("sec-alertes-wrap");
+  if (sec) sec.classList.add("collapsed");
+}
 
 function resetSaisieAvantSupport() {
   const elI = document.getElementById("I"); if(elI) elI.value = "";
@@ -4400,6 +4502,7 @@ function filtrerSupports() {
     resetSaisieAvantSupport();
     supportSelect.innerHTML = `<option value="">-- choisir support --</option>`;
     if (!chantier) {
+        viderToutFormulaire();
         if (typeof mettreAJourBoutonsSupportsSidebar === 'function') mettreAJourBoutonsSupportsSidebar();
         return;
     }
@@ -4427,9 +4530,10 @@ function filtrerSupports() {
         supportSelect.appendChild(opt);
     });
 
-    if (ancienneSelection && Array.from(supportSelect.options).some(o => o.value === ancienneSelection)) {
+      if (ancienneSelection && Array.from(supportSelect.options).some(o => o.value === ancienneSelection)) {
         supportSelect.value = ancienneSelection;
     }
+    if (!supportSelect.value) viderToutFormulaire();
     if (typeof mettreAJourBoutonsSupportsSidebar === 'function') mettreAJourBoutonsSupportsSidebar();
 }
 
@@ -4441,9 +4545,15 @@ function filtrerSupportsParStatut() {
 function chargerSupport() {
     const selectSupport = document.getElementById("selectSupport");
     if (!selectSupport) return;
-    
-    const data = baseSupports.find(s => (s.support || s.SUPPORT) === selectSupport.value);
-    if (!data) return;
+
+    const chantierActuel = document.getElementById("selectChantier")?.value || "";
+    const data = (selectSupport.value && chantierActuel)
+      ? baseSupports.find(s => (s.support || s.SUPPORT) === selectSupport.value && (s.chantier || s.CHANTIER) === chantierActuel)
+      : null;
+    if (!data) {
+      viderToutFormulaire();
+      return;
+    }
 
     const valOuVide = (val) => (val !== undefined && val !== null && val !== "") ? val : "";
 
@@ -5392,7 +5502,9 @@ function logoAINMversPNG(largeurPx, hauteurPx) {
   const observerChantiers = new MutationObserver(() => {
       mettreAJourBoutonsChantiersSidebar();
   });
-
+  const observerSupports = new MutationObserver(() => {
+      mettreAJourBoutonsSupportsSidebar();
+  });
   function mettreAJourBoutonsChantiersSidebar() {
       const container = document.getElementById('sidebarChantiersContainer');
       const labelActif = document.getElementById('labelChantierActif');
@@ -5739,6 +5851,10 @@ function fbmSauverEtatLocal() {
     try {
         const etat = fbmLireEtatFormulaire();
         if (!etat) return;
+        if (!etat.chantier || !etat.support) {
+            localStorage.removeItem(FBM_LOCAL_STATE_KEY);
+            return;
+        }
         localStorage.setItem(FBM_LOCAL_STATE_KEY, JSON.stringify(etat));
         fbmMajStatut();
     } catch (e) {
@@ -5773,7 +5889,7 @@ function fbmRestaurerEtatLocal() {
                     selS.dispatchEvent(new Event('change', {bubbles:true}));
                 }
             }
-
+            if (!etat.support || !selS || selS.value !== etat.support) return;
             Object.entries(etat.champs || {}).forEach(([id, data]) => {
                 const el = document.getElementById(id);
                 if (!el || id === 'selectChantier' || id === 'selectSupport') return;
