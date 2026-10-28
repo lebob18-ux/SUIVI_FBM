@@ -711,6 +711,13 @@ input[readonly]{
       <input type="number" id="slump-input" placeholder="Slump (mm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0" oninput="verifierSlump()">
       <button type="button" onclick="ajouterBL()" style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">💾 Enregistrer BL</button>
     </div>
+	    <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
+      <select id="destination-bl" style="flex:1; height:32px; font-size:0.85em;">
+        <option value="massif">🧱 Massif</option>
+        <option value="carotte">🥕 Carotte</option>
+      </select>
+      <input type="date" id="date-coulage-bl" style="flex:1; height:32px; font-size:0.85em;">
+    </div>
     <div id="slump-alerte" style="font-size:0.78em; font-weight:bold; margin-bottom:6px; display:none;"></div>
     <div id="bl-liste"></div>
 
@@ -1542,6 +1549,8 @@ function normaliserBL(item) {
     _dbId: item?._dbId ?? item?.beton_bl_id ?? item?.id_bl ?? null,
     _assocId: item?._assocId ?? item?.association_id ?? item?.id_liaison ?? null,
     local_ref: item?.local_ref || item?._localRef || creerRefLocaleBL()
+	destination: item?.destination === 'carotte' ? 'carotte' : 'massif',
+    date_coulage: item?.date_coulage || null,
   };
 }
 
@@ -1621,15 +1630,15 @@ async function enregistrerBLDansSupabase(item, blindageId) {
   }
 
   const { data: liaison, error: erreurLiaison } = await supabaseClient.from("blindage_beton_bl_liaison")
-    .upsert({ blindage_id: blindageId, beton_bl_id: fiche.id }, { onConflict: "blindage_id,beton_bl_id", ignoreDuplicates: true })
-    .select("id, blindage_id, beton_bl_id").maybeSingle();
+        .upsert({ blindage_id: blindageId, beton_bl_id: fiche.id, destination: item.destination || 'massif', date_coulage: item.date_coulage || null }, { onConflict: "blindage_id,beton_bl_id", ignoreDuplicates: true })
+    .select("id, blindage_id, beton_bl_id, destination, date_coulage").maybeSingle();
   if (erreurLiaison) throw erreurLiaison;
 
   // Avec ignoreDuplicates, PostgREST peut ne pas retourner de ligne : rechercher la liaison existante.
   let assoc = liaison;
   if (!assoc) {
     const { data, error } = await supabaseClient.from("blindage_beton_bl_liaison")
-      .select("id, blindage_id, beton_bl_id").eq("blindage_id", blindageId).eq("beton_bl_id", fiche.id).single();
+      .select("id, blindage_id, beton_bl_id, destination, date_coulage").eq("blindage_id", blindageId).eq("beton_bl_id", fiche.id).single();
     if (error) throw error;
     assoc = data;
   }
@@ -1637,7 +1646,8 @@ async function enregistrerBLDansSupabase(item, blindageId) {
     id: fiche.id, bl: fiche.numero_bl, type: fiche.type_beton,
     quantite_beton: fiche.quantite_beton, slump: fiche.slump,
     classe_slump: fiche.classe_slump || item.classe_slump || 'S4',
-    local_ref: fiche.local_ref, association_id: assoc.id
+    local_ref: fiche.local_ref, association_id: assoc.id,
+    destination: assoc.destination || item.destination, date_coulage: assoc.date_coulage || item.date_coulage
   }));
   return item;
 }
@@ -1656,7 +1666,7 @@ async function chargerBLs() {
     const blindageId = await obtenirIdBlindageActuel();
     if (cleAutosaveBL() !== cle) return;
     const { data: liens, error: errLiens } = await supabaseClient.from("blindage_beton_bl_liaison")
-      .select("id, blindage_id, beton_bl_id").eq("blindage_id", blindageId).order("id", { ascending: true });
+      .select("id, blindage_id, beton_bl_id, destination, date_coulage").eq("blindage_id", blindageId).order("id", { ascending: true });
     if (errLiens) throw errLiens;
     const ids = [...new Set((liens || []).map(x => x.beton_bl_id))];
     let fiches = [];
@@ -1670,7 +1680,7 @@ async function chargerBLs() {
     const distants = (liens || []).map(lien => {
       const f = fiches.find(x => String(x.id) === String(lien.beton_bl_id));
       return f ? normaliserBL({ id:f.id, bl:f.numero_bl, type:f.type_beton, quantite_beton:f.quantite_beton,
-        slump:f.slump, classe_slump:f.classe_slump, local_ref:f.local_ref, association_id:lien.id }) : null;
+        slump:f.slump, classe_slump:f.classe_slump, local_ref:f.local_ref, association_id:lien.id, destination:lien.destination, date_coulage:lien.date_coulage }) : null;
     }).filter(Boolean);
 
     // Rattacher les anciennes saisies locales à une fiche existante ou en créer une, sans dupliquer un même BL.
@@ -1736,7 +1746,8 @@ async function ajouterBL() {
     if (slumpVal === null || !Number.isFinite(slumpVal)) { alert("⚠️ Saisis une valeur de SLUMP."); slumpInput?.focus(); return false; }
     item = normaliserBL({ bl:blVal, type:typeVal, quantite_beton:quantiteVal, slump:slumpVal, classe_slump:classeSlumpActuelle, local_ref:creerRefLocaleBL() });
   }
-
+  item.destination = document.getElementById("destination-bl")?.value === 'carotte' ? 'carotte' : 'massif';
+  item.date_coulage = document.getElementById("date-coulage-bl")?.value || null;
   memoriserNumeroBL(blVal);
   try {
     const blindageId = await obtenirIdBlindageActuel();
@@ -1799,6 +1810,7 @@ function afficherBLs() {
         <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;flex-wrap:wrap;">
           <span style="font-weight:bold;color:#333;font-size:.82em;">🧾 ${echapperHTML(item.bl || "--")}</span>
           <span style="color:#7C2270;background:#f0e4ee;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${echapperHTML(item.type || "--")}</span>
+		  <span style="color:${item.destination === 'carotte' ? '#92400e' : '#374151'};background:${item.destination === 'carotte' ? '#fef3c7' : '#f3f4f6'};font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${item.destination === 'carotte' ? '🥕 Carotte' : '🧱 Massif'}${item.date_coulage ? ' ' + item.date_coulage.split('-').reverse().join('/') : ''}</span>
           <span style="color:#166534;background:#dcfce7;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${val(item.quantite_beton)} m³</span>
           <span style="color:${couleur};background:${fond};font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;white-space:nowrap;">${icone} ${val(item.slump)} mm ${classe}</span>
         </div>
@@ -2087,6 +2099,8 @@ function rechargerBLsSupport() {
    ============================================================ */
 
 window.addEventListener("load", () => {
+  const champDateCoulage = document.getElementById("date-coulage-bl");
+  if (champDateCoulage && !champDateCoulage.value) champDateCoulage.value = dateDuPosteFBM();
 
   initBLDatalist();
   chargerTypesBetonChantier();
@@ -3054,7 +3068,7 @@ async function chargerBLsDepuisSupabasePourPDF() {
     try {
       const { data: liens, error: errLiens } = await supabaseClient
         .from("blindage_beton_bl_liaison")
-        .select("id, blindage_id, beton_bl_id")
+        .select("id, blindage_id, beton_bl_id, destination, date_coulage")
         .eq("blindage_id", blindageId).order("id", { ascending: true });
       if (!errLiens && Array.isArray(liens) && liens.length) {
         const ids = [...new Set(liens.map(x => x.beton_bl_id).filter(x => x !== null && x !== undefined))];
@@ -3065,7 +3079,7 @@ async function chargerBLsDepuisSupabasePourPDF() {
           const trouves = liens.map(lien => {
             const f = fiches.find(x => String(x.id) === String(lien.beton_bl_id));
             return f ? normaliserBL({ id:f.id, bl:f.numero_bl, type:f.type_beton,
-              quantite_beton:f.quantite_beton, slump:f.slump, classe_slump:f.classe_slump, local_ref:f.local_ref, association_id:lien.id }) : null;
+              quantite_beton:f.quantite_beton, slump:f.slump, classe_slump:f.classe_slump, local_ref:f.local_ref, association_id:lien.id, destination:lien.destination, date_coulage:lien.date_coulage }) : null;
           }).filter(Boolean);
           if (trouves.length) {
             blsActuels = trouves;
@@ -3407,51 +3421,61 @@ async function exporterPDF() {
           bl: saisieBL, type: saisieType,
           quantite_beton: Number.isFinite(saisieQte) ? saisieQte : null,
           slump: Number.isFinite(saisieSlump) ? saisieSlump : null,
+		  destination: g("destination-bl")?.value || 'massif',
+          date_coulage: g("date-coulage-bl")?.value || null,
           classe_slump: classeSlumpActuelle || 'S4'
         }));
       }
-      const rowsBL = listePdfBL.length
-        ? listePdfBL.map((item, i) => {
-            const classe = item.classe_slump || 'S4';
-            const statut = statutSlump(item.slump, classe);
-            const statutTxt = statut === 'conforme' ? 'Conforme' : statut === 'tolerance' ? 'Tolérance' : statut === 'non_conforme' ? 'Non conforme' : '-';
-            const slumpTxt = fmtNombre(item.slump) !== "" ? fmtNombre(item.slump) + " mm" : "-";
-            return [
-              i + 1,
-              item.bl || item.bl_beton || item.numero_bl || "",
-              item.type || item.type_beton || "",
-              fmtNombre(item.quantite_beton) ? fmtNombre(item.quantite_beton) + " m³" : "",
-              classe,
-              slumpTxt,
-              statutTxt
-            ];
-          })
-        : [["-", "Aucun BL associé à cette fouille", "", "", "", "", ""]];
-      doc.autoTable({
-        ...tableBase,
-        startY: y,
-        head: [["#", "N° BL", "Type de béton", "Quantité BL", "Classe", "Slump", "Statut"]],
-        body: rowsBL,
-        styles: { fontSize: 7.8, cellPadding: 2.2, overflow: "linebreak" },
-        columnStyles: {
-          0: { cellWidth: 8, halign: "center" },
-          1: { cellWidth: 40, fontStyle: "bold" },
-          2: { cellWidth: "auto" },
-          3: { cellWidth: 22, halign: "center" },
-          4: { cellWidth: 14, halign: "center" },
-          5: { cellWidth: 20, halign: "center", fontStyle: "bold", textColor: [3, 105, 161] },
-          6: { cellWidth: 24, halign: "center" }
-        },
-        didParseCell: function(data) {
-          if (data.column.index === 6 && data.section === 'body') {
-            const t = String(data.cell.raw || '');
-            if (t.includes('Non conforme')) data.cell.styles.textColor = [153, 27, 27];
-            else if (t.includes('Tolérance')) data.cell.styles.textColor = [146, 64, 14];
-            else if (t.includes('Conforme')) data.cell.styles.textColor = [22, 101, 52];
-          }
-        },
-      });
-      y = doc.lastAutoTable.finalY + 4;
+      const dateBL = (item) => formatDateFR(item.date_coulage) || (item.destination === 'carotte' ? "-" : (datePhase("beton") || "-"));
+      const ligneBL = (item) => {
+        const classe = item.classe_slump || 'S4';
+        const statut = statutSlump(item.slump, classe);
+        const statutTxt = statut === 'conforme' ? 'Conforme' : statut === 'tolerance' ? 'Tolérance' : statut === 'non_conforme' ? 'Non conforme' : '-';
+        const slumpTxt = fmtNombre(item.slump) !== "" ? fmtNombre(item.slump) + " mm" : "-";
+        return [
+          dateBL(item),
+          item.bl || item.bl_beton || item.numero_bl || "",
+          item.type || item.type_beton || "",
+          fmtNombre(item.quantite_beton) ? fmtNombre(item.quantite_beton) + " m³" : "",
+          classe,
+          slumpTxt,
+          statutTxt
+        ];
+      };
+      const tableauBL = (titre, couleurTitre, liste, texteVide) => {
+        doc.autoTable({
+          ...tableBase,
+          startY: y,
+          head: [
+            [{ content: titre, colSpan: 7, styles: { fillColor: couleurTitre, halign: 'left' } }],
+            ["Date", "N° BL", "Type de béton", "Quantité", "Classe", "Slump", "Statut"]
+          ],
+          body: liste.length ? liste.map(ligneBL) : [["-", texteVide, "", "", "", "", ""]],
+          styles: { fontSize: 7.8, cellPadding: 2.2, overflow: "linebreak" },
+          columnStyles: {
+            0: { cellWidth: 20, halign: "center" },
+            1: { cellWidth: 38, fontStyle: "bold" },
+            2: { cellWidth: "auto" },
+            3: { cellWidth: 20, halign: "center" },
+            4: { cellWidth: 13, halign: "center" },
+            5: { cellWidth: 18, halign: "center", fontStyle: "bold", textColor: [3, 105, 161] },
+            6: { cellWidth: 24, halign: "center" }
+          },
+          didParseCell: function(data) {
+            if (data.column.index === 6 && data.section === 'body') {
+              const t = String(data.cell.raw || '');
+              if (t.includes('Non conforme')) data.cell.styles.textColor = [153, 27, 27];
+              else if (t.includes('Tolérance')) data.cell.styles.textColor = [146, 64, 14];
+              else if (t.includes('Conforme')) data.cell.styles.textColor = [22, 101, 52];
+            }
+          },
+        });
+        y = doc.lastAutoTable.finalY + 4;
+      };
+      const blsMassif = listePdfBL.filter(x => x.destination !== 'carotte');
+      const blsCarotte = listePdfBL.filter(x => x.destination === 'carotte');
+      tableauBL("MASSIF", violet, blsMassif, "Aucun BL massif associé à cette fouille");
+      if (blsCarotte.length || verifCarotte) tableauBL("CAROTTE", [217, 119, 6], blsCarotte, "Aucun BL carotte associé");
 
       // Volumes
       const volCarotteVisible = g("display_vol_carotte") && g("display_vol_carotte").style.display !== "none";
