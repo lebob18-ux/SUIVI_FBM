@@ -4769,11 +4769,16 @@ function genererBlocControleTerrain(id, libelle) {
   return `
     <div style="padding:7px 0; border-top:1px solid #eee;">
       <div style="font-weight:600; margin-bottom:5px;">${libelle}</div>
-      <select id="vt_${id}_statut" onchange="basculerDetailsVerification('${id}')" style="width:100%; padding:7px; border:1px solid #ccc; border-radius:5px; background:#fff;">
-        <option value="">-- Sélectionner --</option>
-        <option value="Conforme">Conforme</option>
-        <option value="Non conforme">Non conforme</option>
-      </select>
+      <div style="display:flex; flex-wrap:wrap; gap:16px; align-items:center;">
+        <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+          <input type="radio" name="vt_${id}_statut" value="Conforme" onchange="basculerDetailsVerification('${id}')">
+          Conforme
+        </label>
+        <label style="display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+          <input type="radio" name="vt_${id}_statut" value="Non conforme" onchange="basculerDetailsVerification('${id}')">
+          Non conforme
+        </label>
+      </div>
       <div id="vt_${id}_details" style="display:none; margin-top:6px;">
         <input id="vt_${id}_valeur" type="text" placeholder="Valeur constatée / saisie" style="box-sizing:border-box; width:100%; padding:7px; border:1px solid #ccc; border-radius:5px; margin-bottom:5px;">
         <textarea id="vt_${id}_observation" rows="2" placeholder="Observation" style="box-sizing:border-box; width:100%; padding:7px; border:1px solid #ccc; border-radius:5px; resize:vertical;"></textarea>
@@ -4782,7 +4787,7 @@ function genererBlocControleTerrain(id, libelle) {
 }
 
 window.basculerDetailsVerification = function(id) {
-  const statut = document.getElementById(`vt_${id}_statut`)?.value;
+  const statut = document.querySelector(`input[name=\"vt_${id}_statut\"]:checked`)?.value || '';
   const zone = document.getElementById(`vt_${id}_details`);
   if (zone) zone.style.display = statut === 'Non conforme' ? 'block' : 'none';
 };
@@ -4799,10 +4804,10 @@ async function chargerVerificationTerrain(chantier, support) {
     if (error) throw error;
     if (!data) return;
     CONTROLES_TERRAIN.forEach(c => {
-      const statut = document.getElementById(`vt_${c.id}_statut`);
+      const statut = document.querySelector(`input[name=\"vt_${c.id}_statut\"]:checked`);
       const valeur = document.getElementById(`vt_${c.id}_valeur`);
       const observation = document.getElementById(`vt_${c.id}_observation`);
-      if (statut) statut.value = data[`${c.id}_statut`] || '';
+      if (statut) statut.checked = statut.value === (data[`${c.id}_statut`] || '');
       if (valeur) valeur.value = data[`${c.id}_valeur`] || '';
       if (observation) observation.value = data[`${c.id}_observation`] || '';
       basculerDetailsVerification(c.id);
@@ -4829,7 +4834,7 @@ window.enregistrerVerificationTerrain = async function() {
   }
   const payload = { chantier: cle.chantier, support: cle.support, date_verification: new Date().toISOString(), updated_at: new Date().toISOString() };
   for (const c of CONTROLES_TERRAIN) {
-    const statut = document.getElementById(`vt_${c.id}_statut`)?.value || null;
+    const statut = document.querySelector(`input[name=\"vt_${c.id}_statut\"]:checked`)?.value || null;
     const valeur = document.getElementById(`vt_${c.id}_valeur`)?.value.trim() || '';
     const observation = document.getElementById(`vt_${c.id}_observation`)?.value.trim() || '';
     if (statut === 'Non conforme' && (!valeur || !observation)) {
