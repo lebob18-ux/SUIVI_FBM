@@ -4728,7 +4728,7 @@ function initialiserPopupSupport() {
 
   const modalHtml = `
     <div id="modalDetailSupport" onclick="if(event.target === this) fermerPopupSupport()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; padding:15px;">
-      <div style="background:#fff; width:100%; max-width:330px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.3); overflow:hidden; animation: fadeInModal 0.2s ease-in-out;">
+      <div style="background:#fff; width:100%; max-width:430px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.3); overflow:hidden; animation: fadeInModal 0.2s ease-in-out;">
         
         <!-- En-tête de la popup -->
         <div style="background:#7C2270; color:#fff; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
@@ -4751,6 +4751,108 @@ function initialiserPopupSupport() {
   `;
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
+
+// Contrôles de tournée terrain : stockés dans une table dédiée, sans toucher à blindage.
+const CONTROLES_TERRAIN = [
+  { id: 'implantation', label: 'Implantation' },
+  { id: 'afouille', label: 'A fouille' },
+  { id: 'bfouille', label: 'B fouille' },
+  { id: 'echantillon', label: 'Échantillon' },
+  { id: 'enrobage', label: 'Enrobage' }
+];
+
+function echapperHtmlTerrain(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function genererBlocControleTerrain(id, libelle) {
+  return `
+    <div style="padding:7px 0; border-top:1px solid #eee;">
+      <div style="font-weight:600; margin-bottom:5px;">${libelle}</div>
+      <select id="vt_${id}_statut" onchange="basculerDetailsVerification('${id}')" style="width:100%; padding:7px; border:1px solid #ccc; border-radius:5px; background:#fff;">
+        <option value="">-- Sélectionner --</option>
+        <option value="Conforme">Conforme</option>
+        <option value="Non conforme">Non conforme</option>
+      </select>
+      <div id="vt_${id}_details" style="display:none; margin-top:6px;">
+        <input id="vt_${id}_valeur" type="text" placeholder="Valeur constatée / saisie" style="box-sizing:border-box; width:100%; padding:7px; border:1px solid #ccc; border-radius:5px; margin-bottom:5px;">
+        <textarea id="vt_${id}_observation" rows="2" placeholder="Observation" style="box-sizing:border-box; width:100%; padding:7px; border:1px solid #ccc; border-radius:5px; resize:vertical;"></textarea>
+      </div>
+    </div>`;
+}
+
+window.basculerDetailsVerification = function(id) {
+  const statut = document.getElementById(`vt_${id}_statut`)?.value;
+  const zone = document.getElementById(`vt_${id}_details`);
+  if (zone) zone.style.display = statut === 'Non conforme' ? 'block' : 'none';
+};
+
+async function chargerVerificationTerrain(chantier, support) {
+  const msg = document.getElementById('messageVerificationTerrain');
+  if (!chantier || !support || typeof supabaseClient === 'undefined' || !supabaseClient || !navigator.onLine) {
+    if (msg) msg.textContent = 'Vérification non chargée (connexion ou identification du support indisponible).';
+    return;
+  }
+  try {
+    const { data, error } = await supabaseClient.from('verification_terrain')
+      .select('*').eq('chantier', chantier).eq('support', support).maybeSingle();
+    if (error) throw error;
+    if (!data) return;
+    CONTROLES_TERRAIN.forEach(c => {
+      const statut = document.getElementById(`vt_${c.id}_statut`);
+      const valeur = document.getElementById(`vt_${c.id}_valeur`);
+      const observation = document.getElementById(`vt_${c.id}_observation`);
+      if (statut) statut.value = data[`${c.id}_statut`] || '';
+      if (valeur) valeur.value = data[`${c.id}_valeur`] || '';
+      if (observation) observation.value = data[`${c.id}_observation`] || '';
+      basculerDetailsVerification(c.id);
+    });
+    const dateEl = document.getElementById('dateVerificationTerrain');
+    if (dateEl) dateEl.textContent = data.date_verification ? new Date(data.date_verification).toLocaleDateString('fr-FR') : "À l'enregistrement";
+    if (msg) msg.textContent = 'Dernière vérification chargée.';
+  } catch (e) {
+    console.error('Chargement vérification terrain :', e);
+    if (msg) msg.textContent = 'Impossible de charger la vérification enregistrée.';
+  }
+}
+
+window.enregistrerVerificationTerrain = async function() {
+  const cle = window.supportVerificationTerrainActuel;
+  const msg = document.getElementById('messageVerificationTerrain');
+  if (!cle?.chantier || !cle?.support) {
+    if (msg) msg.textContent = 'Chantier ou support manquant.';
+    return;
+  }
+  if (typeof supabaseClient === 'undefined' || !supabaseClient || !navigator.onLine) {
+    if (msg) msg.textContent = 'Connexion Internet nécessaire pour enregistrer la vérification.';
+    return;
+  }
+  const payload = { chantier: cle.chantier, support: cle.support, date_verification: new Date().toISOString(), updated_at: new Date().toISOString() };
+  for (const c of CONTROLES_TERRAIN) {
+    const statut = document.getElementById(`vt_${c.id}_statut`)?.value || null;
+    const valeur = document.getElementById(`vt_${c.id}_valeur`)?.value.trim() || '';
+    const observation = document.getElementById(`vt_${c.id}_observation`)?.value.trim() || '';
+    if (statut === 'Non conforme' && (!valeur || !observation)) {
+      if (msg) msg.textContent = `Pour ${c.label}, renseigne la valeur constatée et l'observation.`;
+      return;
+    }
+    payload[`${c.id}_statut`] = statut;
+    payload[`${c.id}_valeur`] = statut === 'Non conforme' ? valeur : null;
+    payload[`${c.id}_observation`] = statut === 'Non conforme' ? observation : null;
+  }
+  try {
+    if (msg) msg.textContent = 'Enregistrement en cours…';
+    const { error } = await supabaseClient.from('verification_terrain')
+      .upsert(payload, { onConflict: 'chantier,support' });
+    if (error) throw error;
+    const dateEl = document.getElementById('dateVerificationTerrain');
+    if (dateEl) dateEl.textContent = new Date().toLocaleDateString('fr-FR');
+    if (msg) { msg.style.color = '#16803c'; msg.textContent = 'Vérification enregistrée.'; }
+  } catch (e) {
+    console.error('Enregistrement vérification terrain :', e);
+    if (msg) { msg.style.color = '#b91c1c'; msg.textContent = 'Erreur lors de l’enregistrement : ' + (e.message || e); }
+  }
+};
 
 // Fonction pour ouvrir la popup avec les données du support
 window.ouvrirPopupSupport = function(supportJsonStr) {
@@ -4819,10 +4921,25 @@ window.ouvrirPopupSupport = function(supportJsonStr) {
           </tr>
         </tbody>
       </table>
+
+      <div style="margin-top:14px; padding:10px; border:1px solid #e6d8e4; border-radius:8px; background:#fdfbfd;">
+        <div style="font-weight:bold; color:#7C2270; margin-bottom:8px;">Vérification tournée terrain</div>
+        <div style="font-size:0.78em; color:#666; margin-bottom:9px;">Pour chaque contrôle, sélectionne Conforme ou Non conforme. En cas de non-conformité, précise la valeur constatée et ton observation.</div>
+        ${genererBlocControleTerrain('implantation', 'Implantation')}
+        ${genererBlocControleTerrain('afouille', 'A fouille')}
+        ${genererBlocControleTerrain('bfouille', 'B fouille')}
+        ${genererBlocControleTerrain('echantillon', 'Échantillon')}
+        ${genererBlocControleTerrain('enrobage', 'Enrobage (bord de fouille / nue du support)')}
+        <div style="font-size:0.75em; color:#666; margin:8px 0;">Date de vérification : <span id="dateVerificationTerrain">À l'enregistrement</span></div>
+        <button type="button" onclick="enregistrerVerificationTerrain()" style="width:100%; background:#7C2270; color:#fff; border:0; border-radius:6px; padding:9px; font-weight:bold; cursor:pointer;">Enregistrer la vérification</button>
+        <div id="messageVerificationTerrain" style="font-size:0.78em; margin-top:7px;"></div>
+      </div>
     `;
 
     document.getElementById("modalCorpsSupport").innerHTML = corpsHtml;
     document.getElementById("modalDetailSupport").style.display = "flex";
+    window.supportVerificationTerrainActuel = { chantier: s.chantier || '', support: String(s.support || '') };
+    chargerVerificationTerrain(s.chantier || '', String(s.support || ''));
   } catch (e) {
     console.error("Erreur ouverture popup support :", e);
   }
