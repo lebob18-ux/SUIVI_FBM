@@ -5027,6 +5027,10 @@ async function genererRecap(containerId) {
    ============================================================ */
 
 window.ouvrirOnglet = function(nom) {
+  if (nom === "fbm" && !window.numeroRJ) {
+    const m = document.getElementById("divRJModal");
+    if (m) m.style.display = "flex";
+  }
   const fbmPage  = document.getElementById("fbmPage");
   const adminPage = document.getElementById("adminPage");
   
@@ -5259,6 +5263,10 @@ async function initIdentite() {
       overlay.style.display = "none";
       appliquerIdentite(identite);
       gererAffichageAdmin(resultat.admin);
+      if (resultat.admin) {
+        document.getElementById("divRJModal").style.display = "none";
+        ouvrirOngletGlobal('admin');
+      }
     } else {
       // Déjà demandé mais pas encore validé
       overlay.style.display = "flex";
@@ -5519,9 +5527,14 @@ function logoAINMversPNG(largeurPx, hauteurPx) {
 
           const btn = document.createElement('button');
           btn.type = 'button';
-          btn.innerText = opt.text;
-          btn.style.cssText = "padding: 8px 12px; font-size: 14px; background: #222; color: #ccc; border: 1px solid #444; border-radius: 4px; text-align: left; cursor: pointer; transition: 0.2s; width: 100%;";
-          
+          const chantierCourant = document.getElementById('selectChantier')?.value || '';
+          const ligneSup = (typeof baseSupports !== 'undefined' ? baseSupports : []).find(s =>
+              s.chantier === chantierCourant && String(s.support) === String(opt.value));
+          const implSup = (ligneSup && ligneSup.I !== null && ligneSup.I !== undefined && ligneSup.I !== '') ? 'I : ' + ligneSup.I + ' m' : '';
+          const typeSup = ligneSup?.TYPE || '';
+          const detailSup = [implSup, typeSup].filter(Boolean).join('  •  ');
+          btn.innerText = opt.text + (detailSup ? '\n' + detailSup : '');
+          btn.style.cssText = "padding: 8px 12px; font-size: 14px; background: #222; color: #ccc; border: 1px solid #444; border-radius: 4px; text-align: left; cursor: pointer; transition: 0.2s; width: 100%; white-space: pre-line;";          
           if (selectChantierElem.value === opt.value) {
               btn.style.backgroundColor = '#7C2270';
               btn.style.color = '#fff';
@@ -5803,6 +5816,10 @@ const FBM_LOCAL_PREFIX = 'fbm_outil_2_';
 const FBM_LOCAL_STATE_KEY = FBM_LOCAL_PREFIX + 'etat_v1';
 
 function ouvrirOngletGlobal(page) {
+	    if (page === 'fbm' && !window.numeroRJ) {
+        const m = document.getElementById('divRJModal');
+        if (m) m.style.display = 'flex';
+    }
     const fbmPage = document.getElementById('fbmPage');
     const adminPage = document.getElementById('adminPage');
     const tabFBM = document.getElementById('tabFBM');
