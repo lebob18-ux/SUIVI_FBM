@@ -415,18 +415,24 @@ input[readonly]{
 
     /* Styles pour le menu latéral DROIT (Supports) */
     .sidebar-right {
-        height: 100%;
+        height: 100vh;
+        height: 100dvh; /* Suit la hauteur réellement visible sur smartphone */
+        box-sizing: border-box;
         width: 0;
         position: fixed;
         z-index: 1000;
         top: 0;
         right: 0;
+        bottom: 0;
         background-color: #111;
         overflow-x: hidden;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
         transition: 0.3s;
         padding-top: 60px;
-        padding-bottom: 70px; /* Espace pour le bouton fixe en bas */
+        /* Réserve de la place pour la barre système du téléphone et le dernier support */
+        padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
         box-shadow: -2px 0 5px rgba(0,0,0,0.5);
     }
     .sidebar-right .btn-fermer-droit {
