@@ -4257,6 +4257,7 @@ function resetSauvegardeSupport() {
   }
   if (!confirm("Effacer la sauvegarde locale de ce support et recharger les valeurs de référence ?")) return;
   localStorage.removeItem(cle);
+  localStorage.removeItem(FBM_LOCAL_STATE_KEY);
   if (typeof chargerSupport === "function") chargerSupport();
 }
 
@@ -4539,7 +4540,8 @@ function filtrerSupports() {
       if (ancienneSelection && Array.from(supportSelect.options).some(o => o.value === ancienneSelection)) {
         supportSelect.value = ancienneSelection;
     }
-    if (!supportSelect.value) viderToutFormulaire();
+        if (!supportSelect.value) viderToutFormulaire();
+    else if (typeof chargerSupport === 'function') chargerSupport();
     if (typeof mettreAJourBoutonsSupportsSidebar === 'function') mettreAJourBoutonsSupportsSidebar();
 }
 
@@ -4569,6 +4571,9 @@ function chargerSupport() {
         if (el && val !== undefined && val !== null && val !== "") el.value = val;
     };
     const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
+
+    // Repartir d'un formulaire propre : plus aucune valeur de l'ancien support
+    viderToutFormulaire();
 
     // La sauvegarde locale peut dépanner hors réseau, mais Supabase reste prioritaire
     // dès que ce support est chargé depuis le serveur.
@@ -6035,15 +6040,19 @@ function fbmRestaurerEtatLocal() {
                 }
             }
             if (!etat.support || !selS || selS.value !== etat.support) return;
+            // Les valeurs Supabase (déjà chargées par chargerSupport) restent prioritaires :
+            // la sauvegarde locale ne comble que les champs encore vides.
             Object.entries(etat.champs || {}).forEach(([id, data]) => {
                 const el = document.getElementById(id);
                 if (!el || id === 'selectChantier' || id === 'selectSupport') return;
+                if (el.readOnly || el.disabled) return;
 
                 if (data.type === 'checkbox') {
-                    el.checked = !!data.checked;
+                    if (data.checked) el.checked = true;
                 } else if (data.type === 'radio') {
-                    el.checked = el.value === data.value;
-                } else if (data.value !== undefined) {
+                    const groupeDejaCoche = document.querySelector('input[name="' + el.name + '"]:checked');
+                    if (el.value === data.value && (el.name === 'brh' || !groupeDejaCoche)) el.checked = true;
+                } else if (data.value !== undefined && data.value !== '' && String(el.value || '').trim() === '') {
                     el.value = data.value;
                 }
             });
@@ -6056,9 +6065,7 @@ function fbmRestaurerEtatLocal() {
             // Priorité aux valeurs Supabase lorsque le chargement serveur a réussi.
             // Les champs absents du serveur restent ceux de la sauvegarde locale,
             // afin de conserver une saisie inachevée.
-            if (navigator.onLine && supportsSupabaseCharges && typeof chargerSupport === 'function') {
-                try { chargerSupport(); } catch(e) { console.warn('Priorité Supabase :', e); }
-            } else if (typeof calculer === 'function') {
+            if (typeof calculer === 'function') {
                 try { calculer(); } catch(e) {}
             }
             if (typeof mettreAJourBoutonsChantiersSidebar === 'function') {
