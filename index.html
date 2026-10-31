@@ -4366,7 +4366,7 @@ function initChantiers() {
 
 function peuplerChantiersSidebar() {
     const selectOriginal = document.getElementById('selectChantier');
-    const conteneurSidebar = document.getElementById('listeChantiersSidebar');
+    const conteneurSidebar = document.getElementById('sidebarChantiersContainer');
     
     if (!selectOriginal || !conteneurSidebar) return;
     
@@ -5789,7 +5789,11 @@ function logoAINMversPNG(largeurPx, hauteurPx) {
           hiddenSelect.onchange = () => { filtrerSupports(); };
           document.body.appendChild(hiddenSelect);
       }
-
+// Sécurité : si Supabase a répondu avant la création du select,
+// on relance le chargement des chantiers.
+if (typeof baseSupports !== "undefined" && baseSupports.length > 0) {
+    initChantiers();
+}
       const mainSelect = document.getElementById('selectChantier');
       if (mainSelect) {
           mainSelect.addEventListener('change', () => {
