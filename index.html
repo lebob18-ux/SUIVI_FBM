@@ -3601,7 +3601,7 @@ async function exporterPDF() {
     });
     y = doc.lastAutoTable.finalY + 4;
 
-    if (verifCarotte) {
+    if (false) {
       const rowsCarotte = [
         ["A carotte", val("A_carotte") + " cm"],
         ["B carotte", val("B_carotte") + " cm"],
@@ -6240,6 +6240,64 @@ document.getElementById('modalScannerBL')?.addEventListener('click', event => {
   if (event.target.id === 'modalScannerBL') fermerScannerBL();
 });
 </script>
+<script>
+/* CAROTTE INDÉPENDANTE DU BLINDAGE */
+(function () {
+  function init() {
+    var bloc = document.getElementById('bloc_saisie_carotte');
+    var ref = document.getElementById('section-blindage-wrap');
+    if (!bloc || !ref || document.getElementById('section-carotte-wrap')) return;
 
+    var sec = document.createElement('div');
+    sec.className = 'section collapsed mb-2';
+    sec.id = 'section-carotte-wrap';
+    sec.innerHTML =
+      '<div class="section-title" onclick="toggleSection(\'sec-carotte\')">' +
+      '<span>🥕 CAROTTE</span><span class="section-arrow">▾</span></div>' +
+      '<div class="section-content" id="sec-carotte"></div>';
+    ref.parentNode.insertBefore(sec, ref);
+    document.getElementById('sec-carotte').appendChild(bloc);
+
+    var chk = document.getElementById('carotte');
+    var dernier = null;
+    function sync() {
+      if (!chk || dernier === chk.checked) return;
+      dernier = chk.checked;
+      sec.classList.toggle('collapsed', !chk.checked);
+    }
+    if (chk) chk.addEventListener('change', sync);
+
+    var calculerOrigine = window.calculer;
+    if (typeof calculerOrigine === 'function') {
+      window.calculer = function () {
+        var r = calculerOrigine.apply(this, arguments);
+        sync();
+        return r;
+      };
+    }
+    sync();
+  }
+
+  /* La saisie du bloc carotte n'est plus obligatoire */
+  var validerOrigine = window.validerSaisiesFBM;
+  if (typeof validerOrigine === 'function') {
+    window.validerSaisiesFBM = function () {
+      var erreurs = validerOrigine().filter(function (e) {
+        return e.indexOf('Carotte') === -1;
+      });
+      var d = document.getElementById('tbf');
+      if (d) {
+        d.innerHTML = erreurs.length
+          ? '<div style="color:#dc2626;background:#fee2e2;padding:8px 10px;border-radius:6px;border:1px solid #f87171;font-size:0.85em;text-align:left;"><strong>⚠️ Champs requis manquants :</strong><br>• ' + erreurs.join('<br>• ') + '</div>'
+          : '';
+      }
+      return erreurs;
+    };
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
 </body>
 </html>
