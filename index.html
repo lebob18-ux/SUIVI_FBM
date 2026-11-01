@@ -6224,6 +6224,24 @@ async function scannerBLTelephone() {
     fermerScannerBL();
     alert('Impossible de démarrer le scanner. Vérifie que la caméra est autorisée et que la page est ouverte en HTTPS. Détail : ' + (e.message || e));
   }
+	boucleScannerBL = setInterval(async () => {
+      if (!scanBLEnCours || video.readyState < 2 || video.videoWidth === 0) return;
+      try {
+        const codes = await detecteurBL.detect(video);
+        if (codes && codes.length && codes[0].rawValue) {
+          const valeurBrute = String(codes[0].rawValue).trim();
+          
+          // 1. On nettoie / extrait le numéro propre
+          const valeurExtraite = extraireNumeroBLPropre(valeurBrute);
+          
+          // 2. On coupe la caméra
+          fermerScannerBL();
+          
+          // 3. On ouvre la modale de validation au lieu de remplir direct
+          ouvrirModalValidationBL(valeurExtraite);
+        }
+      } catch (e) { console.debug('Lecture du code en cours…', e); }
+    }, 250);
 }
 
 function fermerScannerBL() {
@@ -6239,7 +6257,82 @@ function fermerScannerBL() {
 document.getElementById('modalScannerBL')?.addEventListener('click', event => {
   if (event.target.id === 'modalScannerBL') fermerScannerBL();
 });
-</script>
+	/* ============================================================
+   2. EXTRACTION INTELLIGENTE ET GESTION DE LA MODALE DE VALIDATION
+   ============================================================ */
 
+// Extrait proprement le numéro de BL si le QR code contient une trame complexe
+function extraireNumeroBLPropre(texteBrut) {
+  let texte = String(texteBrut || "").trim();
+  
+  // Si le QR code contient des points-virgules (format trame centrale à béton)
+  if (texte.includes(';')) {
+    const parties = texte.split(';');
+    for (const p of parties) {
+      const match = p.trim().match(/^CL(\d+)/i);
+      if (match) {
+        return 'CL' + match[1];
+      }
+    }
+    const matchGlobal = texte.match(/CL([A-Z0-9]+)/i);
+    if (matchGlobal) {
+      return matchGlobal[0].toUpperCase();
+    }
+  }
+  
+  return texte.toUpperCase();
+}
+
+// Ouvre la modale avec le numéro extrait pour vérification
+function ouvrirModalValidationBL(valeur) {
+  const modal = document.getElementById('modalValidationBL');
+  const input = document.getElementById('inputValidationBL');
+  if (modal && input) {
+    input.value = valeur;
+    modal.style.display = 'flex';
+    setTimeout(() => { 
+      input.focus(); 
+      input.select(); 
+    }, 150);
+  }
+}
+
+// Bouton "Valider" de la modale : envoie le numéro validé dans le formulaire
+function confirmerValidationBL() {
+  const input = document.getElementById('inputValidationBL');
+  const valeurFinale = input ? input.value.trim().toUpperCase() : '';
+  
+  if (!valeurFinale) {
+    alert("⚠️ Le numéro de BL ne peut pas être vide.");
+    return;
+  }
+
+  const champ = document.getElementById('bl_beton');
+  if (champ) {
+    champ.value = valeurFinale;
+    champ.dispatchEvent(new Event('input', { bubbles: true }));
+    champ.focus();
+  }
+
+  document.getElementById('modalValidationBL').style.display = 'none';
+}
+
+// Bouton "Annuler" de la modale
+function annulerValidationBL() {
+  document.getElementById('modalValidationBL').style.display = 'none';
+}
+</script>
+<!-- MODALE DE VALIDATION DU BL APRÈS SCAN -->
+<div id="modalValidationBL" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; padding:15px; box-sizing:border-box;">
+  <div style="background:white; color:#222; width:100%; max-width:360px; border-radius:12px; padding:20px; box-sizing:border-box; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+    <h3 style="margin-top:0; color:#7c2270; font-size:1.1em;">📋 Validation du N° de BL</h3>
+    <p style="font-size:0.85em; color:#666; margin-bottom:12px;">Vérifiez ou modifiez le numéro de bon de livraison lu par le scanner :</p>
+    <input type="text" id="inputValidationBL" style="width:100%; padding:10px; font-size:1em; font-weight:bold; text-align:center; border:2px solid #7c2270; border-radius:6px; box-sizing:border-box; margin-bottom:15px; text-transform:uppercase;">
+    <div style="display:flex; gap:10px;">
+      <button type="button" onclick="confirmerValidationBL()" style="flex:1; background:#16a34a; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">✅ Valider</button>
+      <button type="button" onclick="annulerValidationBL()" style="flex:1; background:#dc2626; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer;">❌ Annuler</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
