@@ -719,10 +719,7 @@ input[readonly]{
       <button type="button" onclick="ajouterBL()" style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">💾 Enregistrer BL</button>
     </div>
 	    <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
-      <select id="destination-bl" style="flex:1; height:32px; font-size:0.85em;">
-        <option value="massif">🧱 Massif</option>
-        <option value="carotte">🥕 Carotte</option>
-      </select>
+      <input type="hidden" id="destination-bl" value="massif">
       <input type="date" id="date-coulage-bl" style="flex:1; height:32px; font-size:0.85em;">
     </div>
     <div id="slump-alerte" style="font-size:0.78em; font-weight:bold; margin-bottom:6px; display:none;"></div>
@@ -862,6 +859,19 @@ input[readonly]{
       <input type="number" id="nb_big_bag_mignonette" min="0" step="1" value="0" style="width: 75px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; text-align: center;" oninput="calculer()">
     </div>
 
+
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- CHAPITRE CAROTTE : indépendant du blindage  -->
+<!-- ========================================== -->
+<div class="section collapsed mb-2" id="section-carotte-wrap">
+  <div class="section-title" onclick="toggleSection('sec-carotte')">
+    <span>🥕 CAROTTE</span>
+    <span class="section-arrow" id="arrow-sec-carotte">▾</span>
+  </div>
+  <div class="section-content" id="sec-carotte">
     <div id="bloc_saisie_carotte" style="display: none; background: #fff3cd; padding: 8px; border-radius: 8px; margin-top: 8px; border: 1px solid #ffeba2; width: 100% !important; flex-direction: column; gap: 8px; box-sizing: border-box;">  
       <div class="row" style="display: flex; justify-content: space-between; width: 100%;">
         <div class="field compact"><label style="color: #d97706; font-weight: bold;font-size: 0.5em !important;">A (cm)</label><input type="number" id="A_carotte" value="0" onclick="this.select()" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();" onchange="calculer()" oninput="calculer()"></div>
@@ -884,6 +894,37 @@ input[readonly]{
         <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote A:↕ <span id="calc_S3" style="font-weight:bold;">0.00</span></div>
         <div style="background: #fff; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">e2 Cote B:↔ <span id="calc_S4" style="font-weight:bold;">0.00</span></div>
       </div>  
+
+      <div style="margin-top:8px;padding:8px;background:#fff;border:1px solid #f3d28a;border-radius:7px;display:flex;flex-direction:column;gap:5px;">
+        <div style="font-size:.82em;font-weight:bold;color:#b45309;">🧾 BON DE LIVRAISON — CAROTTE</div>
+        <div style="display:flex;gap:5px;align-items:center;">
+          <input type="text" id="bl_beton_carotte" list="bl-numeros-historique" placeholder="N° de BL (saisie ou scan)" autocomplete="off" style="flex:1;min-width:0;height:32px;font-size:.85em;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase();">
+          <button type="button" onclick="scannerBLTelephone('bl_beton_carotte')" title="Scanner le BL carotte" style="background:#7c2270;color:white;padding:6px 9px;margin:0;white-space:nowrap;font-size:.82em;">📷</button>
+          <button type="button" onclick="rappelerDernierBLCarotte()" title="Reprendre le dernier BL utilisé" style="background:#0369a1;color:white;padding:6px 9px;margin:0;white-space:nowrap;font-size:.82em;">↩ Dernier</button>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center;">
+          <input list="bl-datalist" id="bl-input-carotte" placeholder="Type béton" style="flex:1.5;min-width:0;height:32px;font-size:.85em;">
+          <input type="number" id="quantite-beton-input-carotte" placeholder="Quantité (m³)" style="flex:1;min-width:0;height:32px;font-size:.85em;" step="0.001" min="0">
+          <button type="button" onclick="ajouterTypeBetonChantierCarotte()" title="Ajouter un type de béton au chantier actif" style="background:#7c2270;color:white;padding:5px 9px;margin:0;font-weight:bold;font-size:.9em;">＋ Type</button>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;margin-bottom:2px;">
+          <span style="font-size:.75em;font-weight:bold;color:#b45309;white-space:nowrap;">Classe S :</span>
+          <button type="button" id="btn-carotte-S1" onclick="choisirClasseSlumpCarotte('S1')" style="padding:4px 7px;margin:0;font-size:.78em;font-weight:bold;border-radius:4px;border:2px solid #ccc;background:#f3f4f6;color:#333;">S1</button>
+          <button type="button" id="btn-carotte-S2" onclick="choisirClasseSlumpCarotte('S2')" style="padding:4px 7px;margin:0;font-size:.78em;font-weight:bold;border-radius:4px;border:2px solid #ccc;background:#f3f4f6;color:#333;">S2</button>
+          <button type="button" id="btn-carotte-S3" onclick="choisirClasseSlumpCarotte('S3')" style="padding:4px 7px;margin:0;font-size:.78em;font-weight:bold;border-radius:4px;border:2px solid #ccc;background:#f3f4f6;color:#333;">S3</button>
+          <button type="button" id="btn-carotte-S4" onclick="choisirClasseSlumpCarotte('S4')" style="padding:4px 7px;margin:0;font-size:.78em;font-weight:bold;border-radius:4px;border:2px solid #0369a1;background:#e0f2fe;color:#0369a1;">S4</button>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center;">
+          <input type="number" id="slump-input-carotte" placeholder="Slump (mm)" style="flex:1;height:32px;font-size:.85em;" step="1" min="0" oninput="verifierSlumpCarotte()">
+          <button type="button" onclick="ajouterBLCarotte()" style="background:#16a34a;color:white;padding:5px 12px;margin:0;font-weight:bold;font-size:.9em;">💾 Enregistrer BL carotte</button>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center;">
+          <input type="date" id="date-coulage-bl-carotte" style="flex:1;height:32px;font-size:.85em;">
+          <span style="font-size:.75em;color:#92400e;">Destination : carotte</span>
+        </div>
+        <div id="slump-alerte-carotte" style="font-size:.78em;font-weight:bold;display:none;"></div>
+        <div id="bl-liste-carotte"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -891,7 +932,7 @@ input[readonly]{
 <!-- ========================================== -->
 <!-- CHAPITRE 5 : Alertes (Fermé par défaut)     -->
 <!-- ========================================== -->
-<div class="section collapsed mb-2" id="sec-alertes-wrap">
+<div class="section collapsed mb-2" id="sec-alertes-wrap" style="display:none;">
   <div class="section-title" onclick="toggleSection('sec-alertes')">
     <span>🚨 Alertes</span>
     <span class="section-arrow" id="arrow-sec-alertes">▾</span>
@@ -1819,6 +1860,135 @@ async function ajouterBL() {
   }
 }
 
+/* Saisie BL indépendante pour la destination CAROTTE */
+let classeSlumpCarotteActuelle = 'S4';
+function choisirClasseSlumpCarotte(classe) {
+  classeSlumpCarotteActuelle = classe;
+  ['S1','S2','S3','S4'].forEach(s => {
+    const btn = document.getElementById('btn-carotte-' + s);
+    if (!btn) return;
+    const actif = s === classe;
+    btn.style.background = actif ? '#e0f2fe' : '#f3f4f6';
+    btn.style.color = actif ? '#0369a1' : '#333';
+    btn.style.borderColor = actif ? '#0369a1' : '#ccc';
+  });
+  verifierSlumpCarotte();
+}
+
+function verifierSlumpCarotte() {
+  const input = document.getElementById('slump-input-carotte');
+  const alerte = document.getElementById('slump-alerte-carotte');
+  if (!input || !alerte) return;
+  const valeur = parseFloat(input.value);
+  if (isNaN(valeur) || input.value === '') {
+    input.style.borderColor = '#ccc'; input.style.background = ''; alerte.style.display = 'none'; return;
+  }
+  const plage = PLAGES_SLUMP[classeSlumpCarotteActuelle] || PLAGES_SLUMP.S4;
+  const ecart = valeur < plage.min ? plage.min - valeur : valeur > plage.max ? valeur - plage.max : 0;
+  if (!ecart) {
+    input.style.borderColor = '#16a34a'; input.style.background = '#f0fdf4'; alerte.style.display = 'none';
+  } else {
+    const tol = ecart <= 20;
+    input.style.borderColor = tol ? '#f59e0b' : '#dc2626';
+    input.style.background = tol ? '#fffbeb' : '#fef2f2';
+    alerte.style.display = 'block'; alerte.style.color = tol ? '#92400e' : '#991b1b';
+    alerte.textContent = (tol ? '⚠️ Slump hors plage ' : '🚨 Slump NON CONFORME ') + classeSlumpCarotteActuelle + ' (' + plage.min + '-' + plage.max + ' mm) — écart : ' + ecart + ' mm';
+  }
+}
+
+function rappelerDernierBLCarotte() {
+  const cle = cleDernierBL();
+  if (!cle) { alert('Sélectionne d’abord un chantier.'); return; }
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(cle) || 'null'); } catch (_) {}
+  if (!d || !d.bl) { alert('Aucun BL mémorisé pour ce chantier.'); return; }
+  document.getElementById('bl_beton_carotte').value = d.bl || '';
+  document.getElementById('bl-input-carotte').value = d.type || '';
+  document.getElementById('quantite-beton-input-carotte').value = d.quantite_beton ?? '';
+  document.getElementById('slump-input-carotte').value = d.slump ?? '';
+  choisirClasseSlumpCarotte(d.classe_slump || 'S4');
+}
+
+async function ajouterTypeBetonChantierCarotte() {
+  const chantierSelect = document.getElementById("selectChantier");
+  const chantier = chantierSelect && chantierSelect.selectedIndex >= 0
+    ? String(chantierSelect.options[chantierSelect.selectedIndex]?.text || "").trim() : "";
+  if (!chantier || chantier.toLowerCase() === "aucun chantier") {
+    alert("Sélectionne d'abord le chantier concerné."); return;
+  }
+  const saisie = prompt("Nouveau type de béton à ajouter au chantier « " + chantier + " » :");
+  if (saisie === null) return;
+  const type = saisie.trim().toUpperCase();
+  if (!type) { alert("Le type de béton ne peut pas être vide."); return; }
+  if (typeof supabaseClient === "undefined" || !supabaseClient) {
+    alert("Connexion Supabase indisponible. Le type n'a pas été ajouté à la liste partagée."); return;
+  }
+  try {
+    const { error } = await supabaseClient.from("types_beton_chantier")
+      .upsert({ chantier, type_beton: type, actif: true }, { onConflict: "chantier,type_beton" });
+    if (error) throw error;
+    await chargerTypesBetonChantier();
+    const champ = document.getElementById("bl-input-carotte");
+    if (champ) champ.value = type;
+    alert("Type « " + type + " » ajouté au chantier « " + chantier + " ».");
+  } catch (e) {
+    console.error("Ajout du type béton impossible :", e);
+    alert("Impossible d'ajouter ce type dans Supabase. Vérifie que le SQL de création de types_beton_chantier a été exécuté.\n\n" + (e.message || e));
+  }
+}
+
+async function ajouterBLCarotte() {
+  const blInput = document.getElementById('bl_beton_carotte');
+  const typeInput = document.getElementById('bl-input-carotte');
+  const quantiteInput = document.getElementById('quantite-beton-input-carotte');
+  const slumpInput = document.getElementById('slump-input-carotte');
+  const blVal = String(blInput?.value || '').trim().toUpperCase();
+  const typeVal = String(typeInput?.value || '').trim().toUpperCase();
+  const qTexte = String(quantiteInput?.value ?? '').trim();
+  const sTexte = String(slumpInput?.value ?? '').trim();
+  const qVal = qTexte ? Number(qTexte.replace(',', '.')) : null;
+  const sVal = sTexte ? Number(sTexte.replace(',', '.')) : null;
+  const actuel = obtenirSupportBLActuel();
+  if (!blVal) { alert('⚠️ Saisis le numéro du BL carotte.'); blInput?.focus(); return false; }
+  if (!actuel) { alert('⚠️ Sélectionne d’abord un chantier et une fouille.'); return false; }
+  let item;
+  try {
+    if (typeof supabaseClient !== 'undefined' && supabaseClient && navigator.onLine) {
+      const fiche = await trouverBLGlobal(actuel.chantier, blVal);
+      if (fiche) item = normaliserBL({ id:fiche.id, bl:fiche.numero_bl, type:fiche.type_beton, quantite_beton:fiche.quantite_beton, slump:fiche.slump, classe_slump:fiche.classe_slump, local_ref:fiche.local_ref });
+    }
+  } catch (e) {
+    alert('Impossible de vérifier ce BL dans Supabase. Rien n’a été ajouté.\n\n' + (e.message || e)); return false;
+  }
+  if (!item) {
+    if (!typeVal) { alert('⚠️ Saisis le type de béton.'); typeInput?.focus(); return false; }
+    if (qVal === null || !Number.isFinite(qVal) || qVal <= 0) { alert('⚠️ Saisis une quantité en m³ supérieure à zéro.'); quantiteInput?.focus(); return false; }
+    if (sVal === null || !Number.isFinite(sVal)) { alert('⚠️ Saisis une valeur de slump.'); slumpInput?.focus(); return false; }
+    item = normaliserBL({ bl:blVal, type:typeVal, quantite_beton:qVal, slump:sVal, classe_slump:classeSlumpCarotteActuelle, local_ref:creerRefLocaleBL() });
+  }
+  item.destination = 'carotte';
+  item.date_coulage = document.getElementById('date-coulage-bl-carotte')?.value || null;
+  memoriserNumeroBL(blVal);
+  try {
+    const blindageId = await obtenirIdBlindageActuel();
+    await enregistrerBLDansSupabase(item, blindageId);
+    memoriserDernierBL(item);
+    const idx = blsActuels.findIndex(x => x.bl === item.bl && x.destination === 'carotte');
+    if (idx >= 0) blsActuels[idx] = item; else blsActuels.push(item);
+    sauvegarderBLs(); afficherBLs();
+    blInput.value = ''; typeInput.value = ''; quantiteInput.value = ''; slumpInput.value = '';
+    slumpInput.style.borderColor = '#ccc'; slumpInput.style.background = '';
+    const alerte = document.getElementById('slump-alerte-carotte'); if (alerte) alerte.style.display = 'none';
+    choisirClasseSlumpCarotte('S4');
+    blInput.focus();
+    return true;
+  } catch (e) {
+    console.error('Erreur synchronisation BL carotte :', e);
+    alert('⚠️ Le BL carotte n’a pas pu être associé dans Supabase.\n\n' + (e.message || e));
+    return false;
+  }
+}
+
 async function supprimerBL(index) {
   const item = blsActuels[index];
   if (!item) return;
@@ -1836,15 +2006,12 @@ async function supprimerBL(index) {
   blsActuels.splice(index, 1); sauvegarderBLs(); afficherBLs();
 }
 
-function afficherBLs() {
-  const liste = document.getElementById("bl-liste");
-  if (!liste) return;
-  if (!blsActuels.length) {
-    liste.innerHTML = "<p style='color:#999;font-size:0.8em;text-align:center;margin:6px 0;'>Aucun BL enregistré pour cette fouille</p>";
-    return;
-  }
-  liste.innerHTML = blsActuels.map((item, i) => {
-    const val = v => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v)) ? Number(v).toLocaleString("fr-FR", { maximumFractionDigits:3 }) : "--";
+function genererHTMLListeBLs(destination) {
+  const items = blsActuels.map((item, index) => ({ item, index }))
+    .filter(x => (x.item.destination === 'carotte' ? 'carotte' : 'massif') === destination);
+  if (!items.length) return "<p style='color:#999;font-size:0.8em;text-align:center;margin:6px 0;'>Aucun BL "+(destination === 'carotte' ? 'carotte' : 'massif')+" enregistré pour cette fouille</p>";
+  const val = v => v !== null && v !== undefined && v !== "" && Number.isFinite(Number(v)) ? Number(v).toLocaleString("fr-FR", { maximumFractionDigits:3 }) : "--";
+  return items.map(({item, index}) => {
     const classe = item.classe_slump || 'S4';
     const statut = statutSlump(item.slump, classe);
     const couleur = statut === 'conforme' ? '#166534' : statut === 'tolerance' ? '#92400e' : statut === 'non_conforme' ? '#991b1b' : '#0369a1';
@@ -1855,13 +2022,24 @@ function afficherBLs() {
         <div style="display:flex;align-items:center;gap:5px;min-width:0;flex:1;flex-wrap:wrap;">
           <span style="font-weight:bold;color:#333;font-size:.82em;">🧾 ${echapperHTML(item.bl || "--")}</span>
           <span style="color:#7C2270;background:#f0e4ee;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${echapperHTML(item.type || "--")}</span>
-		  <span style="color:${item.destination === 'carotte' ? '#92400e' : '#374151'};background:${item.destination === 'carotte' ? '#fef3c7' : '#f3f4f6'};font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${item.destination === 'carotte' ? '🥕 Carotte' : '🧱 Massif'}${item.date_coulage ? ' ' + item.date_coulage.split('-').reverse().join('/') : ''}</span>
           <span style="color:#166534;background:#dcfce7;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${val(item.quantite_beton)} m³</span>
           <span style="color:${couleur};background:${fond};font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;white-space:nowrap;">${icone} ${val(item.slump)} mm ${classe}</span>
+          ${item.date_coulage ? `<span style="font-size:.72em;color:#666;">${item.date_coulage.split('-').reverse().join('/')}</span>` : ''}
         </div>
-        <button type="button" onclick="supprimerBL(${i})" style="background:#fee2e2;color:#dc2626;padding:2px 7px;font-size:.72em;margin:0;border-radius:4px;flex-shrink:0;" title="Retirer ce BL de cette fouille">✕</button>
+        <button type="button" onclick="supprimerBL(${index})" style="background:#fee2e2;color:#dc2626;padding:2px 7px;font-size:.72em;margin:0;border-radius:4px;flex-shrink:0;" title="Retirer ce BL de cette fouille">✕</button>
       </div></div>`;
   }).join("");
+}
+
+function afficherBLs() {
+  const liste = document.getElementById("bl-liste");
+  if (liste) liste.innerHTML = genererHTMLListeBLs('massif');
+  afficherBLsCarotte();
+}
+
+function afficherBLsCarotte() {
+  const liste = document.getElementById("bl-liste-carotte");
+  if (liste) liste.innerHTML = genererHTMLListeBLs('carotte');
 }
 
 
@@ -2146,6 +2324,8 @@ function rechargerBLsSupport() {
 window.addEventListener("load", () => {
   const champDateCoulage = document.getElementById("date-coulage-bl");
   if (champDateCoulage && !champDateCoulage.value) champDateCoulage.value = dateDuPosteFBM();
+  const champDateCoulageCarotte = document.getElementById("date-coulage-bl-carotte");
+  if (champDateCoulageCarotte && !champDateCoulageCarotte.value) champDateCoulageCarotte.value = dateDuPosteFBM();
 
   initBLDatalist();
   chargerTypesBetonChantier();
@@ -2469,6 +2649,12 @@ PCarotteInput.value = parseFloat((HF * 100)-encastrementCm ).toFixed(0);
 
   document.getElementById("bloc_saisie_carotte").style.display =
       verifCarotte ? "flex" : "none";
+  const sectionCarotte = document.getElementById("section-carotte-wrap");
+  if (sectionCarotte) {
+      sectionCarotte.classList.toggle("collapsed", !verifCarotte);
+      const arrowCarotte = document.getElementById("arrow-sec-carotte");
+      if (arrowCarotte) arrowCarotte.innerText = verifCarotte ? "▴" : "▾";
+  }
 
   document.getElementById("bloc_saisie_blindage").style.display =
       verifBlindage ? "flex" : "none";
@@ -3807,6 +3993,59 @@ function genererDonut(effectues, total, couleur) {
   return canvas.toDataURL("image/jpeg", 0.9);
 }
 
+function datePhaseRenseignee(valeur) {
+  if (valeur === null || valeur === undefined) return false;
+  const v = String(valeur).trim();
+  return v !== '' && v.toLowerCase() !== 'null' && v.toLowerCase() !== 'undefined';
+}
+
+function nombreVolumeRenseigne(...valeurs) {
+  for (const valeur of valeurs) {
+    if (valeur !== null && valeur !== undefined && String(valeur).trim() !== '') {
+      const n = Number(String(valeur).replace(',', '.'));
+      if (Number.isFinite(n)) return n;
+    }
+  }
+  return null;
+}
+
+function lirePhasesEtVolumes(s) {
+  // Les dates admin de l'application Avancement sont reprises uniquement
+  // lorsqu'elles ont été saisies par LAVIGNON (admin_par sur la ligne blindage).
+  const auteurAdmin = String(s.admin_par || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+  const majParLavignon = auteurAdmin.includes('LAVIGNON');
+
+  const dateFouilleTerrain = s.date_fouille || s.DATE_FOUILLE;
+  const dateBetonTerrain = s.date_beton || s.DATE_BETON;
+  const dateMatageTerrain = s.date_matage || s.DATE_MATAGE;
+  const dateFouilleAdmin = majParLavignon ? s.admin_date_fouille : null;
+  const dateBetonAdmin = majParLavignon ? s.admin_date_beton : null;
+  const dateMatageAdmin = majParLavignon ? s.admin_date_matage : null;
+
+  const fouilleTerrain = datePhaseRenseignee(dateFouilleTerrain);
+  const betonTerrain = datePhaseRenseignee(dateBetonTerrain);
+  const matageTerrain = datePhaseRenseignee(dateMatageTerrain);
+  const fouilleAdmin = !fouilleTerrain && datePhaseRenseignee(dateFouilleAdmin);
+  const betonAdmin = !betonTerrain && datePhaseRenseignee(dateBetonAdmin);
+  const matageAdmin = !matageTerrain && datePhaseRenseignee(dateMatageAdmin);
+
+  const fouille = fouilleTerrain || fouilleAdmin;
+  const beton = betonTerrain || betonAdmin;
+  const matage = matageTerrain || matageAdmin;
+  const prevu = nombreVolumeRenseigne(s.vol_theorique) ?? nombreVolumeRenseigne(s.m3_prevu) ?? 0;
+  const reelTerrain = nombreVolumeRenseigne(s.m3_reel, s.vol_reel);
+  const reelAdmin = majParLavignon ? nombreVolumeRenseigne(s.admin_m3_reel) : null;
+  const reel = reelTerrain !== null ? reelTerrain : reelAdmin;
+
+  return {
+    fouille, beton, matage,
+    fouilleAdmin, betonAdmin, matageAdmin,
+    auteurAdmin: majParLavignon ? (s.admin_par || 'LAVIGNON') : '',
+    complet: fouille && beton && matage,
+    prevu, reel
+  };
+}
+
 async function exporterRecapPDF() {
   const btnPdf = document.getElementById("btnRecapPdf");
   if (btnPdf) { btnPdf.disabled = true; btnPdf.innerHTML = "⏳ Génération..."; }
@@ -3835,11 +4074,11 @@ async function exporterRecapPDF() {
     const marge = 6;
 
     // --- Utilisation des données filtrées/mises à jour si disponibles (fallback sur baseSupports) ---
-    const donneesActives = (typeof supportsFiltres !== 'undefined' && supportsFiltres.length > 0) 
-      ? supportsFiltres 
-      : (typeof donneesAdmin !== 'undefined' && donneesAdmin.length > 0) 
-        ? donneesAdmin 
-        : baseSupports;
+    const donneesActives = (typeof supportsFiltres !== 'undefined' && Array.isArray(supportsFiltres))
+      ? supportsFiltres
+      : (typeof donneesAdmin !== 'undefined' && Array.isArray(donneesAdmin) && donneesAdmin.length > 0)
+        ? donneesAdmin
+        : (typeof baseSupports !== 'undefined' ? baseSupports : []);
 
     // --- Récupération de la date la plus récente (MAX) ---
     const dates = donneesActives
@@ -3871,25 +4110,30 @@ async function exporterRecapPDF() {
     const cptMap = {};
     donneesActives.forEach(s => {
       const cpt = (s.CPT || "SANS CPT").trim();
-      if (!cptMap[cpt]) cptMap[cpt] = { total:0, effectues:0, m3Prevu:0, m3Calculé:0, m3Fait:0, chantiers:{} };
+      if (!cptMap[cpt]) cptMap[cpt] = { total:0, effectues:0, fouilles:0, betons:0, matages:0, m3Prevu:0, m3PrevuCoule:0, m3PrevuCompare:0, m3Fait:0, chantiers:{} };
       const cc = cptMap[cpt];
       cc.total++;
       
-      const m3p = parseFloat(s.m3_prevu) || 0;
-      const m3c = parseFloat(s.m3_reel !== undefined ? s.m3_reel : (s.m3_calcule !== undefined ? s.m3_calcule : s.m3_calculé)) || 0;
-      
+      const ph = lirePhasesEtVolumes(s);
+      const m3p = ph.prevu;
+      cc.fouilles += ph.fouille ? 1 : 0;
+      cc.betons += ph.beton ? 1 : 0;
+      cc.matages += ph.matage ? 1 : 0;
       cc.m3Prevu += m3p;
-      cc.m3Calculé += m3c;
       
       const ch = s.chantier || "?";
-      if (!cc.chantiers[ch]) cc.chantiers[ch] = { total:0, effectues:0 };
+      if (!cc.chantiers[ch]) cc.chantiers[ch] = { total:0, effectues:0, fouilles:0, betons:0, matages:0 };
       cc.chantiers[ch].total++;
       
-      if (s.date_beton) {
-        cc.effectues++;
-        cc.m3Fait += m3p; 
-        cc.chantiers[ch].effectues++;
+      if (ph.complet) cc.effectues++;
+      if (ph.beton) {
+        cc.m3PrevuCoule += m3p;
+        if (ph.reel !== null) { cc.m3PrevuCompare += m3p; cc.m3Fait += ph.reel; }
       }
+      cc.chantiers[ch].fouilles += ph.fouille ? 1 : 0;
+      cc.chantiers[ch].betons += ph.beton ? 1 : 0;
+      cc.chantiers[ch].matages += ph.matage ? 1 : 0;
+      if (ph.complet) cc.chantiers[ch].effectues++;
     });
 
     let cptY = 15;
@@ -3901,7 +4145,7 @@ async function exporterRecapPDF() {
 
       const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
       const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurCPT;
-      const ecart = cc.m3Calculé - cc.m3Fait;
+      const ecart = cc.m3Fait - cc.m3PrevuCompare;
 
       doc.setFillColor(...couleurCPT.map(v => Math.min(255, v + 100)));
       doc.rect(marge, cptY, pageW - marge*2, 5, "F");
@@ -3918,14 +4162,15 @@ async function exporterRecapPDF() {
 
       const statsX = marge + donutMM + 3;
       doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6);
-      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, cptY + 2.5);
-      doc.text(`m³ prévu : ${cc.m3Prevu.toFixed(1)}`, statsX, cptY + 6);
-      doc.text(`m³ calculé : ${cc.m3Calculé.toFixed(1)}`, statsX, cptY + 9.5);
-      doc.text(`m³ fait : ${cc.m3Fait.toFixed(1)}`, statsX, cptY + 13);
+      doc.text(`Fouilles : ${cc.fouilles}/${cc.total}`, statsX, cptY + 2.5);
+      doc.text(`Bétons : ${cc.betons}/${cc.total}`, statsX, cptY + 6);
+      doc.text(`Matages : ${cc.matages}/${cc.total}`, statsX, cptY + 9.5);
+      doc.text(`Théorique coulé : ${cc.m3PrevuCoule.toFixed(1)} m³`, statsX, cptY + 13);
+      doc.text(`Réel coulé : ${cc.m3Fait.toFixed(1)} m³`, statsX, cptY + 16.5);
       
       const coulEcart = ecart > 0 ? rouge : vert;
       doc.setTextColor(...coulEcart); doc.setFont("helvetica", "bold");
-      doc.text(`Écart (Calc-Fait) : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, cptY + 16.5);
+      doc.text(`Écart réel/théo : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, cptY + 20);
 
       const chEntriesCPT = Object.entries(cc.chantiers);
       const listeX = statsX + 48;
@@ -3974,25 +4219,30 @@ async function exporterRecapPDF() {
       const ch = s.chantier || "INCONNU";
       const ee = (s.EE || "?").trim().toUpperCase();
       if (!chantierMap[ch]) chantierMap[ch] = {
-        total:0, effectues:0, m3Prevu:0, m3Calculé:0, m3Fait:0, ees:{}
+        total:0, effectues:0, fouilles:0, betons:0, matages:0, m3Prevu:0, m3PrevuCoule:0, m3PrevuCompare:0, m3Fait:0, ees:{}
       };
       const cc = chantierMap[ch];
       cc.total++;
       
-      const m3p = parseFloat(s.m3_prevu) || 0;
-      const m3c = parseFloat(s.m3_reel !== undefined ? s.m3_reel : (s.m3_calcule !== undefined ? s.m3_calcule : s.m3_calculé)) || 0;
-      
+      const ph = lirePhasesEtVolumes(s);
+      const m3p = ph.prevu;
+      cc.fouilles += ph.fouille ? 1 : 0;
+      cc.betons += ph.beton ? 1 : 0;
+      cc.matages += ph.matage ? 1 : 0;
       cc.m3Prevu += m3p;
-      cc.m3Calculé += m3c;
       
-      if (!cc.ees[ee]) cc.ees[ee] = { total:0, effectues:0, couleur: couleursEE[ee] || [100,100,100] };
+      if (!cc.ees[ee]) cc.ees[ee] = { total:0, effectues:0, fouilles:0, betons:0, matages:0, couleur: couleursEE[ee] || [100,100,100] };
       cc.ees[ee].total++;
       
-      if (s.date_beton) {
-        cc.effectues++;
-        cc.m3Fait += m3p;
-        cc.ees[ee].effectues++;
+      if (ph.complet) cc.effectues++;
+      if (ph.beton) {
+        cc.m3PrevuCoule += m3p;
+        if (ph.reel !== null) { cc.m3PrevuCompare += m3p; cc.m3Fait += ph.reel; }
       }
+      cc.ees[ee].fouilles += ph.fouille ? 1 : 0;
+      cc.ees[ee].betons += ph.beton ? 1 : 0;
+      cc.ees[ee].matages += ph.matage ? 1 : 0;
+      if (ph.complet) cc.ees[ee].effectues++;
     });
 
     const chEntries = Object.entries(chantierMap).sort((a, b) => a[0].localeCompare(b[0]));
@@ -4011,7 +4261,7 @@ async function exporterRecapPDF() {
       const x = marge + col * (colW3 + chGap);
       const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
       const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : violet;
-      const ecart = cc.m3Calculé - cc.m3Fait;
+      const ecart = cc.m3Fait - cc.m3PrevuCompare;
 
       doc.setFillColor(...violet);
       doc.roundedRect(x, chY, colW3, 4.5, 0.4, 0.4, "F");
@@ -4031,14 +4281,15 @@ async function exporterRecapPDF() {
       const sX = x + donutSz + 1.5;
       const sY = chY + 6.5;
       doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(4.5);
-      doc.text(`${cc.effectues}/${cc.total} massifs`, sX, sY);
-      doc.text(`Prév: ${cc.m3Prevu.toFixed(1)}`, sX, sY + 2.5);
-      doc.text(`Calc: ${cc.m3Calculé.toFixed(1)}`, sX, sY + 5);
-      doc.text(`Fait: ${cc.m3Fait.toFixed(1)}`, sX, sY + 7.5);
+      doc.text(`F: ${cc.fouilles}/${cc.total}`, sX, sY);
+      doc.text(`B: ${cc.betons}/${cc.total}`, sX, sY + 2.5);
+      doc.text(`M: ${cc.matages}/${cc.total}`, sX, sY + 5);
+      doc.text(`Théo coulé: ${cc.m3PrevuCoule.toFixed(1)}`, sX, sY + 7.5);
+      doc.text(`Réel coulé: ${cc.m3Fait.toFixed(1)}`, sX, sY + 10);
       
       doc.setTextColor(...(ecart > 0 ? rouge : vert));
       doc.setFont("helvetica", "bold");
-      doc.text(`Écart: ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)}`, sX, sY + 10);
+      doc.text(`Écart: ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, sX, sY + 12.5);
 
       const eeX = x + colW3 - 26;
       let eeY = chY + 6.5;
@@ -4071,25 +4322,30 @@ async function exporterRecapPDF() {
     const eeMap = {};
     donneesActives.forEach(s => {
       const ee = (s.EE || "SANS ENTREPRISE").trim().toUpperCase();
-      if (!eeMap[ee]) eeMap[ee] = { total:0, effectues:0, m3Prevu:0, m3Calculé:0, m3Fait:0, chantiers:{} };
+      if (!eeMap[ee]) eeMap[ee] = { total:0, effectues:0, fouilles:0, betons:0, matages:0, m3Prevu:0, m3PrevuCoule:0, m3PrevuCompare:0, m3Fait:0, chantiers:{} };
       const cc = eeMap[ee];
       cc.total++;
       
-      const m3p = parseFloat(s.m3_prevu) || 0;
-      const m3c = parseFloat(s.m3_reel !== undefined ? s.m3_reel : (s.m3_calcule !== undefined ? s.m3_calcule : s.m3_calculé)) || 0;
-      
+      const ph = lirePhasesEtVolumes(s);
+      const m3p = ph.prevu;
+      cc.fouilles += ph.fouille ? 1 : 0;
+      cc.betons += ph.beton ? 1 : 0;
+      cc.matages += ph.matage ? 1 : 0;
       cc.m3Prevu += m3p;
-      cc.m3Calculé += m3c;
       
       const ch = s.chantier || "?";
-      if (!cc.chantiers[ch]) cc.chantiers[ch] = { total:0, effectues:0 };
+      if (!cc.chantiers[ch]) cc.chantiers[ch] = { total:0, effectues:0, fouilles:0, betons:0, matages:0 };
       cc.chantiers[ch].total++;
       
-      if (s.date_beton) {
-        cc.effectues++;
-        cc.m3Fait += m3p;
-        cc.chantiers[ch].effectues++;
+      if (ph.complet) cc.effectues++;
+      if (ph.beton) {
+        cc.m3PrevuCoule += m3p;
+        if (ph.reel !== null) { cc.m3PrevuCompare += m3p; cc.m3Fait += ph.reel; }
       }
+      cc.chantiers[ch].fouilles += ph.fouille ? 1 : 0;
+      cc.chantiers[ch].betons += ph.beton ? 1 : 0;
+      cc.chantiers[ch].matages += ph.matage ? 1 : 0;
+      if (ph.complet) cc.chantiers[ch].effectues++;
     });
 
     let eeY = 15;
@@ -4106,7 +4362,7 @@ async function exporterRecapPDF() {
       const pct = cc.total > 0 ? Math.round((cc.effectues / cc.total) * 100) : 0;
       const couleurEEActuelle = couleursEE[eeNom] || [30, 144, 255];
       const coulBarre = pct === 100 ? vert : pct >= 50 ? orange : couleurEEActuelle;
-      const ecart = cc.m3Calculé - cc.m3Fait;
+      const ecart = cc.m3Fait - cc.m3PrevuCompare;
 
       doc.setFillColor(...couleurEEActuelle.map(v => Math.min(255, v + 150)));
       doc.rect(marge, eeY, pageW - marge*2, 6, "F");
@@ -4123,14 +4379,15 @@ async function exporterRecapPDF() {
 
       const statsX = marge + donutMM + 4;
       doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6.5);
-      doc.text(`Massifs : ${cc.effectues} / ${cc.total}`, statsX, eeY + 3);
-      doc.text(`m³ prévu : ${cc.m3Prevu.toFixed(1)}`, statsX, eeY + 7);
-      doc.text(`m³ calculé : ${cc.m3Calculé.toFixed(1)}`, statsX, eeY + 11);
-      doc.text(`m³ fait : ${cc.m3Fait.toFixed(1)}`, statsX, eeY + 15);
+      doc.text(`Fouilles : ${cc.fouilles}/${cc.total}`, statsX, eeY + 3);
+      doc.text(`Bétons : ${cc.betons}/${cc.total}`, statsX, eeY + 7);
+      doc.text(`Matages : ${cc.matages}/${cc.total}`, statsX, eeY + 11);
+      doc.text(`Théorique coulé : ${cc.m3PrevuCoule.toFixed(1)} m³`, statsX, eeY + 15);
+      doc.text(`Réel coulé : ${cc.m3Fait.toFixed(1)} m³`, statsX, eeY + 19);
       
       const coulEcart = ecart > 0 ? rouge : vert;
       doc.setTextColor(...coulEcart); doc.setFont("helvetica", "bold");
-      doc.text(`Écart (Calc-Fait) : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, eeY + 19);
+      doc.text(`Écart réel/théo : ${ecart >= 0 ? "+" : ""}${ecart.toFixed(1)} m³`, statsX, eeY + 23);
 
       const listeX = statsX + 50;
       doc.setTextColor(80, 80, 80); doc.setFont("helvetica", "normal"); doc.setFontSize(6);
@@ -4422,6 +4679,8 @@ function viderToutFormulaire() {
 
   const dateCoulage = document.getElementById("date-coulage-bl");
   if (dateCoulage && typeof dateDuPosteFBM === "function") dateCoulage.value = dateDuPosteFBM();
+  const dateCoulageCarotte = document.getElementById("date-coulage-bl-carotte");
+  if (dateCoulageCarotte && typeof dateDuPosteFBM === "function") dateCoulageCarotte.value = dateDuPosteFBM();
 
   const inputE = document.getElementById("E");
   if (inputE) inputE.style.display = "none";
@@ -4438,7 +4697,7 @@ function viderToutFormulaire() {
   ["bloc-N","bloc-S"].forEach(id => { const e = document.getElementById(id); if (e) e.style.display = "none"; });
 
   // Sections repliées
-  [["section-fouille-global-wrap"],["section-beton-wrap"],["section-matage-wrap"],["section-blindage-wrap"]]
+  [["section-fouille-global-wrap"],["section-beton-wrap"],["section-matage-wrap"],["section-blindage-wrap"],["section-carotte-wrap"]]
     .forEach(([id]) => {
       const s = document.getElementById(id);
       if (s) s.classList.add("collapsed");
@@ -4453,6 +4712,9 @@ function viderToutFormulaire() {
   if (typeof blsActuels !== "undefined") blsActuels = [];
   if (typeof afficherBLs === "function") afficherBLs();
   if (typeof choisirClasseSlump === "function") choisirClasseSlump("S4");
+  if (typeof choisirClasseSlumpCarotte === "function") choisirClasseSlumpCarotte("S4");
+  const alerteSlumpCarotte = document.getElementById("slump-alerte-carotte");
+  if (alerteSlumpCarotte) alerteSlumpCarotte.style.display = "none";
   const alerteSlump = document.getElementById("slump-alerte");
   if (alerteSlump) alerteSlump.style.display = "none";
   const sec = document.getElementById("sec-alertes-wrap");
@@ -5000,169 +5262,103 @@ async function genererRecap(containerId) {
   const cid = containerId || "recap-content-fbm";
   const container = document.getElementById(cid);
   if (!container) { console.warn("Container introuvable :", cid); return; }
-
   container.innerHTML = "<p style='color:#666; font-size:0.8em; text-align:center;'>Chargement des données...</p>";
 
   try {
-    // 1. Récupération directe depuis Supabase
-    const { data, error } = await supabaseClient
-      .from('blindage')
-      .select('*')
-      .range(0, 9999);
-    
+    const { data, error } = await supabaseClient.from('blindage').select('*').range(0, 9999);
     if (error) throw error;
     const dataBlindage = data || [];
-
-    if (dataBlindage.length === 0) {
+    if (!dataBlindage.length) {
       container.innerHTML = "<p style='color:#999; font-size:0.8em; text-align:center;'>Aucune donnée disponible.</p>";
       return;
     }
 
     const chantiersMap = {};
-
-    // 2. Traitement des données par chantier
     dataBlindage.forEach(row => {
-      const nomChantier = row.chantier ? String(row.chantier).trim().toUpperCase() : "INCONNU";
-      
-      if (!chantiersMap[nomChantier]) {
-        chantiersMap[nomChantier] = { 
-          total: 0, 
-          effectues: 0, 
-          m3TotalPrevu: 0,    
-          m3PrevuEffectue: 0, 
-          m3ReelTotal: 0        
-        };
-      }
-      
-      const c = chantiersMap[nomChantier];
+      const nom = row.chantier ? String(row.chantier).trim().toUpperCase() : "INCONNU";
+      if (!chantiersMap[nom]) chantiersMap[nom] = {
+        total: 0, fouilles: 0, betons: 0, matages: 0,
+        m3TotalPrevu: 0, m3PrevuCoule: 0, m3PrevuCompare: 0, m3ReelCoule: 0
+      };
+      const c = chantiersMap[nom];
+      const ph = lirePhasesEtVolumes(row);
       c.total++;
-      
-      const m3PrevuVal = parseFloat(row.vol_theorique || row.m3_prevu || 0);
-      const m3ReelVal = parseFloat(row.m3_reel || row.vol_reel || 0);
-
-      c.m3TotalPrevu += m3PrevuVal;
-
-      // Vérification si réalisé : présence d'une date dans date_beton
-      const dateBetonVal = row.date_beton ? String(row.date_beton).trim() : "";
-      const estRealise = dateBetonVal !== "" && dateBetonVal !== "null" && dateBetonVal !== "undefined";
-
-      if (estRealise) {
-        c.effectues++;
-        c.m3PrevuEffectue += m3PrevuVal;
-        c.m3ReelTotal += m3ReelVal;
+      c.fouilles += ph.fouille ? 1 : 0;
+      c.betons += ph.beton ? 1 : 0;
+      c.matages += ph.matage ? 1 : 0;
+      c.m3TotalPrevu += ph.prevu;
+      if (ph.beton) {
+        c.m3PrevuCoule += ph.prevu;
+        if (ph.reel !== null) { c.m3PrevuCompare += ph.prevu; c.m3ReelCoule += ph.reel; }
       }
     });
 
     const chantiers = Object.keys(chantiersMap).sort();
     let html = "";
-
     chantiers.forEach(nom => {
       const c = chantiersMap[nom];
-      const pct = c.total > 0 ? Math.round((c.effectues / c.total) * 100) : 0;
-      const couleurBarre = pct === 100 ? "#16a34a" : pct >= 50 ? "#f59e0b" : "#7C2270";
-      
-      const ecart = c.m3ReelTotal - c.m3PrevuEffectue;
+      const pctF = c.total ? Math.round(c.fouilles / c.total * 100) : 0;
+      const pctB = c.total ? Math.round(c.betons / c.total * 100) : 0;
+      const pctM = c.total ? Math.round(c.matages / c.total * 100) : 0;
+      const ecart = c.m3ReelCoule - c.m3PrevuCompare;
       const couleurEcart = ecart > 0 ? "#dc2626" : "#16a34a";
-
       const idDetail = `detail-chantier-${nom.replace(/[^a-zA-Z0-9]/g, '_')}`;
-      
-      // Filtrage et tri croissant des supports par nom
       const supportsDuChantier = dataBlindage
         .filter(row => (row.chantier ? String(row.chantier).trim().toUpperCase() : "INCONNU") === nom)
-        .sort((a, b) => {
-          const supA = String(a.support || "");
-          const supB = String(b.support || "");
-          return supA.localeCompare(supB, undefined, { numeric: true, sensitivity: 'base' });
-        });
+        .sort((a, b) => String(a.support || "").localeCompare(String(b.support || ""), undefined, { numeric: true, sensitivity: 'base' }));
 
-      let htmlLignesDetails = "";
-      supportsDuChantier.forEach((s) => {
-        const nomSupport = s.support || "-";
-        const fktVal = s.fkt || "-";
-        const prevu = parseFloat(s.vol_theorique || s.m3_prevu || 0).toFixed(2);
-        const reel = parseFloat(s.m3_reel || s.vol_reel || 0).toFixed(2);
-        
-        const dateBetonVal = s.date_beton ? String(s.date_beton).trim() : "";
-        const estFait = dateBetonVal !== "" && dateBetonVal !== "null" && dateBetonVal !== "undefined";
-        const statutTxt = estFait ? "✅ Fait" : "⏳ En cours";
-        const couleurStatut = estFait ? "#16a34a" : "#d97706";
-
-        // Encodage sécurisé de l'objet pour le passer dans le bouton de la popup
+      let lignes = "";
+      supportsDuChantier.forEach(s => {
+        const ph = lirePhasesEtVolumes(s);
+        const statut = v => v ? "✓" : "—";
+        const prevu = ph.prevu.toFixed(2);
+        const reel = ph.reel === null ? "—" : ph.reel.toFixed(2);
+        const statutBeton = ph.beton && ph.reel !== null ? "Coulé" : (ph.beton ? "Coulé – volume non saisi" : "Non coulé");
         const supportJsonEncoded = encodeURIComponent(JSON.stringify(s));
-
-        htmlLignesDetails += `
+        lignes += `
           <tr style="border-bottom:1px solid #eee;">
-            <td style="padding:5px 6px; border:1px solid #ddd; text-align:left; font-weight:bold;">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <button onclick="ouvrirPopupSupport('${supportJsonEncoded}')" style="background:#7C2270; color:#fff; border:none; border-radius:3px; padding:3px 6px; font-size:0.7em; cursor:pointer;" title="Voir les détails complets">🔍 ${nomSupport}</button>
-              </div>
+            <td style="padding:5px 6px;border:1px solid #ddd;text-align:left;font-weight:bold;">
+              <button onclick="ouvrirPopupSupport('${supportJsonEncoded}')" style="background:#7C2270;color:#fff;border:none;border-radius:3px;padding:3px 6px;font-size:0.7em;cursor:pointer;">🔍 ${s.support || "-"}</button>
             </td>
-            <td style="padding:5px 6px; border:1px solid #ddd; text-align:center;">${prevu}</td>
-            <td style="padding:5px 6px; border:1px solid #ddd; text-align:center;">${reel}</td>
-            <td style="padding:5px 6px; border:1px solid #ddd; text-align:center; color:${couleurStatut}; font-weight:bold;">${statutTxt}</td>
-          </tr>
-        `;
+            <td style="padding:5px;border:1px solid #ddd;text-align:center;">${statut(ph.fouille)}${ph.fouilleAdmin ? ' <small title="Validé dans Avancement par LAVIGNON">(L)</small>' : ''}</td>
+            <td style="padding:5px;border:1px solid #ddd;text-align:center;">${statut(ph.beton)}${ph.betonAdmin ? ' <small title="Validé dans Avancement par LAVIGNON">(L)</small>' : ''}</td>
+            <td style="padding:5px;border:1px solid #ddd;text-align:center;">${statut(ph.matage)}${ph.matageAdmin ? ' <small title="Validé dans Avancement par LAVIGNON">(L)</small>' : ''}</td>
+            <td style="padding:5px;border:1px solid #ddd;text-align:center;">${prevu}</td>
+            <td style="padding:5px;border:1px solid #ddd;text-align:center;">${reel}</td>
+            <td style="padding:5px;border:1px solid #ddd;text-align:center;">${statutBeton}</td>
+          </tr>`;
       });
 
       html += `
-      <div style="margin-bottom:12px; border:1px solid #e5e5e5; border-radius:8px; overflow:hidden; background:#fff;">
-        <!-- En-tête cliquable -->
-        <div onclick="basculerDetailChantier('${idDetail}')" style="background:linear-gradient(to right,#f7f0f6,#f5f5f5); padding:8px 10px; font-weight:bold; font-size:0.82em; color:#7C2270; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" title="Cliquer pour afficher/masquer le détail fouille par fouille">
-          <span>📁 ${nom} </span>
-          <span style="font-size:0.95em; color:#333;">Total chantier : <strong>${c.m3TotalPrevu.toFixed(2)} m³</strong></span>
+      <div style="margin-bottom:12px;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden;background:#fff;">
+        <div onclick="basculerDetailChantier('${idDetail}')" style="background:linear-gradient(to right,#f7f0f6,#f5f5f5);padding:8px 10px;font-weight:bold;font-size:0.82em;color:#7C2270;display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+          <span>📁 ${nom}</span><span style="font-size:0.9em;color:#333;">Prévision totale : <strong>${c.m3TotalPrevu.toFixed(2)} m³</strong></span>
         </div>
-        
         <div style="padding:8px 10px;">
-          <div style="display:flex; justify-content:space-between; font-size:0.78em; color:#555; margin-bottom:4px;">
-            <span>Massifs : <strong>${c.effectues} / ${c.total}</strong></span>
-            <span style="color:${couleurBarre}; font-weight:bold;">${pct}%</span>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;">
+            <div style="background:#f7f0f6;border-radius:6px;padding:7px;text-align:center;"><div style="font-size:0.72em;color:#666;">Fouilles (F)</div><strong>${c.fouilles}/${c.total}</strong><div style="font-size:0.72em;color:#7C2270;">${pctF}%</div></div>
+            <div style="background:#f7f0f6;border-radius:6px;padding:7px;text-align:center;"><div style="font-size:0.72em;color:#666;">Bétons (B)</div><strong>${c.betons}/${c.total}</strong><div style="font-size:0.72em;color:#7C2270;">${pctB}%</div></div>
+            <div style="background:#f7f0f6;border-radius:6px;padding:7px;text-align:center;"><div style="font-size:0.72em;color:#666;">Matages (M)</div><strong>${c.matages}/${c.total}</strong><div style="font-size:0.72em;color:#7C2270;">${pctM}%</div></div>
           </div>
-          <div style="background:#eee; border-radius:6px; height:8px; margin-bottom:8px;">
-            <div style="background:${couleurBarre}; width:${pct}%; height:8px; border-radius:6px;"></div>
-          </div>
-          <table style="width:100%; border-collapse:collapse; font-size:0.78em;">
-            <thead>
-              <tr>
-                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ prévu (réalisé)</th>
-                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">m³ réel</th>
-                <th style="background:#f5f5f5; padding:4px 6px; text-align:center; color:#555; border:1px solid #ddd;">Écart</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold;">${c.m3PrevuEffectue.toFixed(2)}</td>
-                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:${couleurEcart};">${c.m3ReelTotal.toFixed(2)}</td>
-                <td style="padding:4px 6px; border:1px solid #ddd; text-align:center; font-weight:bold; color:${couleurEcart};">${ecart >= 0 ? '+' : ''}${ecart.toFixed(2)}</td>
-              </tr>
-            </tbody>
+          <table style="width:100%;border-collapse:collapse;font-size:0.76em;margin-bottom:8px;">
+            <thead><tr><th style="background:#f5f5f5;padding:5px;border:1px solid #ddd;">Théorique des volumes renseignés (m³)</th><th style="background:#f5f5f5;padding:5px;border:1px solid #ddd;">Béton réel coulé (m³)</th><th style="background:#f5f5f5;padding:5px;border:1px solid #ddd;">Écart (m³)</th></tr></thead>
+            <tbody><tr><td style="padding:6px;border:1px solid #ddd;text-align:center;font-weight:bold;">${c.m3PrevuCoule.toFixed(2)}</td><td style="padding:6px;border:1px solid #ddd;text-align:center;font-weight:bold;">${c.m3ReelCoule.toFixed(2)}</td><td style="padding:6px;border:1px solid #ddd;text-align:center;font-weight:bold;color:${couleurEcart};">${ecart >= 0 ? '+' : ''}${ecart.toFixed(2)}</td></tr></tbody>
           </table>
-
-          <!-- Zone de détail -->
-          <div id="${idDetail}" class="detail-chantier-bloc" style="display:none; margin-top:10px; border-top:1px dashed #ccc; padding-top:8px;">
-            <div style="font-size:0.8em; font-weight:bold; color:#7C2270; margin-bottom:6px;">🔍 Détail des fouilles / supports :</div>
-            <table style="width:100%; border-collapse:collapse; font-size:0.75em;">
-              <thead>
-                <tr style="background:#fafafa;">
-                  <th style="padding:4px 6px; border:1px solid #ddd; text-align:left; color:#555;">Support</th>
-                  <th style="padding:4px 6px; border:1px solid #ddd; text-align:center; color:#555;">Prévu (m³)</th>
-                  <th style="padding:4px 6px; border:1px solid #ddd; text-align:center; color:#555;">Réel (m³)</th>
-                  <th style="padding:4px 6px; border:1px solid #ddd; text-align:center; color:#555;">Statut</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${htmlLignesDetails}
-              </tbody>
-            </table>
+          <div id="${idDetail}" class="detail-chantier-bloc" style="display:none;margin-top:10px;border-top:1px dashed #ccc;padding-top:8px;">
+            <div style="font-size:0.8em;font-weight:bold;color:#7C2270;margin-bottom:6px;">🔍 Détail des supports et des phases</div>
+            <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.72em;min-width:520px;">
+              <thead><tr style="background:#fafafa;">
+                <th style="padding:5px;border:1px solid #ddd;">Support</th><th style="padding:5px;border:1px solid #ddd;">Fouille</th><th style="padding:5px;border:1px solid #ddd;">Béton</th><th style="padding:5px;border:1px solid #ddd;">Matage</th><th style="padding:5px;border:1px solid #ddd;">Prévu (m³)</th><th style="padding:5px;border:1px solid #ddd;">Réel (m³)</th><th style="padding:5px;border:1px solid #ddd;">État béton</th>
+              </tr></thead><tbody>${lignes}</tbody>
+            </table></div>
           </div>
-
         </div>
       </div>`;
     });
     container.innerHTML = html;
-
   } catch (err) {
     console.error("Erreur chargement récap :", err);
-    container.innerHTML = "<p style='color:#dc2626; font-size:0.8em; text-align:center;'>Erreur lors du chargement des données de récapitulatif.</p>";
+    container.innerHTML = "<p style='color:#dc2626;font-size:0.8em;text-align:center;'>Erreur lors du chargement des données de récapitulatif.</p>";
   }
 }
 
@@ -5246,10 +5442,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const chkBlindage = document.getElementById("blindageCheck");
     function refreshBlocs() {
         if (document.getElementById("bloc_saisie_carotte")) document.getElementById("bloc_saisie_carotte").style.display = chkCarotte?.checked ? "flex" : "none";
+        const sectionCarotte = document.getElementById("section-carotte-wrap");
+        if (sectionCarotte) {
+          sectionCarotte.classList.toggle("collapsed", !chkCarotte?.checked);
+          const arrow = document.getElementById("arrow-sec-carotte");
+          if (arrow) arrow.textContent = chkCarotte?.checked ? "▴" : "▾";
+        }
         if (document.getElementById("bloc_saisie_blindage")) document.getElementById("bloc_saisie_blindage").style.display = chkBlindage?.checked ? "flex" : "none";
     }
     if (chkCarotte) chkCarotte.addEventListener("change", refreshBlocs);
     if (chkBlindage) chkBlindage.addEventListener("change", refreshBlocs);
+    refreshBlocs();
 });
 
 /* --- 3. CHARGEMENT INITIAL --- */
@@ -5328,9 +5531,10 @@ async function verifierAccesSupabase(email) {
 
 function gererAffichageAdmin(estAdmin) {
   const tabAdmin = document.getElementById("tabAdmin");
-  if (tabAdmin) {
-    tabAdmin.style.display = estAdmin ? "inline-block" : "none";
-  }
+  if (tabAdmin) tabAdmin.style.display = estAdmin ? "inline-block" : "none";
+  const blocAlertes = document.getElementById("sec-alertes-wrap");
+  if (blocAlertes) blocAlertes.style.display = estAdmin ? "block" : "none";
+  window.fbmEstAdmin = estAdmin === true;
 }
 
 /**
@@ -6184,7 +6388,7 @@ let boucleScannerBL = null;
 let detecteurBL = null;
 let scanBLEnCours = false;
 
-async function scannerBLTelephone() {
+async function scannerBLTelephone(champCibleId = "bl_beton") {
   const modal = document.getElementById('modalScannerBL');
   const video = document.getElementById('videoScannerBL');
   const statut = document.getElementById('statutScannerBL');
@@ -6214,7 +6418,7 @@ async function scannerBLTelephone() {
         const codes = await detecteurBL.detect(video);
         if (codes && codes.length && codes[0].rawValue) {
           const valeur = String(codes[0].rawValue).trim();
-          const champ = document.getElementById('bl_beton');
+          const champ = document.getElementById(champCibleId || 'bl_beton');
           if (champ) {
             champ.value = valeur.toUpperCase();
             champ.dispatchEvent(new Event('input', { bubbles: true }));
