@@ -1260,6 +1260,7 @@ async function chargerSupportsDepuisSupabase() {
             f_reel: row.f_reel,
             p_reel: row.p_reel,
             sup_reel: row.sup_reel,
+			dist_carotte: row.dist_carotte,
             m3_prevu: row.vol_theorique,
             m3_reel: (row.m3_reel !== null && row.m3_reel !== undefined) ? row.m3_reel : row.vol_reel,
             EE: row.ee,
@@ -2940,7 +2941,10 @@ async function synchroniserSupportActuel() {
         if (document.getElementById('check_beton')?.checked && Number.isFinite(volReelNum) && volReelNum > 0) {
           maj.m3_reel = volReelNum;
         }
-        if (document.getElementById('brh_oui')?.checked) maj.brh = true;
+                if (document.getElementById('brh_oui')?.checked) maj.brh = true;
+        if (document.getElementById('carotte')?.checked) {
+          ajouterSiRenseigne('dist_carotte', document.getElementById('dist_carotte')?.value);
+        }
         return maj;
       })())
       .eq('chantier', nomChantier)
@@ -4595,6 +4599,7 @@ function chargerSupport() {
     setVal("H_Fouille", valOuVide(data.h_reel));
     setVal("AR", valOuVide(data.ar_reel));
     setVal("Enc", valOuVide(data.enc_reel));
+	setVal("dist_carotte", valOuVide(data.dist_carotte));
     setVal("valP_N", valOuVide(data.p_reel));
     setVal("valP_S", valOuVide(data.p_reel));
 
@@ -6334,5 +6339,91 @@ function annulerValidationBL() {
     </div>
   </div>
 </div>
+	<script>
+/* COTE BORD CAROTTE - BORD RAIL + ALERTE IMPLANTATION */
+(function () {
+  function init() {
+    var bloc = document.getElementById('bloc_saisie_carotte');
+    if (!bloc || document.getElementById('dist_carotte')) return;
+
+    var zone = document.createElement('div');
+    zone.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;';
+    zone.innerHTML =
+      '<label style="color:#d97706;font-weight:bold;font-size:0.8em;flex:1;">Bord carotte - bord rail (m)</label>' +
+      '<input type="number" id="dist_carotte" step="any" onclick="this.select()" oninput="calculer()" style="width:75px;padding:4px;border-radius:4px;border:1px solid #ccc;text-align:center;">';
+    bloc.insertBefore(zone, bloc.firstChild);
+
+    var res = document.createElement('div');
+    res.id = 'alerte_carotte_impl';
+    res.style.cssText = 'font-size:0.85em;font-weight:bold;text-align:left;';
+    bloc.appendChild(res);
+  }
+
+  function calculCarotte() {
+    var res = document.getElementById('alerte_carotte_impl');
+    var chk = document.getElementById('carotte');
+    if (!res) return;
+    var d = parseFloat(document.getElementById('dist_carotte')?.value);
+    if (!chk || !chk.checked || isNaN(d)) { res.innerHTML = ''; return; }
+
+    var ac = (parseFloat(document.getElementById('A_carotte')?.value) || 0) / 100;
+    if (ac <= 0) {
+      res.innerHTML = '<span style="color:#6b7280;">Saisis A carotte pour calculer l\'implantation.</span>';
+      return;
+    }
+
+    /* Profondeur échantillon E en cm (même logique que calculer) */
+    var sel = document.getElementById('E_select');
+    var E = 0;
+    if (sel && sel.value === 'manuel') E = parseFloat(document.getElementById('E')?.value) || 0;
+    else E = parseFloat(sel?.value) || 0;
+    if (E >= 100) E = E / 10;
+    var e = E / 100;
+
+    /* Support centré dans la carotte */
+    var iCarotte = d + ac / 2 - e / 2;
+
+    var iRef = parseFloat(document.getElementById('I_ref')?.innerText);
+    var iSaisi = parseFloat(document.getElementById('I')?.value);
+    var cible = !isNaN(iRef) ? iRef : (!isNaN(iSaisi) ? iSaisi : null);
+    var tol = 0.02;
+
+    var html = '<span style="color:#7c2270;">👉 Implantation déduite (support centré) = ' + iCarotte.toFixed(2) + ' m</span>';
+    if (cible === null) {
+      html += '<br><span style="color:#6b7280;">Aucune implantation voulue pour comparer.</span>';
+    } else {
+      var ecart = iCarotte - cible;
+      if (Math.abs(ecart) <= tol) {
+        html += '<br><span style="color:green;">✅ Position carotte conforme à l\'implantation voulue (' + cible.toFixed(2) + ' m)</span>';
+      } else {
+        html += '<br><span style="color:#dc3545;">🚨 Carotte mal positionnée : implantation voulue ' + cible.toFixed(2) + ' m, obtenue ' + iCarotte.toFixed(2) + ' m (écart ' + (ecart > 0 ? '+' : '') + ecart.toFixed(2) + ' m)</span>';
+        var dIdeal = cible - ac / 2 + e / 2;
+        html += '<br><span style="color:#dc3545;">👉 Bord carotte - bord rail attendu = ' + dIdeal.toFixed(2) + ' m</span>';
+      }
+    }
+    res.innerHTML = html;
+  }
+
+  function brancher() {
+    init();
+    var orig = window.calculer;
+    if (typeof orig === 'function') {
+      window.calculer = function () {
+        var r = orig.apply(this, arguments);
+        try { calculCarotte(); } catch (x) {}
+        return r;
+      };
+    }
+    ['A_carotte', 'carotte'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('input', calculCarotte);
+      if (el) el.addEventListener('change', calculCarotte);
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', brancher);
+  else brancher();
+})();
+</script>
 </body>
 </html>
