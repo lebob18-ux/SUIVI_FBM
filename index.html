@@ -3940,11 +3940,7 @@ async function exporterPDF() {
     doc.setFont("helvetica", "bold");
     doc.text("Rédigé par : " + redacteurComplet, marge, y);
     y += 5;
-    if (emailRedacteur) {
-      doc.setFont("helvetica", "normal");
-      doc.text("Email : " + emailRedacteur, marge, y);
-      y += 5;
-    }
+
 
     const totalPages = doc.internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
@@ -3960,8 +3956,57 @@ async function exporterPDF() {
     if (typeof synchroniserSupportActuel === "function") {
       syncOk = await synchroniserSupportActuel();
     }
-    if (syncOk) localStorage.removeItem("fbm_sync_en_attente");
-    doc.save(nomFichier);
+if (syncOk) localStorage.removeItem("fbm_sync_en_attente");
+
+// CONTRÔLE DE LA DERNIÈRE MODIFICATION BLINDAGE
+try {
+  const { data: blindage, error } = await supabaseClient
+    .from("blindage")
+    .select("id, updated_at")
+    .eq("chantier", nomChantier)
+    .eq("support", numSupportInput)
+    .maybeSingle();
+
+  let alerte = "";
+
+  if (error) {
+    alerte = "Erreur de vérification Supabase : " + error.message;
+  } else if (!blindage) {
+    alerte = "Aucune ligne blindage trouvée.";
+  } else {
+    const derniereMaj = new Date(blindage.updated_at).getTime();
+    const ageMinutes = (Date.now() - derniereMaj) / 60000;
+
+    if (!blindage.updated_at || !Number.isFinite(derniereMaj) || ageMinutes > 5) {
+      alerte = "Dernière modification supérieure à 5 minutes.";
+    }
+  }
+
+  if (alerte) {
+    const idBlindage = blindage?.id ?? "Introuvable";
+
+    await fetch("https://thbqkeugjvsxbryfnzuo.supabase.co/functions/v1/quick-worker", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        texte:
+          "⚠️ ALERTE FBM\n" +
+          "Chantier : " + nomChantier + "\n" +
+          "Support : " + numSupportInput + "\n" +
+          "ID blindage : " + idBlindage + "\n" +
+          "Motif : " + alerte
+      })
+    });
+  }
+} catch (e) {
+  console.error("Erreur contrôle Telegram :", e);
+}
+
+// Le PDF est toujours généré
+doc.save(nomFichier);
 
   } catch (err) {
     console.error(err);
