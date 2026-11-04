@@ -763,7 +763,7 @@ input[readonly]{
             <select id="E_select" onclick="event.preventDefault(); document.getElementById('divEchantillonModal').style.display='flex';" onmousedown="event.preventDefault();" style="width: 100%; height: 28px; font-size: 0.85em; text-align: center; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;"></select>
             <input type="number" id="E" oninput="calculer()" onkeydown="if(event.key==='Enter'){event.preventDefault(); document.getElementById('AR').focus(); document.getElementById('AR').select();}" placeholder="cm" style="display: none; margin-top: 4px; width: 100%;">
           </td>
-          <td><input type="number" id="AR" oninput="calculer()"></td>
+          <td><input type="number" id="AR" inputmode="numeric" oninput="calculer()" onblur="normaliserAR()"></td>
           <td><input type="number" id="Enc" onblur="calculer()"></td>
         </tr>
         <tr>
@@ -2971,7 +2971,20 @@ function toggleSensP() {
   majAffichageSensP(sensActuel === "APRES" ? "AVANT" : "APRES");
   calculer();
 }
-
+/* AR en cm entier : 0.48 (m) -> 48 ; 48.4 -> 48 */
+function normaliserAR() {
+  const el = document.getElementById("AR");
+  if (!el || el.value === "") return;
+  const v = parseFloat(String(el.value).replace(",", "."));
+  if (isNaN(v)) return;
+  const converti = v < 5 ? Math.round(v * 100) : Math.round(v);
+  if (String(converti) !== String(el.value)) {
+    el.value = converti;
+    el.style.background = "#fef3c7";
+    setTimeout(() => { el.style.background = ""; }, 2500);
+  }
+  calculer();
+}
 /* Toggle signe SOL */
 function toggleSignSOL(){
   let input = document.getElementById("SOL");
@@ -3119,6 +3132,7 @@ async function synchroniserSupportActuel() {
           ajouterSiRenseigne('i_reel', iReel);
           ajouterSiRenseigne('ech_reel', echValeur, false);
           ajouterSiRenseigne('ar_reel', arReel);
+          if (maj.ar_reel !== undefined) maj.ar_reel = Math.round(maj.ar_reel);
           ajouterSiRenseigne('enc_reel', encReel);
           ajouterSiRenseigne('f_reel', fReel);
           ajouterSiRenseigne('p_reel', pSaisi);
@@ -3223,6 +3237,9 @@ function validerSaisiesFBM() {
         
         if (!iMat || !arMat || !encMat || !valF) {
             erreurs.push("🔨 **Matage** : Implantation, Arasement, Encastrement ou Fruit (F) manquant.");
+        }
+        if (arMat && !Number.isInteger(Number(arMat))) {
+            erreurs.push("🔨 **Matage** : l'arasement (AR) doit être un entier en cm (ex : 48, pas 0.48).");
         }
     }
 
@@ -3414,6 +3431,7 @@ async function exporterPDF() {
   // ------------------------------------------------
 
   // --- 2. CONTRÔLE DES CHAMPS VIDES ---
+  normaliserAR();
   const erreursSaisies = validerSaisiesFBM();
   if (erreursSaisies.length > 0) {
     const texteErreurs = erreursSaisies.map(e => e.replace(/\*\*/g, "")).join("\n• ");
@@ -3902,9 +3920,11 @@ async function exporterPDF() {
     }
 
     // ---------- Gestion Nom / Prénom / Email (avec colonnes Supabase 'nom' et 'prenom') ----------
-    const prenomRedacteur = val("prenom"); // ID de ton input HTML pour le prénom
-    const nomRedacteur = val("nom");       // ID de ton input HTML pour le nom
-    const emailRedacteur = val("emailRedacteur");
+    let identiteRed = {};
+    try { identiteRed = JSON.parse(localStorage.getItem("fbm_identite_redacteur") || "{}"); } catch (_) {}
+    const prenomRedacteur = identiteRed.prenom || "";
+    const nomRedacteur = identiteRed.nom || val("nomRedacteur") || "";
+    const emailRedacteur = identiteRed.email || val("emailRedacteur");
 
     // Mémorisation locale pour ne pas avoir à les retaper
     localStorage.setItem("fbm_prenom", prenomRedacteur);
@@ -3935,12 +3955,13 @@ async function exporterPDF() {
     // 1. DÉCLENCHEMENT IMMÉDIAT DU TÉLÉCHARGEMENT PDF (priorité utilisateur)
         const lettresPhases = phasesTitre.map(p => p.nom[0]).join("") || "FBM";
     const nomFichier = lettresPhases + "_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
-    doc.save(nomFichier);
-
-    // 2. MISE À JOUR SUPABASE JUSTE APRÈS (en arrière-plan)
+    localStorage.setItem("fbm_sync_en_attente", JSON.stringify({ chantier: nomChantier, support: numSupportInput, date: new Date().toISOString() }));
+    let syncOk = false;
     if (typeof synchroniserSupportActuel === "function") {
-      await synchroniserSupportActuel();
+      syncOk = await synchroniserSupportActuel();
     }
+    if (syncOk) localStorage.removeItem("fbm_sync_en_attente");
+    doc.save(nomFichier);
 
   } catch (err) {
     console.error(err);
@@ -6628,6 +6649,16 @@ function annulerValidationBL() {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', brancher);
   else brancher();
 })();
+</script>
+	<script>
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    try {
+      const p = JSON.parse(localStorage.getItem("fbm_sync_en_attente") || "null");
+      if (p && p.support) alert("⚠️ Envoi Supabase non terminé pour " + p.chantier + " / " + p.support + ".\nRouvre ce support et refais ENREGISTRER / EXPORTER PDF.");
+    } catch (_) {}
+  }, 2500);
+});
 </script>
 </body>
 </html>
