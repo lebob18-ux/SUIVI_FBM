@@ -3028,7 +3028,7 @@ function texteAlertePourSupabase() {
   return morceaux.length ? [...new Set(morceaux)].join("\n") : null;
 }
 
-async function synchroniserSupportActuel() {
+async function synchroniserSupportActuel(modeCorrection = false) {
   const numSupportInput = document.getElementById("selectSupport")?.value.trim();
   const chantierSelect = document.getElementById("selectChantier");
   const nomChantier = (chantierSelect && chantierSelect.selectedIndex >= 0 && chantierSelect.options[chantierSelect.selectedIndex])
@@ -3068,17 +3068,24 @@ async function synchroniserSupportActuel() {
     const fReel = document.getElementById("valF")?.value;
     const supReel = document.getElementById("valSUP")?.value;
 
-    const identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur") || "{}");
+    let identite = {};
+    try { identite = JSON.parse(localStorage.getItem("fbm_identite_redacteur") || "{}"); } catch (_) {}
     const nom = identite.nom || "ANONYME";
     const prenom = identite.prenom || "";
 
-    // --- Phases : on part de l'état réel en base, pas de l'écran ---
-    const { data: actuel, error: errLecture } = await supabaseClient
-      .from('blindage')
-      .select('date_fouille, date_beton, date_matage')
-      .eq('chantier', nomChantier)
-      .eq('support', numSupportInput)
-      .maybeSingle();
+    const supportBase = (typeof baseSupports !== "undefined" ? baseSupports : []).find(s =>
+      String(s.chantier || s.CHANTIER || "").trim() === String(nomChantier || "").trim() &&
+      String(s.support || s.SUPPORT || "").trim() === numSupportInput
+    );
+
+    // Lecture de la ligne réelle : l'ID est prioritaire pour éviter toute ambiguïté de support.
+    let lecture = supabaseClient.from('blindage').select('*');
+    if (supportBase?.id !== undefined && supportBase?.id !== null) {
+      lecture = lecture.eq('id', supportBase.id);
+    } else {
+      lecture = lecture.eq('chantier', nomChantier).eq('support', numSupportInput);
+    }
+    const { data: actuel, error: errLecture } = await lecture.maybeSingle();
 
     if (errLecture) throw errLecture;
     if (!actuel) throw new Error("Support introuvable dans la table blindage : " + nomChantier + " / " + numSupportInput);
@@ -3086,89 +3093,163 @@ async function synchroniserSupportActuel() {
     const initiales = window.phasesInitiales || {};
     const phases = {};
 
-    [
-      ['fouille', 'date_fouille', 'check_fouille'],
-      ['beton',   'date_beton',   'check_beton'],
-      ['matage',  'date_matage',  'check_matage']
-    ].forEach(([cle, colonne, idCase]) => {
-      const coche = document.getElementById(idCase)?.checked || false;
-      if (coche) {
-        if (!actuel[colonne]) phases[colonne] = dateJour;   // nouvelle phase validée
-      } else if (initiales[cle]) {
-        phases[colonne] = null;                              // décochage volontaire
+    // En correction, les dates de phases ne sont jamais modifiées.
+    if (!modeCorrection) {
+      [
+        ['fouille', 'date_fouille', 'check_fouille'],
+        ['beton',   'date_beton',   'check_beton'],
+        ['matage',  'date_matage',  'check_matage']
+      ].forEach(([cle, colonne, idCase]) => {
+        const coche = document.getElementById(idCase)?.checked || false;
+        if (coche) {
+          if (!actuel[colonne]) phases[colonne] = dateJour;
+        } else if (initiales[cle]) {
+          phases[colonne] = null;
+        }
+      });
+    }
+
+    const phaseFouilleActive = modeCorrection ? !!initiales.fouille : !!document.getElementById('check_fouille')?.checked;
+    const phaseBetonActive   = modeCorrection ? !!initiales.beton   : !!document.getElementById('check_beton')?.checked;
+    const phaseMatageActive  = modeCorrection ? !!initiales.matage  : !!document.getElementById('check_matage')?.checked;
+
+    const maj = {
+      ...(modeCorrection ? {} : {
+        nom: nom,
+        prenom: prenom,
+        effectue: 1,
+        date_exec: dateJour,
+        ...phases
+      }),
+      // Le statut du blindage reste un champ corrigeable, sans toucher aux dates d'origine.
+      blind: document.getElementById('blindageCheck')?.checked ? 'OUI' : 'NON'
+    };
+
+    const alerteCalculee = texteAlertePourSupabase();
+    // En correction, une absence d'alerte calculée ne doit pas effacer une ancienne valeur par inadvertance.
+    if (!modeCorrection || (alerteCalculee !== null && alerteCalculee !== undefined && String(alerteCalculee).trim() !== "")) {
+      maj.alerte = alerteCalculee;
+    }
+
+    const ajouterSiRenseigne = (colonne, valeur, numerique = true) => {
+      if (valeur !== undefined && valeur !== null && String(valeur).trim() !== '') {
+        maj[colonne] = numerique ? parseFloat(String(valeur).replace(',', '.')) : String(valeur).trim();
       }
-    });
+    };
 
-    const { data: lignes, error } = await supabaseClient
-      .from('blindage')
-      .update((() => {
-        // Mise à jour partielle : une valeur vide ne doit JAMAIS effacer le relevé
-        // d'une phase précédemment enregistré par un autre agent.
-        const maj = {
-          nom: nom,
-          prenom: prenom,
-          effectue: 1,
-          date_exec: dateJour,
-          // Enregistre le statut du blindage dans la même mise à jour que la fouille.
-          // Le déclencheur SQL peut ainsi détecter date_fouille + blind = OUI.
-          blind: document.getElementById('blindageCheck')?.checked ? 'OUI' : 'NON',
-          alerte: texteAlertePourSupabase(),
-          ...phases
-        };
-        const ajouterSiRenseigne = (colonne, valeur, numerique = true) => {
-          if (valeur !== undefined && valeur !== null && String(valeur).trim() !== '') {
-            maj[colonne] = numerique ? parseFloat(String(valeur).replace(',', '.')) : String(valeur).trim();
-          }
-        };
+    if (phaseFouilleActive) {
+      ajouterSiRenseigne('a_reel', aReel);
+      ajouterSiRenseigne('b_reel', bReel);
+      ajouterSiRenseigne('h_reel', hReel);
+    }
+    if (phaseMatageActive) {
+      ajouterSiRenseigne('i_reel', iReel);
+      ajouterSiRenseigne('ech_reel', echValeur, false);
+      ajouterSiRenseigne('ar_reel', arReel);
+      if (maj.ar_reel !== undefined) maj.ar_reel = Math.round(maj.ar_reel);
+      ajouterSiRenseigne('enc_reel', encReel);
+      ajouterSiRenseigne('f_reel', fReel);
+      ajouterSiRenseigne('p_reel', pSaisi);
+      ajouterSiRenseigne('sup_reel', supReel);
+    }
+    if (phaseBetonActive && Number.isFinite(volReelNum) && volReelNum > 0) {
+      maj.m3_reel = volReelNum;
+    }
+    if (document.getElementById('brh_oui')?.checked) maj.brh = true;
+    if (document.getElementById('carotte')?.checked) {
+      ajouterSiRenseigne('dist_carotte', document.getElementById('dist_carotte')?.value);
+    }
 
-        // Ne conserver que les valeurs effectivement saisies. Les phases non faites
-        // ne transmettent plus de null à Supabase.
-        if (document.getElementById('check_fouille')?.checked) {
-          ajouterSiRenseigne('a_reel', aReel);
-          ajouterSiRenseigne('b_reel', bReel);
-          ajouterSiRenseigne('h_reel', hReel);
-        }
-        if (document.getElementById('check_matage')?.checked) {
-          ajouterSiRenseigne('i_reel', iReel);
-          ajouterSiRenseigne('ech_reel', echValeur, false);
-          ajouterSiRenseigne('ar_reel', arReel);
-          if (maj.ar_reel !== undefined) maj.ar_reel = Math.round(maj.ar_reel);
-          ajouterSiRenseigne('enc_reel', encReel);
-          ajouterSiRenseigne('f_reel', fReel);
-          ajouterSiRenseigne('p_reel', pSaisi);
-          ajouterSiRenseigne('sup_reel', supReel);
-        }
-        if (document.getElementById('check_beton')?.checked && Number.isFinite(volReelNum) && volReelNum > 0) {
-          maj.m3_reel = volReelNum;
-        }
-                if (document.getElementById('brh_oui')?.checked) maj.brh = true;
-        if (document.getElementById('carotte')?.checked) {
-          ajouterSiRenseigne('dist_carotte', document.getElementById('dist_carotte')?.value);
-        }
-        return maj;
-      })())
-      .eq('chantier', nomChantier)
-      .eq('support', numSupportInput)
-      .select('support');
+    const valeurComparable = (valeur) => {
+      if (valeur === undefined || valeur === null) return null;
+      if (typeof valeur === 'number' || typeof valeur === 'boolean') return valeur;
+      const texte = String(valeur).trim();
+      if (texte === '') return '';
+      const nombre = Number(texte.replace(',', '.'));
+      return Number.isFinite(nombre) ? nombre : texte;
+    };
+    const valeursIdentiques = (a, b) => valeurComparable(a) === valeurComparable(b);
+
+    let majFinale = maj;
+    let changements = [];
+    if (modeCorrection) {
+      changements = Object.entries(maj).filter(([champ, nouvelleValeur]) => !valeursIdentiques(actuel[champ], nouvelleValeur));
+      majFinale = Object.fromEntries(changements);
+
+      if (changements.length === 0) {
+        console.log("ℹ️ Aucune donnée différente détectée pour le support " + numSupportInput + ".");
+        return true;
+      }
+    }
+
+    let requeteMaj = supabaseClient.from('blindage').update(majFinale);
+    if (actuel.id !== undefined && actuel.id !== null) {
+      requeteMaj = requeteMaj.eq('id', actuel.id);
+    } else {
+      requeteMaj = requeteMaj.eq('chantier', nomChantier).eq('support', numSupportInput);
+    }
+    const { data: lignes, error } = await requeteMaj.select('id,support');
 
     if (error) throw error;
     if (!lignes || lignes.length === 0) throw new Error("Aucune ligne mise à jour pour " + nomChantier + " / " + numSupportInput);
 
-    // Mémoire locale à jour : les cases et la liste des supports restent cohérentes sans rechargement
+    // Historique détaillé : une ligne par champ réellement modifié.
+    if (modeCorrection && changements.length > 0) {
+      const redacteur = [prenom, nom].filter(Boolean).join(" ") || "ANONYME";
+      const historique = changements.map(([champ, nouvelleValeur]) => ({
+        blindage_id: actuel.id,
+        chantier: nomChantier,
+        support: numSupportInput,
+        mode_modification: "correction",
+        champ: champ,
+        ancienne_valeur: actuel[champ] === undefined ? null : actuel[champ],
+        nouvelle_valeur: nouvelleValeur === undefined ? null : nouvelleValeur,
+        modifie_par: redacteur,
+        modifie_email: identite.email || null
+      }));
+
+      const { error: erreurHistorique } = await supabaseClient
+        .from('historique_modifications_fbm')
+        .insert(historique);
+
+      if (erreurHistorique) {
+        console.error("❌ Correction enregistrée, mais erreur d'archivage :", erreurHistorique.message);
+        alert("⚠️ Les données ont bien été corrigées, mais l'historique n'a pas pu être enregistré.\nVérifie que la table historique_modifications_fbm a bien été créée dans Supabase.\n\n" + erreurHistorique.message);
+      }
+    }
+
+    // Mémoire locale à jour : les listes et les données du support restent cohérentes.
     if (typeof baseSupports !== "undefined") {
       const s = baseSupports.find(x => x.chantier === nomChantier && String(x.support) === numSupportInput);
       if (s) {
-        Object.keys(phases).forEach(c => { s[c] = phases[c]; });
-        s.EFFECTUE = 1;
+        const correspondance = {
+          blind: 'BLIND',
+          i_reel: 'i_reel', ech_reel: 'ech_reel', ar_reel: 'ar_reel', enc_reel: 'enc_reel',
+          a_reel: 'a_reel', b_reel: 'b_reel', h_reel: 'h_reel', f_reel: 'f_reel',
+          p_reel: 'p_reel', sup_reel: 'sup_reel', m3_reel: 'm3_reel',
+          date_fouille: 'date_fouille', date_beton: 'date_beton', date_matage: 'date_matage'
+        };
+        Object.entries(majFinale).forEach(([champ, valeur]) => {
+          if (correspondance[champ]) s[correspondance[champ]] = valeur;
+        });
+        if (!modeCorrection) {
+          Object.keys(phases).forEach(c => { s[c] = phases[c]; });
+          s.EFFECTUE = 1;
+        }
       }
     }
-    window.phasesInitiales = {
+
+    window.phasesInitiales = modeCorrection ? {
+      fouille: !!initiales.fouille,
+      beton:   !!initiales.beton,
+      matage:  !!initiales.matage
+    } : {
       fouille: !!(document.getElementById('check_fouille')?.checked),
       beton:   !!(document.getElementById('check_beton')?.checked),
       matage:  !!(document.getElementById('check_matage')?.checked)
     };
 
-    console.log("✅ Support " + numSupportInput + " (" + nomChantier + ") synchronisé", phases);
+    console.log("✅ Support " + numSupportInput + " (" + nomChantier + ") synchronisé", modeCorrection ? changements : phases);
     return true;
 
   } catch (err) {
@@ -3382,6 +3463,37 @@ async function exporterPDF() {
     return;
   }
 
+  // Un support dont les trois phases sont déjà enregistrées passe en correction uniquement.
+  const chantierPourCorrection = document.getElementById("selectChantier")?.value || "";
+  const supportPourCorrection = (typeof baseSupports !== "undefined" ? baseSupports : []).find(s =>
+    String(s.chantier || s.CHANTIER || "").trim() === String(chantierPourCorrection).trim() &&
+    String(s.support || s.SUPPORT || "").trim() === numSupportInput
+  );
+  const supportDejaTermine = !!(
+    supportPourCorrection?.date_fouille &&
+    supportPourCorrection?.date_beton &&
+    supportPourCorrection?.date_matage
+  );
+  let modeCorrection = false;
+  if (supportDejaTermine) {
+    const confirmerCorrection = confirm(
+      "Ce support est déjà terminé (Fouille, Béton et Matage enregistrés).\n\n" +
+      "Souhaites-tu corriger les données existantes ?\n\n" +
+      "Les dates d'origine, la date de dernière saisie et le rédacteur d'origine seront conservés.\n" +
+      "Chaque champ réellement modifié sera ajouté à l'historique."
+    );
+    if (!confirmerCorrection) return;
+    modeCorrection = true;
+
+    // Une correction ne doit jamais décocher ni recréer une phase déjà enregistrée.
+    ['check_fouille', 'check_beton', 'check_matage'].forEach(id => {
+      const casePhase = document.getElementById(id);
+      if (casePhase) casePhase.checked = true;
+    });
+    window.phasesInitiales = { fouille: true, beton: true, matage: true };
+    window.phasesInitialesCount = 3;
+  }
+
   // Charger les BL avant l'export. En cas d'indisponibilité Supabase,
   // conserver les BL déjà visibles dans l'application et continuer le PDF.
   try { await chargerBLsDepuisSupabasePourPDF(); }
@@ -3407,24 +3519,26 @@ async function exporterPDF() {
 
   const phasesActuellesCount = (fouilleCoche ? 1 : 0) + (betonCoche ? 1 : 0) + (matageCoche ? 1 : 0);
 
-  if (isBlindage || isHorsP1) {
-    if (phasesActuellesCount === 0) {
-      alert("⚠️ En mode Blindage / Hors P1, vous devez valider au moins une phase pour exporter.");
-      return;
-    }
-        if (phasesActuellesCount <= (window.phasesInitialesCount || 0)) {
-      alert("⚠️ En mode Blindage / Hors P1, vous devez valider au moins une nouvelle phase supplémentaire par rapport à l'état initial.");
-      return;
-    }
-  } else {
-    if (!fouilleCoche || !betonCoche || !matageCoche) {
-      const confirmation = confirm("Voulez-vous valider les 3 Phases ?");
-      if (!confirmation) {
-        return; 
-      } else {
-        document.getElementById('check_fouille').checked = true;
-        document.getElementById('check_beton').checked = true;
-        document.getElementById('check_matage').checked = true;
+  if (!modeCorrection) {
+    if (isBlindage || isHorsP1) {
+      if (phasesActuellesCount === 0) {
+        alert("⚠️ En mode Blindage / Hors P1, vous devez valider au moins une phase pour exporter.");
+        return;
+      }
+      if (phasesActuellesCount <= (window.phasesInitialesCount || 0)) {
+        alert("⚠️ En mode Blindage / Hors P1, vous devez valider au moins une nouvelle phase supplémentaire par rapport à l'état initial.");
+        return;
+      }
+    } else {
+      if (!fouilleCoche || !betonCoche || !matageCoche) {
+        const confirmation = confirm("Voulez-vous valider les 3 Phases ?");
+        if (!confirmation) {
+          return;
+        } else {
+          document.getElementById('check_fouille').checked = true;
+          document.getElementById('check_beton').checked = true;
+          document.getElementById('check_matage').checked = true;
+        }
       }
     }
   }
@@ -3954,7 +4068,7 @@ async function exporterPDF() {
     localStorage.setItem("fbm_sync_en_attente", JSON.stringify({ chantier: nomChantier, support: numSupportInput, date: new Date().toISOString() }));
     let syncOk = false;
     if (typeof synchroniserSupportActuel === "function") {
-      syncOk = await synchroniserSupportActuel();
+      syncOk = await synchroniserSupportActuel(modeCorrection);
     }
 if (syncOk) localStorage.removeItem("fbm_sync_en_attente");
 
