@@ -5036,7 +5036,7 @@ function chargerSupport() {
     setVal("valF", valOuVide(data.f_reel));
     setVal("valSUP", valOuVide(data.sup_reel));
     setVal("I", valOuVide(data.i_reel));
-    setVal("AF", valOuVide(data.a_reel !== undefined && data.a_reel !== null ? data.a_reel : (data.AF !== undefined ? data.AF : data.A)));
+    document.getElementById("AF").value = valOuVide(data.a_reel);
     setVal("B_Fouille", valOuVide(data.b_reel));
     setVal("H_Fouille", valOuVide(data.h_reel));
     setVal("AR", valOuVide(data.ar_reel));
