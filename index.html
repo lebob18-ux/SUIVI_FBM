@@ -3380,25 +3380,7 @@ function validerSaisiesFBM() {
         }
     }
 
-    // 4. Bloc BLINDAGE (si blindageCheck est coché)
-    if (document.getElementById('blindageCheck')?.checked) {
-        let distBlindage = document.getElementById('dist_blindage')?.value;
-        let statutBlindage = document.querySelector('input[name="statut_blindage"]:checked');
-        
-        if (!distBlindage || !statutBlindage) {
-            erreurs.push("🛡️ **Blindage** : La distance bord rail ou le statut (Conforme/Non conf.) est manquant.");
-        }
-    }
-
-    // 5. Bloc CAROTTE (si carotte est coché)
-    if (document.getElementById('carotte')?.checked) {
-        let aCarotte = document.getElementById('A_carotte')?.value;
-        let bCarotte = document.getElementById('B_carotte')?.value;
-        
-        if (!aCarotte || aCarotte === "0" || !bCarotte || bCarotte === "0") {
-            erreurs.push("🥕 **Carotte** : Les dimensions A ou B de la carotte sont requises.");
-        }
-    }
+    // 4. Blindage et Carotte : saisie facultative (plus d'obligation)
 
     // Affichage dynamique dans ton bloc d'alertes existant (#tbf)
     let alertesDiv = document.getElementById('tbf');
