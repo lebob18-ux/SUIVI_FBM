@@ -730,10 +730,7 @@ input[readonly]{
       <input type="number" id="slump-input" placeholder="Slump (mm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0" oninput="verifierSlump()">
       <button type="button" onclick="ajouterBL()" style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">💾 Enregistrer BL</button>
     </div>
-	    <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
-      <input type="hidden" id="destination-bl" value="massif">
-      <input type="date" id="date-coulage-bl" style="flex:1; height:32px; font-size:0.85em;">
-    </div>
+    <input type="hidden" id="destination-bl" value="massif">
     <div id="slump-alerte" style="font-size:0.78em; font-weight:bold; margin-bottom:6px; display:none;"></div>
     <div id="bl-liste"></div>
 
@@ -1850,7 +1847,7 @@ async function ajouterBL() {
     item = normaliserBL({ bl:blVal, type:typeVal, quantite_beton:quantiteVal, slump:slumpVal, classe_slump:classeSlumpActuelle, local_ref:creerRefLocaleBL() });
   }
   item.destination = document.getElementById("destination-bl")?.value === 'carotte' ? 'carotte' : 'massif';
-  item.date_coulage = document.getElementById("date-coulage-bl")?.value || null;
+  item.date_coulage = null;
   memoriserNumeroBL(blVal);
   try {
     const blindageId = await obtenirIdBlindageActuel();
@@ -2042,7 +2039,6 @@ function genererHTMLListeBLs(destination) {
           <span style="color:#7C2270;background:#f0e4ee;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${echapperHTML(item.type || "--")}</span>
           <span style="color:#166534;background:#dcfce7;font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;">${val(item.quantite_beton)} m³</span>
           <span style="color:${couleur};background:${fond};font-weight:bold;padding:2px 6px;border-radius:8px;font-size:.72em;white-space:nowrap;">${icone} ${val(item.slump)} mm ${classe}</span>
-          ${item.date_coulage ? `<span style="font-size:.72em;color:#666;">${item.date_coulage.split('-').reverse().join('/')}</span>` : ''}
         </div>
         <button type="button" onclick="supprimerBL(${index})" style="background:#fee2e2;color:#dc2626;padding:2px 7px;font-size:.72em;margin:0;border-radius:4px;flex-shrink:0;" title="Retirer ce BL de cette fouille">✕</button>
       </div></div>`;
@@ -2340,8 +2336,6 @@ function rechargerBLsSupport() {
    ============================================================ */
 
 window.addEventListener("load", () => {
-  const champDateCoulage = document.getElementById("date-coulage-bl");
-  if (champDateCoulage && !champDateCoulage.value) champDateCoulage.value = dateDuPosteFBM();
   const champDateCoulageCarotte = document.getElementById("date-coulage-bl-carotte");
   if (champDateCoulageCarotte && !champDateCoulageCarotte.value) champDateCoulageCarotte.value = dateDuPosteFBM();
 
@@ -3249,6 +3243,30 @@ async function synchroniserSupportActuel(modeCorrection = false) {
     if (error) throw error;
     if (!lignes || lignes.length === 0) throw new Error("Aucune ligne mise à jour pour " + nomChantier + " / " + numSupportInput);
 
+    // Mise à jour des volumes béton dans le suivi SUTX (tâches GC "béton")
+    try {
+      const volPrevuTexte = document.getElementById("vol_prevu")?.innerText || "0";
+      const m3Prevu = parseFloat(String(volPrevuTexte).replace("m³", "").trim().replace(",", "."))
+        || Number(actuel.vol_theorique)
+        || Number(actuel.m3_prevu)
+        || 0;
+      const m3Reel = Number.isFinite(volReelNum) ? volReelNum : 0;
+      const { error: errSutx } = await supabaseClient
+        .from('suivi_sutx_v2')
+        .update({ beton_prevu: m3Prevu, beton_coule: m3Reel })
+        .eq('Chantier', nomChantier)
+        .eq('Support', numSupportInput)
+        .eq('type', 'GC')
+        .ilike('Tache', '%b_ton%');
+      if (errSutx) {
+        console.warn("Mise à jour suivi_sutx_v2 non effectuée :", errSutx.message || errSutx);
+      } else {
+        console.log("✅ suivi_sutx_v2 mis à jour (béton) pour", nomChantier, "/", numSupportInput, "→ prévu:", m3Prevu, "coulé:", m3Reel);
+      }
+    } catch (eSutx) {
+      console.warn("Mise à jour suivi_sutx_v2 ignorée :", eSutx.message || eSutx);
+    }
+
     // Historique détaillé : une ligne par champ réellement modifié.
     if (modeCorrection && changements.length > 0) {
       const redacteur = [prenom, nom].filter(Boolean).join(" ") || "ANONYME";
@@ -3839,18 +3857,16 @@ async function exporterPDF() {
           quantite_beton: Number.isFinite(saisieQte) ? saisieQte : null,
           slump: Number.isFinite(saisieSlump) ? saisieSlump : null,
 		  destination: g("destination-bl")?.value || 'massif',
-          date_coulage: g("date-coulage-bl")?.value || null,
+          date_coulage: null,
           classe_slump: classeSlumpActuelle || 'S4'
         }));
       }
-      const dateBL = (item) => formatDateFR(item.date_coulage) || (item.destination === 'carotte' ? "-" : (datePhase("beton") || "-"));
       const ligneBL = (item) => {
         const classe = item.classe_slump || 'S4';
         const statut = statutSlump(item.slump, classe);
         const statutTxt = statut === 'conforme' ? 'Conforme' : statut === 'tolerance' ? 'Tolérance' : statut === 'non_conforme' ? 'Non conforme' : '-';
         const slumpTxt = fmtNombre(item.slump) !== "" ? fmtNombre(item.slump) + " mm" : "-";
         return [
-          dateBL(item),
           item.bl || item.bl_beton || item.numero_bl || "",
           item.type || item.type_beton || "",
           fmtNombre(item.quantite_beton) ? fmtNombre(item.quantite_beton) + " m³" : "",
@@ -3864,22 +3880,21 @@ async function exporterPDF() {
           ...tableBase,
           startY: y,
           head: [
-            [{ content: titre, colSpan: 7, styles: { fillColor: couleurTitre, halign: 'left' } }],
-            ["Date", "N° BL", "Type de béton", "Quantité", "Classe", "Slump", "Statut"]
+            [{ content: titre, colSpan: 6, styles: { fillColor: couleurTitre, halign: 'left' } }],
+            ["N° BL", "Type de béton", "Quantité", "Classe", "Slump", "Statut"]
           ],
-          body: liste.length ? liste.map(ligneBL) : [["-", texteVide, "", "", "", "", ""]],
+          body: liste.length ? liste.map(ligneBL) : [[texteVide, "", "", "", "", ""]],
           styles: { fontSize: 7.8, cellPadding: 2.2, overflow: "linebreak" },
           columnStyles: {
-            0: { cellWidth: 20, halign: "center" },
-            1: { cellWidth: 38, fontStyle: "bold" },
-            2: { cellWidth: "auto" },
-            3: { cellWidth: 20, halign: "center" },
-            4: { cellWidth: 13, halign: "center" },
-            5: { cellWidth: 18, halign: "center", fontStyle: "bold", textColor: [3, 105, 161] },
-            6: { cellWidth: 24, halign: "center" }
+            0: { cellWidth: 42, fontStyle: "bold" },
+            1: { cellWidth: "auto" },
+            2: { cellWidth: 22, halign: "center" },
+            3: { cellWidth: 15, halign: "center" },
+            4: { cellWidth: 20, halign: "center", fontStyle: "bold", textColor: [3, 105, 161] },
+            5: { cellWidth: 26, halign: "center" }
           },
           didParseCell: function(data) {
-            if (data.column.index === 6 && data.section === 'body') {
+            if (data.column.index === 5 && data.section === 'body') {
               const t = String(data.cell.raw || '');
               if (t.includes('Non conforme')) data.cell.styles.textColor = [153, 27, 27];
               else if (t.includes('Tolérance')) data.cell.styles.textColor = [146, 64, 14];
@@ -4901,8 +4916,6 @@ function viderToutFormulaire() {
     }
   });
 
-  const dateCoulage = document.getElementById("date-coulage-bl");
-  if (dateCoulage && typeof dateDuPosteFBM === "function") dateCoulage.value = dateDuPosteFBM();
   const dateCoulageCarotte = document.getElementById("date-coulage-bl-carotte");
   if (dateCoulageCarotte && typeof dateDuPosteFBM === "function") dateCoulageCarotte.value = dateDuPosteFBM();
 
