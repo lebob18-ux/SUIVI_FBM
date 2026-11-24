@@ -645,7 +645,7 @@ input[readonly]{
     <div id="bloc-date-fouille" style="margin-bottom:8px; padding:6px 8px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px;">
       <label for="date_saisie_fouille" style="font-size:0.8em; font-weight:bold; color:#0369a1; display:flex; align-items:center; gap:8px; justify-content:space-between;">
         📅 Date fouille
-        <input type="date" id="date_saisie_fouille" style="width:150px; height:30px; font-size:0.9em; padding:2px 6px; border:1px solid #7dd3fc; border-radius:5px;">
+        <input type="date" id="date_saisie_fouille" disabled style="width:150px; height:30px; font-size:0.9em; padding:2px 6px; border:1px solid #7dd3fc; border-radius:5px; background:#eee; cursor:not-allowed;">
       </label>
     </div>
     <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">📐 Cotes Fouille (A / B / H)</div>
@@ -704,7 +704,7 @@ input[readonly]{
     <div id="bloc-date-beton" style="margin-bottom:8px; padding:6px 8px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px;">
       <label for="date_saisie_beton" style="font-size:0.8em; font-weight:bold; color:#0369a1; display:flex; align-items:center; gap:8px; justify-content:space-between;">
         📅 Date béton
-        <input type="date" id="date_saisie_beton" style="width:150px; height:30px; font-size:0.9em; padding:2px 6px; border:1px solid #7dd3fc; border-radius:5px;">
+        <input type="date" id="date_saisie_beton" disabled style="width:150px; height:30px; font-size:0.9em; padding:2px 6px; border:1px solid #7dd3fc; border-radius:5px; background:#eee; cursor:not-allowed;">
       </label>
     </div>
     <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
@@ -756,7 +756,7 @@ input[readonly]{
     <div id="bloc-date-matage" style="margin-bottom:8px; padding:6px 8px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px;">
       <label for="date_saisie_matage" style="font-size:0.8em; font-weight:bold; color:#0369a1; display:flex; align-items:center; gap:8px; justify-content:space-between;">
         📅 Date matage
-        <input type="date" id="date_saisie_matage" style="width:150px; height:30px; font-size:0.9em; padding:2px 6px; border:1px solid #7dd3fc; border-radius:5px;">
+        <input type="date" id="date_saisie_matage" disabled style="width:150px; height:30px; font-size:0.9em; padding:2px 6px; border:1px solid #7dd3fc; border-radius:5px; background:#eee; cursor:not-allowed;">
       </label>
     </div>
     <div style="font-size: 0.85em; font-weight: bold; color: #7C2270; margin-bottom: 4px;">📍 Implantation / Échantillon / Arasement / Encastrement</div>
@@ -5142,6 +5142,8 @@ function chargerSupport() {
     if (chkM && (data.date_matage || data.DATE_MATAGE)) chkM.checked = true;
 
     // Préremplir les calendriers de phase (AAAA-MM-JJ)
+    // Priorité : date déjà enregistrée en base. Sinon laisser vide
+    // (la date du poste n'est proposée qu'au moment où on coche la phase).
     const normaliserDateISO = (v) => {
       if (!v) return "";
       const s = String(v).trim();
@@ -5150,18 +5152,36 @@ function chargerSupport() {
       if (m) return m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0");
       return "";
     };
-    const setDateSaisie = (id, val, forcerJourSiVide) => {
+    const setDateSaisie = (id, val) => {
       const el = document.getElementById(id);
       if (!el) return;
       const iso = normaliserDateISO(val);
-      if (iso) el.value = iso;
-      else if (forcerJourSiVide && typeof dateDuPosteFBM === "function") el.value = dateDuPosteFBM();
-      else el.value = "";
+      el.value = iso || "";
     };
-    // Si une date existe en base on la reprend, sinon date du poste
-    setDateSaisie("date_saisie_fouille", data.date_fouille || data.DATE_FOUILLE, true);
-    setDateSaisie("date_saisie_beton", data.date_beton || data.DATE_BETON, true);
-    setDateSaisie("date_saisie_matage", data.date_matage || data.DATE_MATAGE, true);
+    // Si une date existe en base on la reprend (pas la date du jour)
+    setDateSaisie("date_saisie_fouille", data.date_fouille || data.DATE_FOUILLE);
+    setDateSaisie("date_saisie_beton", data.date_beton || data.DATE_BETON);
+    setDateSaisie("date_saisie_matage", data.date_matage || data.DATE_MATAGE);
+
+    // Dates saisissables uniquement si la case correspondante est cochée
+    if (typeof synchroniserEtatDatesPhases === "function") {
+      synchroniserEtatDatesPhases();
+    } else {
+      [
+        ['check_fouille', 'date_saisie_fouille'],
+        ['check_beton', 'date_saisie_beton'],
+        ['check_matage', 'date_saisie_matage']
+      ].forEach(([idCase, idDate]) => {
+        const el = document.getElementById(idDate);
+        const coche = !!document.getElementById(idCase)?.checked;
+        if (el) {
+          el.disabled = !coche;
+          el.style.background = coche ? '' : '#eee';
+          el.style.cursor = coche ? '' : 'not-allowed';
+          if (coche && !el.value && typeof dateDuPosteFBM === 'function') el.value = dateDuPosteFBM();
+        }
+      });
+    }
     
     memoriserEtatInitialPhases();
 
@@ -5993,26 +6013,57 @@ function logoAINMversPNG(largeurPx, hauteurPx) {
       const arrowId = 'arrow-' + sectionElem.id.replace('-wrap', '');
       const arrowElem = document.getElementById(arrowId);
 
+      const mapDate = {
+        'section-fouille-global-wrap': 'date_saisie_fouille',
+        'section-beton-wrap': 'date_saisie_beton',
+        'section-matage-wrap': 'date_saisie_matage'
+      };
+      const idDate = mapDate[idSection];
+      const elDate = idDate ? document.getElementById(idDate) : null;
+
       if (estCoche) {
           sectionElem.classList.remove('collapsed');
           if (arrowElem) arrowElem.innerText = '▴';
-          // Préremplir la date de phase si vide (date du poste)
-          if (typeof dateDuPosteFBM === 'function') {
-            const map = {
-              'section-fouille-global-wrap': 'date_saisie_fouille',
-              'section-beton-wrap': 'date_saisie_beton',
-              'section-matage-wrap': 'date_saisie_matage'
-            };
-            const idDate = map[idSection];
-            if (idDate) {
-              const el = document.getElementById(idDate);
-              if (el && !el.value) el.value = dateDuPosteFBM();
+          // Date saisissable uniquement si la case est cochée
+          if (elDate) {
+            elDate.disabled = false;
+            elDate.style.background = '';
+            elDate.style.cursor = '';
+            // Préremplir uniquement si vide (date du poste)
+            if (!elDate.value && typeof dateDuPosteFBM === 'function') {
+              elDate.value = dateDuPosteFBM();
             }
           }
       } else {
           sectionElem.classList.add('collapsed');
           if (arrowElem) arrowElem.innerText = '▾';
+          // Case décochée : date non saisissable (on conserve la valeur affichée si déjà en base)
+          if (elDate) {
+            elDate.disabled = true;
+            elDate.style.background = '#eee';
+            elDate.style.cursor = 'not-allowed';
+          }
       }
+  }
+
+  function synchroniserEtatDatesPhases() {
+      [
+        ['check_fouille', 'date_saisie_fouille', 'section-fouille-global-wrap'],
+        ['check_beton',   'date_saisie_beton',   'section-beton-wrap'],
+        ['check_matage',  'date_saisie_matage',  'section-matage-wrap']
+      ].forEach(([idCase, idDate, idSection]) => {
+        const coche = !!document.getElementById(idCase)?.checked;
+        const elDate = document.getElementById(idDate);
+        if (elDate) {
+          elDate.disabled = !coche;
+          elDate.style.background = coche ? '' : '#eee';
+          elDate.style.cursor = coche ? '' : 'not-allowed';
+        }
+        // Ouvre/ferme le bloc sans écraser une date déjà présente
+        if (typeof gererOuvertureBlocParCase === 'function') {
+          gererOuvertureBlocParCase(idSection, coche);
+        }
+      });
   }
 
   function gererVisibiliteBlindageCase() {
