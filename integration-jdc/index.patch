@@ -1,0 +1,639 @@
+--- a/index.html
++++ b/index.html
+@@ -1,15 +1,33 @@
+ <!DOCTYPE html>
+ <html lang="fr">
+ <head>
+-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
++<script src="../supabase.js?v=14.2-collaborateurs"></script>
++<script src="../config.js?v=15.17.0-production"></script>
++<script src="../vendor/jdc-securite/identite-modules.js"></script>
+ <meta charset="UTF-8">
+-<meta name="viewport" content="width=device-width, initial-scale=1.0">
++<meta name="referrer" content="no-referrer">
++
++<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
++<script id="fbm-ios-layout-detection-v1614">
++(function(){
++  var iphone = /iPhone|iPod/i.test(navigator.userAgent || '') ||
++    (/iPad/i.test(navigator.userAgent || '') && navigator.maxTouchPoints > 1);
++  if (!iphone) return;
++  document.documentElement.classList.add('fbm-ios-layout');
++  if (window.top === window.self &&
++      (navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches))) {
++    document.documentElement.classList.add('fbm-ios-standalone');
++  }
++})();
++</script>
+ <title>Outil_FBM_2</title>
++<link rel="stylesheet" href="../journal-v154.css?v=15.4">
++<script src="../journal-dialogs.js?v=16.0.10"></script>
+ <style>
+ /* Style global de la page */
+ body {
+   font-family: Arial, sans-serif;
+   background: #f5f5f5;
+   padding: 1px;
+ }
+ /* En-tête avec titre et bouton de partage */
+@@ -491,16 +509,17 @@
+ 
+ <style>
+ .support-filtre-radio{flex:1;min-width:0;cursor:pointer;}
+ .support-filtre-radio input{position:absolute;opacity:0;pointer-events:none;}
+ .support-filtre-radio span{display:block;text-align:center;padding:9px 4px;border:1px solid #555;border-radius:7px;background:#222;color:#ddd;font-size:13px;font-weight:600;transition:background .15s,border-color .15s;}
+ .support-filtre-radio input:checked + span{background:#7C2270;border-color:#c06bb3;color:#fff;box-shadow:0 0 0 1px #7C2270;}
+ .support-filtre-radio input:focus-visible + span{outline:2px solid #fff;outline-offset:2px;}
+ </style>
++<link rel="stylesheet" href="iphone-layout-v1614.css?v=16.1.4" media="screen">
+ </head>
+ <body>
+ 
+ <!-- FOND ASSOMBRI CLIQUABLE POUR FERMER LES MENUS -->
+ <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="fermerToutesSidebars()"></div>
+ 
+ <!-- MENU LATÉRAL GAUCHE (PARAMÈTRES / CHANTIERS) -->
+ <div id="menuParametres" class="sidebar">
+@@ -597,32 +616,32 @@
+       <span style="font-size: 0.8em;">📍 ▾</span>
+   </button>
+   <span id="display_type" style="font-size:0.85em; font-weight:bold; color:#7C2270; white-space:nowrap; background:#f5eaf3; padding:4px 8px; border-radius:4px;"></span>
+   <button type="button" onclick="resetSauvegardeSupport()" title="Effacer la sauvegarde locale de ce support" style="background:#fee2e2; color:#dc2626; font-size:0.75em; padding:5px 8px; margin:0;">🗑️</button>
+ </div>
+ <div style="height: 5px;"></div>
+ 
+ <div class="single-field" style="margin-left: 5px; margin-bottom: 5px;">  
+-  <div style="display: flex; flex-direction: row; gap: 15px; align-items: center; width: 100%;">
++  <div class="fbm-step-grid fbm-step-grid--tools" style="display: flex; flex-direction: row; gap: 15px; align-items: center; width: 100%;">
+     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold;">  
+       <input type="checkbox" id="verifVoie" checked onchange="calculer()"> 🚆TES.D  
+     </label>  
+     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold;">  
+       <input type="checkbox" id="carotte" onchange="calculer();"> 🥕CAROTTE  
+     </label>
+     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; color: #dc3545;">  
+       <input type="checkbox" id="blindageCheck" onchange="gererVisibiliteBlindageCase(); calculer();"> 🛡️BLINDAGE  
+     </label>
+   </div>
+ </div> 
+ 
+ <!-- SECTION : CASES A COCHER (Fouille / Béton / Matage / Hors P1) -->
+ <div class="single-field" style="margin-left: 5px; margin-bottom: 10px;">  
+-  <div style="display: flex; flex-direction: row; gap: 12px; align-items: center; width: 100%; flex-wrap: wrap;">
++  <div class="fbm-step-grid fbm-step-grid--phases" style="display: flex; flex-direction: row; gap: 12px; align-items: center; width: 100%; flex-wrap: wrap;">
+     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; cursor: pointer;">  
+       <input type="checkbox" id="check_fouille" name="etapes_suivi" value="fouille" onchange="gererOuvertureBlocParCase('section-fouille-global-wrap', this.checked)"> 📐 FOUILLE  
+     </label>  
+     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; cursor: pointer;">  
+       <input type="checkbox" id="check_beton" name="etapes_suivi" value="beton" onchange="gererOuvertureBlocParCase('section-beton-wrap', this.checked)"> 🧱 BÉTON  
+     </label>
+     <label style="margin:0; font-size:0.65em; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-weight: bold; cursor: pointer;">  
+       <input type="checkbox" id="check_matage" name="etapes_suivi" value="matage" onchange="gererOuvertureBlocParCase('section-matage-wrap', this.checked)"> 🔨 MATAGE  
+@@ -675,19 +694,19 @@
+     </table>
+ 
+     <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; background: #fdf4ff; padding: 6px 8px; border-radius: 6px; border: 1px solid #f5d0fe;">
+       <label for="nb_big_bag_terre" style="font-size: 0.8em; font-weight: bold; color: #7c2270;">📦 Nombre de Big-Bag de terre :</label>
+       <input type="number" id="nb_big_bag_terre" min="0" step="1" value="0" style="width: 75px; padding: 4px; border-radius: 4px; border: 1px solid #ccc; text-align: center;" oninput="calculer()">
+     </div>
+   </div>
+ 
+-    <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: #fdf4ff; padding: 6px 8px; border-radius: 6px; border: 1px solid #f5d0fe;">
++    <div class="fbm-brh-row" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; background: #fdf4ff; padding: 6px 8px; border-radius: 6px; border: 1px solid #f5d0fe;">
+       <label style="font-size: 0.8em; font-weight: bold; color: #7c2270;">🔨 Utilisation BRH :</label>
+-      <div style="display: flex; gap: 16px; align-items: center;">
++      <div class="fbm-brh-options" style="display: flex; gap: 16px; align-items: center;">
+         <label style="font-size: 0.8em; display: flex; align-items: center; gap: 4px; cursor: pointer; margin: 0;">
+           <input type="radio" name="brh" id="brh_oui" value="oui"> Oui
+         </label>
+         <label style="font-size: 0.8em; display: flex; align-items: center; gap: 4px; cursor: pointer; margin: 0;">
+           <input type="radio" name="brh" id="brh_non" value="non" checked> Non
+         </label>
+       </div>
+     </div>
+@@ -702,36 +721,36 @@
+   </div>
+   <div class="section-content" id="sec-beton">
+     <div id="bloc-date-beton" style="margin-bottom:8px; padding:6px 8px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px;">
+       <label for="date_saisie_beton" style="font-size:0.8em; font-weight:bold; color:#0369a1; display:flex; align-items:center; gap:8px; justify-content:space-between;">
+         📅 Date béton
+         <input type="date" id="date_saisie_beton" disabled style="width:150px; height:30px; font-size:0.9em; padding:2px 6px; border:1px solid #7dd3fc; border-radius:5px; background:#eee; cursor:not-allowed;">
+       </label>
+     </div>
+-    <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
++    <div class="fbm-bl-first" style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
+       <input type="text" id="bl_beton" list="bl-numeros-historique" placeholder="N° de BL (saisie ou scan)" autocomplete="off" style="flex:1; min-width:0; height:32px; font-size:0.85em; text-transform:uppercase;" oninput="this.value = this.value.toUpperCase();">
+       <datalist id="bl-numeros-historique"></datalist>
+             <button type="button" onclick="scannerBLTelephone()" style="background:#7c2270; color:white; padding:6px 9px; margin:0; white-space:nowrap; font-size:0.82em;">📷 Scanner</button>
+       <button type="button" onclick="rappelerDernierBL()" title="Reprendre le dernier BL utilisé sur ce chantier" style="background:#0369a1; color:white; padding:6px 9px; margin:0; white-space:nowrap; font-size:0.82em;">↩ Dernier</button>
+     </div>
+-    <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
++    <div class="fbm-bl-second" style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
+       <input list="bl-datalist" id="bl-input" placeholder="Type béton prévu au chantier" style="flex:1.5; min-width:0; height:32px; font-size:0.85em;">
+       <datalist id="bl-datalist"></datalist>
+       <input type="number" id="quantite-beton-input" placeholder="Quantité (m³)" style="flex:1; min-width:0; height:32px; font-size:0.85em;" step="0.001" min="0">
+       <button type="button" onclick="ajouterTypeBetonChantier()" title="Ajouter un type de béton au chantier actif" style="background:#7c2270; color:white; padding:5px 9px; margin:0; font-weight:bold; font-size:0.9em;">＋ Type</button>
+     </div>
+-    <div style="display:flex; gap:4px; margin-bottom:5px; align-items:center;">
++    <div class="fbm-bl-class" style="display:flex; gap:4px; margin-bottom:5px; align-items:center;">
+       <span style="font-size:0.75em; font-weight:bold; color:#0369a1; white-space:nowrap;">Classe S :</span>
+       <button type="button" id="btn-S1" onclick="choisirClasseSlump('S1')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#f3f4f6; color:#333;">S1</button>
+       <button type="button" id="btn-S2" onclick="choisirClasseSlump('S2')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#f3f4f6; color:#333;">S2</button>
+       <button type="button" id="btn-S3" onclick="choisirClasseSlump('S3')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#f3f4f6; color:#333;">S3</button>
+       <button type="button" id="btn-S4" onclick="choisirClasseSlump('S4')" style="padding:4px 7px; margin:0; font-size:0.78em; font-weight:bold; border-radius:4px; border:2px solid #ccc; background:#e0f2fe; color:#0369a1; border-color:#0369a1;">S4</button>
+     </div>
+-    <div style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
++    <div class="fbm-bl-save" style="display:flex; gap:5px; margin-bottom:8px; align-items:center;">
+       <input type="number" id="slump-input" placeholder="Slump (mm)" style="flex:1; height:32px; font-size:0.85em;" step="1" min="0" oninput="verifierSlump()">
+       <button type="button" onclick="ajouterBL()" style="background:#16a34a; color:white; padding:5px 14px; margin:0; font-weight:bold; font-size:0.9em;">💾 Enregistrer BL</button>
+     </div>
+     <input type="hidden" id="destination-bl" value="massif">
+     <div id="slump-alerte" style="font-size:0.78em; font-weight:bold; margin-bottom:6px; display:none;"></div>
+     <div id="bl-liste"></div>
+ 
+     <div class="result" style="margin-top: 10px; padding: 8px; border: 1px dashed #bbb; border-radius: 8px; background: #fafafa;">
+@@ -1074,18 +1093,18 @@
+     <h3 style="color:#7C2270;">📊 Récapitulatif chantiers</h3>
+     <div id="recap-content-admin" style="padding: 4px 0;">
+       <p style="color:#999;">Chargement en cours...</p>
+     </div>
+   </div>
+ </div>
+ 
+ <!-- SCRIPTS JS -->
+-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>    
++<script src="../briefing/vendor/jspdf.umd.min.js"></script>
++<script src="../vendor/jdc-securite/autotable-5.0.9.min.js"></script>    
+ <script>
+ /* ===== js/QR_CODE.js ===== */
+ let streamScanner = null;
+ let scanInterval = null;
+ 
+ // 1. Lancer le scan (ouvre la modale existante #divScanModal)
+ function scannerQRCode() {
+     fermerToutesSidebars();
+@@ -1263,17 +1282,17 @@
+ </script>
+ <script>
+ /* ===== data.js ===== */
+ // Configuration Supabase_BOB
+ const SUPABASE_URL = "https://thbqkeugjvsxbryfnzuo.supabase.co";
+ const SUPABASE_ANON_KEY = "sb_publishable_2-Ij-nrTPeK6rB-kSD-QTg_b42zNakq";
+ 
+ // Initialisation du client Supabase
+-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
++const supabaseClient = JDCIdentiteModules.client(SUPABASE_URL, SUPABASE_ANON_KEY, () => chargerIdentite()?.email);
+ 
+ // Déclaration de la variable globale qu'utilisent tes autres scripts
+ let baseSupports = [];
+ let supportsSupabaseCharges = false;
+ 
+ // Fonction asynchrone pour charger les données depuis Supabase
+ async function chargerSupportsDepuisSupabase() {
+     try {
+@@ -1563,17 +1582,17 @@
+ 
+ async function ajouterTypeBetonChantier() {
+   const chantierSelect = document.getElementById("selectChantier");
+   const chantier = chantierSelect && chantierSelect.selectedIndex >= 0
+     ? String(chantierSelect.options[chantierSelect.selectedIndex]?.text || "").trim() : "";
+   if (!chantier || chantier.toLowerCase() === "aucun chantier") {
+     alert("Sélectionne d'abord le chantier concerné."); return;
+   }
+-  const saisie = prompt("Nouveau type de béton à ajouter au chantier « " + chantier + " » :");
++  const saisie = await JournalDialogs.prompt("Nouveau type de béton à ajouter au chantier « " + chantier + " » :");
+   if (saisie === null) return;
+   const type = saisie.trim().toUpperCase();
+   if (!type) { alert("Le type de béton ne peut pas être vide."); return; }
+   if (typeof supabaseClient === "undefined" || !supabaseClient) {
+     alert("Connexion Supabase indisponible. Le type n'a pas été ajouté à la liste partagée."); return;
+   }
+   try {
+     const { error } = await supabaseClient.from("types_beton_chantier")
+@@ -1926,17 +1945,17 @@
+ 
+ async function ajouterTypeBetonChantierCarotte() {
+   const chantierSelect = document.getElementById("selectChantier");
+   const chantier = chantierSelect && chantierSelect.selectedIndex >= 0
+     ? String(chantierSelect.options[chantierSelect.selectedIndex]?.text || "").trim() : "";
+   if (!chantier || chantier.toLowerCase() === "aucun chantier") {
+     alert("Sélectionne d'abord le chantier concerné."); return;
+   }
+-  const saisie = prompt("Nouveau type de béton à ajouter au chantier « " + chantier + " » :");
++  const saisie = await JournalDialogs.prompt("Nouveau type de béton à ajouter au chantier « " + chantier + " » :");
+   if (saisie === null) return;
+   const type = saisie.trim().toUpperCase();
+   if (!type) { alert("Le type de béton ne peut pas être vide."); return; }
+   if (typeof supabaseClient === "undefined" || !supabaseClient) {
+     alert("Connexion Supabase indisponible. Le type n'a pas été ajouté à la liste partagée."); return;
+   }
+   try {
+     const { error } = await supabaseClient.from("types_beton_chantier")
+@@ -2002,17 +2021,17 @@
+     alert('⚠️ Le BL carotte n’a pas pu être associé dans Supabase.\n\n' + (e.message || e));
+     return false;
+   }
+ }
+ 
+ async function supprimerBL(index) {
+   const item = blsActuels[index];
+   if (!item) return;
+-  if (!confirm("Retirer ce BL de cette fouille ?\n\n" + (item.bl || "BL sans numéro") + "\n\nLe BL et sa quantité resteront enregistrés et pourront être utilisés sur une autre fouille.")) return;
++  if (!await JournalDialogs.confirm("Retirer ce BL de cette fouille ?\n\n" + (item.bl || "BL sans numéro") + "\n\nLe BL et sa quantité resteront enregistrés et pourront être utilisés sur une autre fouille.")) return;
+   if (item._assocId) {
+     try {
+       const blindageId = await obtenirIdBlindageActuel();
+       const { error } = await supabaseClient.from("blindage_beton_bl_liaison")
+         .delete().eq("id", item._assocId).eq("blindage_id", blindageId);
+       if (error) throw error;
+     } catch (e) {
+       alert("❌ Impossible de retirer ce BL de la fouille.\n\n" + (e.message || e)); return;
+@@ -3527,17 +3546,17 @@
+   );
+   const supportDejaTermine = !!(
+     supportPourCorrection?.date_fouille &&
+     supportPourCorrection?.date_beton &&
+     supportPourCorrection?.date_matage
+   );
+   let modeCorrection = false;
+   if (supportDejaTermine) {
+-    const confirmerCorrection = confirm(
++    const confirmerCorrection = await JournalDialogs.confirm(
+       "Ce support est déjà terminé (Fouille, Béton et Matage enregistrés).\n\n" +
+       "Souhaites-tu corriger les données existantes ?\n\n" +
+       "Les dates d'origine, la date de dernière saisie et le rédacteur d'origine seront conservés.\n" +
+       "Chaque champ réellement modifié sera ajouté à l'historique."
+     );
+     if (!confirmerCorrection) return;
+     modeCorrection = true;
+ 
+@@ -3582,17 +3601,17 @@
+         return;
+       }
+       if (phasesActuellesCount <= (window.phasesInitialesCount || 0)) {
+         alert("⚠️ En mode Blindage / Hors P1, vous devez valider au moins une nouvelle phase supplémentaire par rapport à l'état initial.");
+         return;
+       }
+     } else {
+       if (!fouilleCoche || !betonCoche || !matageCoche) {
+-        const confirmation = confirm("Voulez-vous valider les 3 Phases ?");
++        const confirmation = await JournalDialogs.confirm("Voulez-vous valider les 3 Phases ?");
+         if (!confirmation) {
+           return;
+         } else {
+           document.getElementById('check_fouille').checked = true;
+           document.getElementById('check_beton').checked = true;
+           document.getElementById('check_matage').checked = true;
+         }
+       }
+@@ -4119,16 +4138,18 @@
+     for (let p = 1; p <= totalPages; p++) {
+       doc.setPage(p);
+       piedDePage(p, totalPages);
+     }
+ 
+     // 1. DÉCLENCHEMENT IMMÉDIAT DU TÉLÉCHARGEMENT PDF (priorité utilisateur)
+         const lettresPhases = phasesTitre.map(p => p.nom[0]).join("") || "FBM";
+     const nomFichier = lettresPhases + "_" + numSupportInput.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + new Date().toISOString().slice(0, 10) + ".pdf";
++    doc.save(nomFichier);
++    await window.jdcArchiverPDF(doc, nomFichier, {brouillon:true});
+     localStorage.setItem("fbm_sync_en_attente", JSON.stringify({ chantier: nomChantier, support: numSupportInput, date: new Date().toISOString() }));
+     let syncOk = false;
+     if (typeof synchroniserSupportActuel === "function") {
+       syncOk = await synchroniserSupportActuel(modeCorrection);
+     }
+ if (syncOk) localStorage.removeItem("fbm_sync_en_attente");
+ 
+ // CONTRÔLE DE LA DERNIÈRE MODIFICATION BLINDAGE
+@@ -4173,18 +4194,17 @@
+           "Motif : " + alerte
+       })
+     });
+   }
+ } catch (e) {
+   console.error("Erreur contrôle Telegram :", e);
+ }
+ 
+-// Le PDF est toujours généré
+-doc.save(nomFichier);
++// PDF téléchargé et proposé à l’archivage avant la synchronisation FBM.
+ 
+   } catch (err) {
+     console.error(err);
+     alert("⚠️ Erreur lors de la génération du PDF :\n" + err.message);
+   } finally {
+     if (btnPdf) {
+       btnPdf.innerHTML = btnOriginalHTML;
+       btnPdf.disabled = false;
+@@ -4308,21 +4328,34 @@
+       "SANS ENTREPRISE": [100, 100, 100]
+     };
+ 
+     const pageW = doc.internal.pageSize.getWidth();
+     const pageH = doc.internal.pageSize.getHeight();
+     const marge = 6;
+ 
+     // --- Utilisation des données filtrées/mises à jour si disponibles (fallback sur baseSupports) ---
+-    const donneesActives = (typeof supportsFiltres !== 'undefined' && Array.isArray(supportsFiltres))
++    const toutesDonnees = (typeof supportsFiltres !== 'undefined' && Array.isArray(supportsFiltres))
+       ? supportsFiltres
+       : (typeof donneesAdmin !== 'undefined' && Array.isArray(donneesAdmin) && donneesAdmin.length > 0)
+         ? donneesAdmin
+         : (typeof baseSupports !== 'undefined' ? baseSupports : []);
++    const dansJournal = new URLSearchParams(location.search).has('journal_session');
++    const selectRecap = document.getElementById('selectChantier');
++    const chantierRecap = String(selectRecap?.selectedOptions?.[0]?.text || selectRecap?.value || '').trim();
++    const normaliserRecap = texte => String(texte || '').normalize('NFD')
++      .replace(/[\u0300-\u036f]/g, '').replace(/^(SST|RCT|PMP|GC)\s+/i, '').trim().toLowerCase();
++    const donneesActives = dansJournal
++      ? (Array.isArray(toutesDonnees) ? toutesDonnees : []).filter(ligne =>
++          normaliserRecap(ligne.chantier) === normaliserRecap(chantierRecap))
++      : toutesDonnees;
++    if (dansJournal && (!chantierRecap || !donneesActives.length)) {
++      throw new Error('Sélectionnez un chantier FBM contenant des supports pour le récapitulatif. Aucun récapitulatif multi-chantiers dans un seul chantier JDC.');
++    }
++    const libelleRecap = dansJournal ? chantierRecap : 'PCLE-MMM';
+ 
+     // --- Récupération de la date la plus récente (MAX) ---
+     const dates = donneesActives
+       .map(s => s.date)
+       .filter(d => d)
+       .sort();
+ 
+     const derniereDate = dates.length > 0 ? dates[dates.length - 1] : "N/A";
+@@ -4339,17 +4372,17 @@
+       doc.text(titre, pageW / 2, 6, { align: "center" });
+       doc.setFontSize(7); doc.setFont("helvetica", "normal");
+       doc.text("Dernier relevé : " + dateAffichee, pageW / 2, 10.5, { align: "center" });
+     }
+ 
+     // ================================================================
+     // PAGE 1 : SUIVI PAR CPT
+     // ================================================================
+-    dessinerEntete("SUIVI GC PCLE-MMM — PAR CPT");
++    dessinerEntete("SUIVI GC " + libelleRecap + " — PAR CPT");
+ 
+     const cptMap = {};
+     donneesActives.forEach(s => {
+       const cpt = (s.CPT || "SANS CPT").trim();
+       if (!cptMap[cpt]) cptMap[cpt] = { total:0, effectues:0, fouilles:0, betons:0, matages:0, m3Prevu:0, m3PrevuCoule:0, m3PrevuCompare:0, m3Fait:0, chantiers:{} };
+       const cc = cptMap[cpt];
+       cc.total++;
+       
+@@ -4446,17 +4479,17 @@
+ 
+       cptY += donutMM + 2.5;
+     });
+ 
+     // ================================================================
+     // PAGE 2 : SUIVI PAR CHANTIER
+     // ================================================================
+     doc.addPage();
+-    dessinerEntete("SUIVI GC PCLE-MMM — PAR CHANTIER");
++    dessinerEntete("SUIVI GC " + libelleRecap + " — PAR CHANTIER");
+ 
+     const chantierMap = {};
+     donneesActives.forEach(s => {
+       const ch = s.chantier || "INCONNU";
+       const ee = (s.EE || "?").trim().toUpperCase();
+       if (!chantierMap[ch]) chantierMap[ch] = {
+         total:0, effectues:0, fouilles:0, betons:0, matages:0, m3Prevu:0, m3PrevuCoule:0, m3PrevuCompare:0, m3Fait:0, ees:{}
+       };
+@@ -4551,17 +4584,17 @@
+         eeY + 4.5;
+       });
+     });
+ 
+     // ================================================================
+     // PAGE 3 : SUIVI PAR EE (Entreprise Exécutante) — Hauteur élargie
+     // ================================================================
+     doc.addPage();
+-    dessinerEntete("SUIVI GC PCLE-MMM — PAR ENTREPRISE (EE)");
++    dessinerEntete("SUIVI GC " + libelleRecap + " — PAR ENTREPRISE (EE)");
+ 
+     const eeMap = {};
+     donneesActives.forEach(s => {
+       const ee = (s.EE || "SANS ENTREPRISE").trim().toUpperCase();
+       if (!eeMap[ee]) eeMap[ee] = { total:0, effectues:0, fouilles:0, betons:0, matages:0, m3Prevu:0, m3PrevuCoule:0, m3PrevuCompare:0, m3Fait:0, chantiers:{} };
+       const cc = eeMap[ee];
+       cc.total++;
+       
+@@ -4663,38 +4696,39 @@
+     // PIED DE PAGE GLOBAL
+     // ================================================================
+     const totalPages = doc.internal.getNumberOfPages();
+     for (let p = 1; p <= totalPages; p++) {
+       doc.setPage(p);
+       doc.setFillColor(240, 228, 238);
+       doc.rect(0, pageH - 4.5, pageW, 4.5, "F");
+       doc.setTextColor(...violet); doc.setFontSize(5.5); doc.setFont("helvetica", "bold");
+-      doc.text("AINM — SUIVI GC PCLE-MMM", marge, pageH - 1.5);
++      doc.text("AINM — SUIVI GC " + libelleRecap, marge, pageH - 1.5);
+       doc.text("Page " + p + " / " + totalPages, pageW - marge, pageH - 1.5, { align: "right" });
+     }
+ 
+     // --- EXPORT SÉCURISÉ ---
+-    const nomFichier = "SUIVI_GC_" + new Date().toISOString().slice(0, 10) + ".pdf";
++    const nomFichier = "SUIVI_GC_" + (dansJournal ? libelleRecap.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0,45) + "_" : "") + new Date().toISOString().slice(0, 10) + ".pdf";
+     
+     if (navigator.share && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+       try {
+         const pdfBlob = doc.output("blob");
+         const file = new File([pdfBlob], nomFichier, { type: "application/pdf" });
+         if (navigator.canShare && navigator.canShare({ files: [file] })) {
+           await navigator.share({ files: [file], title: "Suivi GC", text: "AINM" });
+         } else {
+           doc.save(nomFichier);
+         }
+       } catch (e) {
+         doc.save(nomFichier);
+       }
+     } else {
+       doc.save(nomFichier);
+     }
++    if (dansJournal) await window.jdcArchiverPDF(doc, nomFichier, {brouillon:false});
+ 
+   } catch (err) {
+     alert("Erreur : " + err.message);
+   } finally {
+     if (btnPdf) { btnPdf.disabled = false; btnPdf.innerHTML = btnPdf.id === "btnEnregistrerBas" ? "💾 ENREGISTRER / EXPORTER PDF" : "📄 Exporter PDF"; }
+   }
+ }
+ 
+@@ -5784,31 +5818,33 @@
+ }
+ 
+ /**
+  * Interroge Supabase pour vérifier l'accès FBM et le statut Admin
+  */
+ async function verifierAccesSupabase(email) {
+   if (!email) return { acces: false, admin: false };
+   try {
++    await JDCIdentiteModules.check(email);
+     const { data, error } = await supabaseClient
+       .from('app_bob')
+       .select('fbm, admin')
+       .eq('email', email.trim().toLowerCase())
+       .maybeSingle();
+ 
+     if (error) throw error;
+     
+     if (!data || data.fbm !== true) {
+       return { acces: false, admin: false };
+     }
+ 
+     return { acces: true, admin: data.admin === true };
+   } catch (err) {
+-    console.error("Erreur vérification accès Supabase :", err.message);
++    const message = document.getElementById("auth-message");
++    if (message) message.textContent = err.message;
+     return { acces: false, admin: false };
+   }
+ }
+ 
+ function gererAffichageAdmin(estAdmin) {
+   const tabAdmin = document.getElementById("tabAdmin");
+   if (tabAdmin) tabAdmin.style.display = estAdmin ? "inline-block" : "none";
+   const blocAlertes = document.getElementById("sec-alertes-wrap");
+@@ -5825,16 +5861,17 @@
+   const email = document.getElementById("req-email").value.trim().toLowerCase();
+ 
+   if (!prenom || !nom || !email) {
+     alert("⚠️ Veuillez remplir tous les champs.");
+     return;
+   }
+ 
+   try {
++    await JDCIdentiteModules.check(email);
+     // Vérifie si l'utilisateur existe déjà
+     const { data, error } = await supabaseClient
+       .from('app_bob')
+       .select('*')
+       .eq('email', email)
+       .maybeSingle();
+ 
+     if (error) throw error;
+@@ -5939,17 +5976,17 @@
+         img.onerror = () => resolve(null);
+         img.src = image64;
+       })
+       .catch(() => resolve(null));
+   });
+ }
+ 
+ </script>
+-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
++<script src="../vendor/jdc-securite/jsqr-1.4.0.js"></script>
+ <script>
+   if ("serviceWorker" in navigator) {
+     navigator.serviceWorker.register("sw.js").catch(function(err) {
+       console.log("Service Worker error:", err);
+     });
+   }
+ 
+   // --- GESTION DE L'OUVERTURE ET FERMETURE DES SIDEBARS AVEC BACKDROP ---
+@@ -6389,17 +6426,17 @@
+ 
+   async function envoyerAmeliorationSupabase() {
+       const texte = document.getElementById('inputTexteAmelioration').value.trim();
+       if (!texte) { alert("Veuillez saisir une description pour votre amélioration."); return; }
+ 
+       let client = window._supabaseClient || window.supabase;
+       if (!client || typeof client.from !== 'function') {
+           if (window.supabase && typeof window.supabase.createClient === 'function' && typeof SUPABASE_URL !== 'undefined') {
+-              client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
++              client = JDCIdentiteModules.client(SUPABASE_URL, SUPABASE_ANON_KEY, () => chargerIdentite()?.email);
+           }
+       }
+       if (!client || typeof client.from !== 'function') {
+           alert("❌ Erreur technique : L'objet Supabase n'est pas initialisé correctement.");
+           return;
+       }
+ 
+       let nomRedacteur = document.getElementById('nomRedacteur')?.value.trim() || "ANONYME";
+@@ -6705,18 +6742,20 @@
+   </div>
+ </div>
+ <script>
+ /* Scanner BL par caméra : QR codes et formats de codes-barres pris en charge par le navigateur */
+ let fluxCameraBL = null;
+ let boucleScannerBL = null;
+ let detecteurBL = null;
+ let scanBLEnCours = false;
++let cibleScannerBL = "bl_beton";
+ 
+ async function scannerBLTelephone(champCibleId = "bl_beton") {
++  cibleScannerBL = champCibleId === "bl_beton_carotte" ? "bl_beton_carotte" : "bl_beton";
+   const modal = document.getElementById('modalScannerBL');
+   const video = document.getElementById('videoScannerBL');
+   const statut = document.getElementById('statutScannerBL');
+   if (!('BarcodeDetector' in window)) {
+     alert('La lecture des QR codes et codes-barres n’est pas prise en charge par ce navigateur. Essaie avec Google Chrome à jour sur Android, ou utilise un lecteur USB/Bluetooth.');
+     return;
+   }
+   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+@@ -6834,17 +6873,17 @@
+   const input = document.getElementById('inputValidationBL');
+   const valeurFinale = input ? input.value.trim().toUpperCase() : '';
+   
+   if (!valeurFinale) {
+     alert("⚠️ Le numéro de BL ne peut pas être vide.");
+     return;
+   }
+ 
+-  const champ = document.getElementById('bl_beton');
++  const champ = document.getElementById(cibleScannerBL);
+   if (champ) {
+     champ.value = valeurFinale;
+     champ.dispatchEvent(new Event('input', { bubbles: true }));
+     champ.focus();
+   }
+ 
+   document.getElementById('modalValidationBL').style.display = 'none';
+ }
+@@ -6957,10 +6996,44 @@
+   setTimeout(() => {
+     try {
+       const p = JSON.parse(localStorage.getItem("fbm_sync_en_attente") || "null");
+       if (p && p.support) alert("⚠️ Envoi Supabase non terminé pour " + p.chantier + " / " + p.support + ".\nRouvre ce support et refais ENREGISTRER / EXPORTER PDF.");
+     } catch (_) {}
+   }, 2500);
+ });
+ </script>
++<!-- Passerelle JDC conservée : brouillons par chantier, documents PDF, fil d'actualités. -->
++<script>
++/* Passerelle JDC V16.0.23 : conserve le PDF local ET archive le PDF officiel
++   dans Documentation/FBM + fil d'actualite, via la session authentifiee JDC.
++   Aucune cle ni connexion Supabase de l'application FBM n'est modifiee. */
++window.jdcArchiverPDF = async function(doc, nomFichier, options={}) {
++  if (!new URLSearchParams(location.search).has('journal_session')) return {ok:true, mode:'autonome'};
++  const pont = window.JournalFBMChild;
++  if (!pont?.integrated) {
++    alert('Journal de chantier indisponible : PDF télécharge localement, mais NON archivé. Réouvrez FBM depuis votre chantier JDC.');
++    return {ok:false, error:'Pont Journal indisponible'};
++  }
++  try {
++    if (options.brouillon) {
++      const sauvegarde = await pont.persistBeforeArchive();
++      if (!sauvegarde?.ok) {
++        alert('Le brouillon JDC n\'est pas confirmé : ' + String(sauvegarde?.error||'Erreur') + '. PDF téléchargé, NON archivé.');
++        return {ok:false, error:'Brouillon non confirme'};
++      }
++    }
++    const resultat = await pont.archive(doc.output('blob'), nomFichier);
++    if (!resultat?.ok) {
++      alert('Le PDF a été téléchargé, mais l\'archivage dans Journal de chantier a échoué : ' + String(resultat?.error||'Erreur') + '. Réessayez avant de quitter.');
++      return {ok:false, error:resultat?.error || 'Archivage non confirme'};
++    }
++    return resultat;
++  } catch(e) {
++    alert('PDF téléchargé, mais archivage Journal non confirmé : ' + String(e?.message||e).slice(0,180));
++    return {ok:false, error:'Erreur archivage'};
++  }
++};
++</script>
++<script src="journal-bridge.js?v=16.4.16"></script>
++<script src="./jdc-fbm-photos.js?v=16.4.16"></script>
+ </body>
+ </html>
